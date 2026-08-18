@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            result.textContent =
+            
 result.textContent = "KLYDE AI is thinking...";
 
 try {

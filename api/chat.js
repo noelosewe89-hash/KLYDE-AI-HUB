@@ -13,33 +13,46 @@ export default async function handler(req, res) {
         });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.GEMINI_API_KEY) {
         return res.status(500).json({
-            error: "OPENAI_API_KEY is not configured."
+            error: "GEMINI_API_KEY is not configured."
         });
     }
 
     try {
+        const model =
+            process.env.GEMINI_MODEL ||
+            "gemini-2.5-flash";
+
         const response = await fetch(
-            "https://api.openai.com/v1/responses",
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(process.env.GEMINI_API_KEY)}`,
             {
                 method: "POST",
 
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization":
-                        `Bearer ${process.env.OPENAI_API_KEY}`
+                    "Content-Type": "application/json"
                 },
 
                 body: JSON.stringify({
-                    model:
-                        process.env.OPENAI_MODEL ||
-                        "gpt-4o-mini",
+                    systemInstruction: {
+                        parts: [
+                            {
+                                text:
+                                    "You are KLYDE AI, the intelligent assistant inside KLYDE AI HUB. Be helpful, clear, friendly and practical. If asked who you are, say you are KLYDE AI."
+                            }
+                        ]
+                    },
 
-                    instructions:
-                        "You are KLYDE AI, the intelligent assistant inside KLYDE AI HUB. Be helpful, clear, friendly and practical. If asked who you are, say you are KLYDE AI.",
-
-                    input: message
+                    contents: [
+                        {
+                            role: "user",
+                            parts: [
+                                {
+                                    text: message
+                                }
+                            ]
+                        }
+                    ]
                 })
             }
         );
@@ -47,54 +60,53 @@ export default async function handler(req, res) {
         const data = await response.json();
 
         console.log(
-            "OpenAI status:",
+            "Gemini status:",
             response.status
         );
 
         if (!response.ok) {
             console.error(
-                "OpenAI error:",
+                "Gemini error:",
                 data
             );
 
             return res.status(response.status).json({
                 error:
                     data?.error?.message ||
-                    `OpenAI HTTP ${response.status}`
+                    `Gemini HTTP ${response.status}`
             });
         }
 
         const reply =
-            data?.output_text ||
-            data?.output
-                ?.flatMap(item => item.content || [])
-                ?.map(item => item.text || "")
+            data?.candidates?.[0]
+                ?.content?.parts
+                ?.map(part => part.text || "")
                 ?.join("") ||
             null;
 
         if (!reply) {
             return res.status(502).json({
                 error:
-                    "OpenAI returned an empty response."
+                    "Gemini returned an empty response."
             });
         }
 
         return res.status(200).json({
             reply: reply.trim(),
-            provider: "OpenAI"
+            provider: "Gemini"
         });
 
     } catch (error) {
 
         console.error(
-            "KLYDE OPENAI ERROR:",
+            "KLYDE GEMINI ERROR:",
             error
         );
 
         return res.status(500).json({
             error:
                 error?.message ||
-                "OpenAI connection failed."
+                "Gemini connection failed."
         });
     }
 }

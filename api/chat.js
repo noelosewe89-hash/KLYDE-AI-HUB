@@ -1,4 +1,3 @@
-// KLYDE AI OpenRouter test
 export default async function handler(req, res) {
     if (req.method !== "POST") {
         return res.status(405).json({
@@ -14,47 +13,33 @@ export default async function handler(req, res) {
         });
     }
 
-    if (!process.env.OPENROUTER_API_KEY) {
+    if (!process.env.OPENAI_API_KEY) {
         return res.status(500).json({
-            error: "OPENROUTER_API_KEY is not configured."
+            error: "OPENAI_API_KEY is not configured."
         });
     }
 
     try {
         const response = await fetch(
-            "https://openrouter.ai/api/v1/chat/completions",
+            "https://api.openai.com/v1/responses",
             {
                 method: "POST",
 
                 headers: {
                     "Content-Type": "application/json",
-
                     "Authorization":
-                        `Bearer ${process.env.OPENROUTER_API_KEY}`,
-
-                    "HTTP-Referer":
-                        "https://klyde-ai-hi4wy4tz7-klydexszn.vercel.app",
-
-                    "X-Title":
-                        "KLYDE AI HUB"
+                        `Bearer ${process.env.OPENAI_API_KEY}`
                 },
 
                 body: JSON.stringify({
                     model:
-                        process.env.OPENROUTER_MODEL ||
-                        "openai/gpt-oss-20b:free",
+                        process.env.OPENAI_MODEL ||
+                        "gpt-4o-mini",
 
-                    messages: [
-                        {
-                            role: "system",
-                            content:
-                                "You are KLYDE AI, the intelligent assistant inside KLYDE AI HUB. Be helpful, clear, friendly and practical. If asked who you are, say you are KLYDE AI."
-                        },
-                        {
-                            role: "user",
-                            content: message
-                        }
-                    ]
+                    instructions:
+                        "You are KLYDE AI, the intelligent assistant inside KLYDE AI HUB. Be helpful, clear, friendly and practical. If asked who you are, say you are KLYDE AI.",
+
+                    input: message
                 })
             }
         );
@@ -62,49 +47,54 @@ export default async function handler(req, res) {
         const data = await response.json();
 
         console.log(
-            "OpenRouter status:",
+            "OpenAI status:",
             response.status
         );
 
         if (!response.ok) {
             console.error(
-                "OpenRouter error:",
+                "OpenAI error:",
                 data
             );
 
             return res.status(response.status).json({
                 error:
                     data?.error?.message ||
-                    `OpenRouter HTTP ${response.status}`
+                    `OpenAI HTTP ${response.status}`
             });
         }
 
         const reply =
-            data?.choices?.[0]?.message?.content;
+            data?.output_text ||
+            data?.output
+                ?.flatMap(item => item.content || [])
+                ?.map(item => item.text || "")
+                ?.join("") ||
+            null;
 
         if (!reply) {
             return res.status(502).json({
                 error:
-                    "OpenRouter returned an empty response."
+                    "OpenAI returned an empty response."
             });
         }
 
         return res.status(200).json({
             reply: reply.trim(),
-            provider: "OpenRouter"
+            provider: "OpenAI"
         });
 
     } catch (error) {
 
         console.error(
-            "KLYDE OPENROUTER ERROR:",
+            "KLYDE OPENAI ERROR:",
             error
         );
 
         return res.status(500).json({
             error:
                 error?.message ||
-                "OpenRouter connection failed."
+                "OpenAI connection failed."
         });
     }
 }

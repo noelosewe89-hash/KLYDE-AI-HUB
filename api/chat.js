@@ -13,7 +13,27 @@ export default async function handler(req, res) {
         });
     }
 
+    /*
+    =========================================================
+    KLYDE AI PROVIDER SYSTEM
+
+    Priority:
+    1. OpenAI
+    2. Gemini
+    3. Groq
+    4. OpenRouter
+
+    If one provider fails, KLYDE automatically tries the next.
+    =========================================================
+    */
+
     const providers = [
+        {
+            name: "OpenAI",
+            key: process.env.OPENAI_API_KEY,
+            call: () => callOpenAI(message)
+        },
+
         {
             name: "Gemini",
             key: process.env.GEMINI_API_KEY,
@@ -38,6 +58,11 @@ export default async function handler(req, res) {
     for (const provider of providers) {
 
         if (!provider.key) {
+
+            failures.push(
+                `${provider.name}: API key not configured`
+            );
+
             continue;
         }
 
@@ -56,7 +81,7 @@ export default async function handler(req, res) {
                 );
 
                 return res.status(200).json({
-                    reply: reply,
+                    reply: reply.trim(),
                     provider: provider.name
                 });
             }
@@ -76,7 +101,12 @@ export default async function handler(req, res) {
                 `${provider.name}: ${error.message}`
             );
 
-            // Continue automatically to the next provider.
+            /*
+            Do NOT stop here.
+
+            KLYDE automatically moves to
+            the next available provider.
+            */
         }
     }
 
@@ -87,9 +117,103 @@ export default async function handler(req, res) {
 
     return res.status(503).json({
         error:
-            "KLYDE AI is temporarily unable to answer. " +
-            "All available AI providers are currently unavailable."
+            "KLYDE AI could not get a response from any available AI provider. Please try again shortly."
     });
+}
+
+
+/* =========================================================
+   SHARED KLYDE AI INSTRUCTIONS
+========================================================= */
+
+const KLYDE_SYSTEM_PROMPT = `
+You are KLYDE AI, the intelligent assistant inside KLYDE AI HUB.
+
+Your identity is KLYDE AI.
+
+Be:
+- Helpful
+- Intelligent
+- Clear
+- Friendly
+- Confident
+- Practical
+
+Answer naturally and directly.
+
+Do not introduce yourself as OpenAI, Gemini, Groq,
+OpenRouter, or any other provider.
+
+If the user asks who you are, say that you are
+KLYDE AI, the AI assistant inside KLYDE AI HUB.
+
+If the user specifically asks what technology or
+provider is answering, you may explain honestly.
+
+Use the conversation provided by the user when
+it contains previous context.
+`;
+
+
+/* =========================================================
+   OPENAI
+========================================================= */
+
+async function callOpenAI(message) {
+
+    const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json",
+
+                "Authorization":
+                    `Bearer ${process.env.OPENAI_API_KEY}`
+            },
+
+            body: JSON.stringify({
+
+                model:
+                    process.env.OPENAI_MODEL ||
+                    "gpt-4o-mini",
+
+                messages: [
+
+                    {
+                        role: "system",
+                        content: KLYDE_SYSTEM_PROMPT
+                    },
+
+                    {
+                        role: "user",
+                        content: message
+                    }
+
+                ],
+
+                temperature: 0.7
+            })
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+
+        throw new Error(
+            data.error?.message ||
+            `OpenAI HTTP ${response.status}`
+        );
+    }
+
+    return (
+        data
+            .choices?.[0]
+            ?.message
+            ?.content || null
+    );
 }
 
 
@@ -99,10 +223,12 @@ export default async function handler(req, res) {
 
 async function callGemini(message) {
 
+    const model =
+        process.env.GEMINI_MODEL ||
+        "gemini-2.5-flash";
+
     const response = await fetch(
-        "https://generativelanguage.googleapis.com/" +
-        "v1beta/models/gemini-3.6-flash:generateContent?key=" +
-        process.env.GEMINI_API_KEY,
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`,
         {
             method: "POST",
 
@@ -112,15 +238,31 @@ async function callGemini(message) {
 
             body: JSON.stringify({
 
+                systemInstruction: {
+                    parts: [
+                        {
+                            text: KLYDE_SYSTEM_PROMPT
+                        }
+                    ]
+                },
+
                 contents: [
+
                     {
+                        role: "user",
+
                         parts: [
                             {
                                 text: message
                             }
                         ]
                     }
-                ]
+
+                ],
+
+                generationConfig: {
+                    temperature: 0.7
+                }
 
             })
         }
@@ -139,7 +281,8 @@ async function callGemini(message) {
     return (
         data
             .candidates?.[0]
-            ?.content?.parts?.[0]
+            ?.content
+            ?.parts?.[0]
             ?.text || null
     );
 }
@@ -157,7 +300,9 @@ async function callGroq(message) {
             method: "POST",
 
             headers: {
-                "Content-Type": "application/json",
+
+                "Content-Type":
+                    "application/json",
 
                 "Authorization":
                     `Bearer ${process.env.GROQ_API_KEY}`
@@ -170,21 +315,24 @@ async function callGroq(message) {
                     "llama-3.3-70b-versatile",
 
                 messages: [
+
                     {
                         role: "system",
 
                         content:
-                            "You are KLYDE AI, a helpful, intelligent, " +
-                            "clear and practical AI assistant inside " +
-                            "KLYDE AI HUB."
+                            KLYDE_SYSTEM_PROMPT
                     },
 
                     {
                         role: "user",
-                        content: message
-                    }
-                ]
 
+                        content:
+                            message
+                    }
+
+                ],
+
+                temperature: 0.7
             })
         }
     );
@@ -202,7 +350,8 @@ async function callGroq(message) {
     return (
         data
             .choices?.[0]
-            ?.message?.content || null
+            ?.message
+            ?.content || null
     );
 }
 
@@ -227,7 +376,7 @@ async function callOpenRouter(message) {
                     `Bearer ${process.env.OPENROUTER_API_KEY}`,
 
                 "HTTP-Referer":
-                    "https://klyde-ai-9z7g0pgla-klydexszn.vercel.app",
+                    "https://klyde-ai-jh39hlmkq-klydexszn.vercel.app",
 
                 "X-Title":
                     "KLYDE AI HUB"
@@ -245,18 +394,19 @@ async function callOpenRouter(message) {
                         role: "system",
 
                         content:
-                            "You are KLYDE AI, the intelligent assistant " +
-                            "inside KLYDE AI HUB. Be helpful, clear, " +
-                            "friendly, intelligent and practical."
+                            KLYDE_SYSTEM_PROMPT
                     },
 
                     {
                         role: "user",
-                        content: message
+
+                        content:
+                            message
                     }
 
-                ]
+                ],
 
+                temperature: 0.7
             })
         }
     );
@@ -274,6 +424,7 @@ async function callOpenRouter(message) {
     return (
         data
             .choices?.[0]
-            ?.message?.content || null
+            ?.message
+            ?.content || null
     );
 }

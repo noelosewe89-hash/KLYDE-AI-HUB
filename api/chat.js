@@ -7,65 +7,33 @@ export default async function handler(req, res) {
 
     const { message } = req.body || {};
 
-    if (!message) {
+    if (!message || typeof message !== "string") {
         return res.status(400).json({
             error: "Message is required"
         });
     }
 
-    /*
-     * KLYDE AI PROVIDER FALLBACK
-     *
-     * Priority:
-     * 1. Gemini
-     * 2. Groq
-     * 3. OpenAI
-     *
-     * A provider is skipped automatically if its API key
-     * is not configured.
-     */
-
     const providers = [
         {
             name: "Gemini",
             key: process.env.GEMINI_API_KEY,
-            run: () => callGemini(message)
+            call: () => callGemini(message)
         },
 
         {
             name: "Groq",
             key: process.env.GROQ_API_KEY,
-            run: () =>
-                callOpenAICompatible(
-                    "https://api.groq.com/openai/v1/chat/completions",
-                    process.env.GROQ_API_KEY,
-                    process.env.GROQ_MODEL ||
-                        "llama-3.3-70b-versatile",
-                    message
-                )
+            call: () => callGroq(message)
         },
 
         {
-            name: "OpenAI",
-            key: process.env.OPENAI_API_KEY,
-            run: () =>
-                callOpenAICompatible(
-                    "https://api.openai.com/v1/chat/completions",
-                    process.env.OPENAI_API_KEY,
-                    process.env.OPENAI_MODEL ||
-                        "gpt-5-mini",
-                    message
-                )
+            name: "OpenRouter",
+            key: process.env.OPENROUTER_API_KEY,
+            call: () => callOpenRouter(message)
         }
     ];
 
-
-    const errors = [];
-
-
-    /*
-     * TRY EACH PROVIDER
-     */
+    const failures = [];
 
     for (const provider of providers) {
 
@@ -73,80 +41,56 @@ export default async function handler(req, res) {
             continue;
         }
 
-
         try {
 
-            const reply = await provider.run();
+            console.log(
+                `KLYDE AI trying ${provider.name}`
+            );
 
+            const reply = await provider.call();
 
-            if (reply) {
+            if (reply && reply.trim()) {
+
+                console.log(
+                    `KLYDE AI answered using ${provider.name}`
+                );
 
                 return res.status(200).json({
                     reply: reply,
                     provider: provider.name
                 });
-
             }
 
-
-            errors.push(
+            failures.push(
                 `${provider.name}: empty response`
             );
 
-        }
+        } catch (error) {
 
+            console.error(
+                `${provider.name} failed:`,
+                error.message
+            );
 
-        catch (error) {
-
-            /*
-             * DO NOT STOP HERE.
-             *
-             * If Gemini fails because of quota,
-             * rate limits, downtime, etc.,
-             * KLYDE moves to the next provider.
-             */
-
-            errors.push(
+            failures.push(
                 `${provider.name}: ${error.message}`
             );
 
+            // Continue automatically to the next provider.
         }
-
     }
 
-
-    /*
-     * NO PROVIDERS CONFIGURED
-     */
-
-    if (errors.length === 0) {
-
-        return res.status(503).json({
-
-            error:
-                "KLYDE AI has no configured AI providers. " +
-                "Add GEMINI_API_KEY, GROQ_API_KEY, " +
-                "or OPENAI_API_KEY in Vercel."
-
-        });
-
-    }
-
-
-    /*
-     * EVERYTHING FAILED
-     */
+    console.error(
+        "All KLYDE AI providers failed:",
+        failures
+    );
 
     return res.status(503).json({
-
         error:
-            "KLYDE AI could not connect to any available " +
-            "AI provider. Please try again shortly."
-
+            "KLYDE AI is temporarily unable to answer. " +
+            "All available AI providers are currently unavailable."
     });
-
 }
-
 
 
 /* =========================================================
@@ -156,96 +100,122 @@ export default async function handler(req, res) {
 async function callGemini(message) {
 
     const response = await fetch(
-
         "https://generativelanguage.googleapis.com/" +
         "v1beta/models/gemini-3.6-flash:generateContent?key=" +
         process.env.GEMINI_API_KEY,
-
         {
-
             method: "POST",
 
             headers: {
-
-                "Content-Type":
-                    "application/json"
-
+                "Content-Type": "application/json"
             },
 
             body: JSON.stringify({
 
                 contents: [
-
                     {
-
                         parts: [
-
                             {
                                 text: message
                             }
-
                         ]
-
                     }
-
                 ]
 
             })
-
         }
-
     );
 
-
-    const data =
-        await response.json();
-
+    const data = await response.json();
 
     if (!response.ok) {
 
         throw new Error(
-
             data.error?.message ||
             `Gemini HTTP ${response.status}`
-
         );
-
     }
 
-
     return (
-
         data
             .candidates?.[0]
             ?.content?.parts?.[0]
-            ?.text ||
-
-        null
-
+            ?.text || null
     );
-
 }
 
 
-
 /* =========================================================
-   OPENAI-COMPATIBLE PROVIDERS
-   Used for Groq and OpenAI
+   GROQ
 ========================================================= */
 
-async function callOpenAICompatible(
-    url,
-    apiKey,
-    model,
-    message
-) {
+async function callGroq(message) {
 
     const response = await fetch(
-
-        url,
-
+        "https://api.groq.com/openai/v1/chat/completions",
         {
+            method: "POST",
 
+            headers: {
+                "Content-Type": "application/json",
+
+                "Authorization":
+                    `Bearer ${process.env.GROQ_API_KEY}`
+            },
+
+            body: JSON.stringify({
+
+                model:
+                    process.env.GROQ_MODEL ||
+                    "llama-3.3-70b-versatile",
+
+                messages: [
+                    {
+                        role: "system",
+
+                        content:
+                            "You are KLYDE AI, a helpful, intelligent, " +
+                            "clear and practical AI assistant inside " +
+                            "KLYDE AI HUB."
+                    },
+
+                    {
+                        role: "user",
+                        content: message
+                    }
+                ]
+
+            })
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+
+        throw new Error(
+            data.error?.message ||
+            `Groq HTTP ${response.status}`
+        );
+    }
+
+    return (
+        data
+            .choices?.[0]
+            ?.message?.content || null
+    );
+}
+
+
+/* =========================================================
+   OPENROUTER
+========================================================= */
+
+async function callOpenRouter(message) {
+
+    const response = await fetch(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
             method: "POST",
 
             headers: {
@@ -254,57 +224,56 @@ async function callOpenAICompatible(
                     "application/json",
 
                 "Authorization":
-                    `Bearer ${apiKey}`
+                    `Bearer ${process.env.OPENROUTER_API_KEY}`,
 
+                "HTTP-Referer":
+                    "https://klyde-ai-9z7g0pgla-klydexszn.vercel.app",
+
+                "X-Title":
+                    "KLYDE AI HUB"
             },
 
             body: JSON.stringify({
 
-                model: model,
+                model:
+                    process.env.OPENROUTER_MODEL ||
+                    "openai/gpt-oss-20b:free",
 
                 messages: [
 
                     {
+                        role: "system",
 
+                        content:
+                            "You are KLYDE AI, the intelligent assistant " +
+                            "inside KLYDE AI HUB. Be helpful, clear, " +
+                            "friendly, intelligent and practical."
+                    },
+
+                    {
                         role: "user",
-
                         content: message
-
                     }
 
                 ]
 
             })
-
         }
-
     );
 
-
-    const data =
-        await response.json();
-
+    const data = await response.json();
 
     if (!response.ok) {
 
         throw new Error(
-
             data.error?.message ||
-            `Provider HTTP ${response.status}`
-
+            `OpenRouter HTTP ${response.status}`
         );
-
     }
 
-
     return (
-
         data
             .choices?.[0]
-            ?.message?.content ||
-
-        null
-
+            ?.message?.content || null
     );
-
 }

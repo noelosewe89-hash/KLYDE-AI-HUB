@@ -1,22 +1,32 @@
 ```css
 /* =========================================================
-   KLYDE AI HUB — WORLD CLASS UI
-   Dark • Cyan • Premium • Responsive
+   KLYDE AI HUB — PREMIUM FUTURISTIC UI
    ========================================================= */
 
 :root {
-    --bg: #05080f;
-    --bg-soft: #080d16;
-    --panel: #0b121d;
-    --panel-2: #101a28;
-    --line: #1b2a3c;
-    --text: #f5f8fc;
-    --muted: #8d9aad;
-    --cyan: #19d3ff;
-    --cyan-soft: rgba(25, 211, 255, 0.12);
-    --green: #4cff91;
-    --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    --bg: #07111f;
+    --bg2: #0b1728;
+    --panel: rgba(17, 31, 50, 0.82);
+    --panel-light: rgba(24, 43, 67, 0.9);
+    --line: rgba(105, 181, 220, 0.18);
+
+    --cyan: #28d9ff;
+    --cyan2: #00aeea;
+    --blue: #1769ff;
+
+    --white: #f5fbff;
+    --soft-white: #d9e8f2;
+    --muted: #91a7b8;
+
+    --green: #45f59a;
+
+    --shadow:
+        0 25px 70px rgba(0, 0, 0, 0.28);
 }
+
+/* =========================================================
+   RESET
+   ========================================================= */
 
 * {
     margin: 0;
@@ -29,19 +39,36 @@ html {
 }
 
 body {
-    font-family: Arial, Helvetica, sans-serif;
-    background:
-        radial-gradient(circle at 15% 10%, rgba(25, 211, 255, 0.06), transparent 25%),
-        radial-gradient(circle at 85% 35%, rgba(25, 211, 255, 0.05), transparent 25%),
-        var(--bg);
-    color: var(--text);
-    line-height: 1.6;
-    overflow-x: hidden;
-}
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
 
-body::selection {
-    background: var(--cyan);
-    color: #001018;
+    color: var(--white);
+
+    line-height: 1.6;
+
+    overflow-x: hidden;
+
+    background:
+        radial-gradient(
+            circle at 10% 0%,
+            rgba(40, 217, 255, 0.13),
+            transparent 27%
+        ),
+        radial-gradient(
+            circle at 90% 20%,
+            rgba(23, 105, 255, 0.12),
+            transparent 28%
+        ),
+        linear-gradient(
+            135deg,
+            #07111f 0%,
+            #091827 45%,
+            #06101d 100%
+        );
+
+    min-height: 100vh;
 }
 
 a {
@@ -54,54 +81,86 @@ input {
     font: inherit;
 }
 
+::selection {
+    background: var(--cyan);
+    color: #03101b;
+}
+
 /* =========================================================
    HEADER
    ========================================================= */
 
 header {
-    height: 76px;
+    height: 78px;
+
     width: 100%;
+
     padding: 0 6%;
+
     position: sticky;
     top: 0;
+
     z-index: 1000;
 
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
 
-    background: rgba(5, 8, 15, 0.86);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    background:
+        linear-gradient(
+            90deg,
+            rgba(5, 17, 31, 0.94),
+            rgba(10, 26, 44, 0.92)
+        );
 
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px);
+
+    border-bottom:
+        1px solid
+        rgba(85, 190, 230, 0.16);
+
+    box-shadow:
+        0 8px 35px rgba(0, 0, 0, 0.18);
 }
 
 .logo {
     display: flex;
+
     align-items: center;
+
     gap: 9px;
 
     font-size: 20px;
-    font-weight: 800;
+
+    font-weight: 900;
+
     letter-spacing: 1px;
 }
 
 .logo span {
-    width: 38px;
-    height: 38px;
+    width: 39px;
+    height: 39px;
 
     display: inline-flex;
+
     align-items: center;
     justify-content: center;
 
     border-radius: 11px;
 
-    background: var(--cyan);
-    color: #031018;
+    background:
+        linear-gradient(
+            135deg,
+            var(--cyan),
+            #6eeaff
+        );
+
+    color: #04101a;
 
     box-shadow:
-        0 0 25px rgba(25, 211, 255, 0.25);
+        0 0 25px rgba(40, 217, 255, 0.3);
 }
 
 .logo b {
@@ -110,14 +169,39 @@ header {
 
 nav {
     display: flex;
+
     align-items: center;
-    gap: 28px;
+
+    gap: 27px;
 }
 
 nav a {
-    color: #aeb8c7;
+    color: #a9c0d1;
+
     font-size: 14px;
-    font-weight: 600;
+
+    font-weight: 700;
+
+    transition: 0.25s ease;
+
+    position: relative;
+}
+
+nav a::after {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+
+    bottom: -7px;
+
+    width: 0;
+
+    height: 2px;
+
+    background: var(--cyan);
+
     transition: 0.25s ease;
 }
 
@@ -125,50 +209,68 @@ nav a:hover {
     color: var(--cyan);
 }
 
+nav a:hover::after {
+    width: 100%;
+}
+
 /* =========================================================
    HERO
    ========================================================= */
 
 .hero {
-    min-height: 690px;
-    padding: 105px 8%;
+    min-height: 700px;
+
+    padding:
+        105px 8%
+        95px;
 
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
 
     gap: 70px;
 
     position: relative;
+
     overflow: hidden;
 
     background:
         radial-gradient(
-            circle at 78% 48%,
-            rgba(25, 211, 255, 0.14),
-            transparent 30%
-        ),
-        linear-gradient(180deg, #070c15, #05080f);
+            circle at 75% 48%,
+            rgba(40, 217, 255, 0.16),
+            transparent 32%
+        );
 }
 
 .hero::before {
     content: "";
+
     position: absolute;
 
-    width: 500px;
-    height: 500px;
+    width: 650px;
+    height: 650px;
+
+    right: -160px;
+    top: 20px;
 
     border-radius: 50%;
 
-    border: 1px solid rgba(25, 211, 255, 0.05);
+    border:
+        1px solid
+        rgba(40, 217, 255, 0.08);
 
-    right: 5%;
-    top: 15%;
+    box-shadow:
+        0 0 100px
+        rgba(40, 217, 255, 0.05);
 }
 
 .hero-text {
-    max-width: 730px;
+    max-width: 720px;
+
     position: relative;
+
     z-index: 2;
 }
 
@@ -177,7 +279,8 @@ nav a:hover {
     color: var(--cyan);
 
     font-size: 11px;
-    font-weight: 800;
+
+    font-weight: 900;
 
     letter-spacing: 3px;
 
@@ -185,7 +288,12 @@ nav a:hover {
 }
 
 .hero h1 {
-    font-size: clamp(55px, 7vw, 105px);
+    font-size:
+        clamp(
+            55px,
+            7vw,
+            104px
+        );
 
     line-height: 0.94;
 
@@ -198,11 +306,14 @@ nav a:hover {
     color: var(--cyan);
 
     text-shadow:
-        0 0 35px rgba(25, 211, 255, 0.15);
+        0 0 35px
+        rgba(40, 217, 255, 0.2);
 }
 
 .hero-text > p:not(.tag) {
-    color: var(--muted);
+    color: var(--soft-white);
+
+    opacity: 0.78;
 
     max-width: 620px;
 
@@ -217,7 +328,9 @@ nav a:hover {
 
 .buttons {
     display: flex;
+
     gap: 14px;
+
     flex-wrap: wrap;
 }
 
@@ -228,39 +341,53 @@ nav a:hover {
 
     cursor: pointer;
 
-    padding: 14px 23px;
+    padding:
+        14px 23px;
 
     border-radius: 9px;
 
-    background: var(--cyan);
+    background:
+        linear-gradient(
+            135deg,
+            var(--cyan),
+            #55e3ff
+        );
 
-    color: #031018;
+    color: #03111c;
 
-    font-weight: 800;
+    font-weight: 900;
 
     display: inline-block;
 
-    transition:
-        transform 0.25s ease,
-        box-shadow 0.25s ease,
-        background 0.25s ease;
+    transition: 0.25s ease;
+
+    box-shadow:
+        0 8px 25px
+        rgba(40, 217, 255, 0.12);
 }
 
 .button:hover,
 .card button:hover,
 .banner button:hover {
-    transform: translateY(-3px);
+    transform:
+        translateY(-3px);
 
     box-shadow:
-        0 12px 35px rgba(25, 211, 255, 0.2);
+        0 14px 35px
+        rgba(40, 217, 255, 0.22);
 }
 
 .outline {
-    background: transparent;
+    background:
+        rgba(255, 255, 255, 0.02);
 
-    border: 1px solid #304153;
+    border:
+        1px solid
+        rgba(130, 190, 220, 0.3);
 
     color: white;
+
+    box-shadow: none;
 }
 
 .outline:hover {
@@ -268,7 +395,7 @@ nav a:hover {
 }
 
 /* =========================================================
-   HERO LOGO
+   HERO ORB
    ========================================================= */
 
 .hero-logo {
@@ -276,7 +403,9 @@ nav a:hover {
     height: 380px;
 
     display: flex;
+
     align-items: center;
+
     justify-content: center;
 
     position: relative;
@@ -288,9 +417,11 @@ nav a:hover {
 
     position: absolute;
 
-    border: 1px solid rgba(25, 211, 255, 0.12);
-
     border-radius: 50%;
+
+    border:
+        1px solid
+        rgba(40, 217, 255, 0.15);
 }
 
 .hero-logo::before {
@@ -299,8 +430,8 @@ nav a:hover {
 }
 
 .hero-logo::after {
-    width: 390px;
-    height: 390px;
+    width: 395px;
+    height: 395px;
 
     border-style: dashed;
 
@@ -313,26 +444,35 @@ nav a:hover {
 
     border-radius: 50%;
 
-    border: 1px solid var(--cyan);
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    align-items: center;
+
+    position: relative;
+
+    z-index: 2;
+
+    border:
+        1px solid
+        rgba(40, 217, 255, 0.75);
 
     background:
         radial-gradient(
             circle,
-            rgba(25, 211, 255, 0.11),
-            transparent 65%
+            rgba(40, 217, 255, 0.18),
+            rgba(8, 25, 42, 0.7) 65%
         );
 
     box-shadow:
-        0 0 80px rgba(25, 211, 255, 0.18),
-        inset 0 0 50px rgba(25, 211, 255, 0.08);
+        0 0 80px
+        rgba(40, 217, 255, 0.2),
 
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-    position: relative;
-    z-index: 2;
+        inset 0 0 60px
+        rgba(40, 217, 255, 0.08);
 }
 
 .circle strong {
@@ -343,15 +483,16 @@ nav a:hover {
     color: var(--cyan);
 
     text-shadow:
-        0 0 35px rgba(25, 211, 255, 0.25);
+        0 0 40px
+        rgba(40, 217, 255, 0.35);
 }
 
 .circle small {
+    color: #b7cad7;
+
     letter-spacing: 5px;
 
-    color: #aeb8c7;
-
-    font-weight: 700;
+    font-weight: 800;
 }
 
 /* =========================================================
@@ -361,37 +502,38 @@ nav a:hover {
 .search-section {
     margin: 0 8%;
 
-    padding: 48px;
+    padding: 50px;
 
-    border: 1px solid var(--line);
+    border-radius: 20px;
 
     background:
         linear-gradient(
-            145deg,
-            rgba(16, 25, 38, 0.95),
-            rgba(8, 13, 22, 0.95)
+            135deg,
+            rgba(24, 46, 70, 0.9),
+            rgba(12, 29, 48, 0.86)
         );
 
-    border-radius: 18px;
+    border:
+        1px solid
+        rgba(110, 194, 230, 0.2);
 
     box-shadow: var(--shadow);
 
     position: relative;
+
     z-index: 5;
 }
 
 .search-section h2 {
-    margin-bottom: 25px;
-
     font-size: 32px;
+
+    margin-bottom: 25px;
 }
 
 .search-box {
     display: flex;
 
     max-width: 900px;
-
-    position: relative;
 }
 
 .search-box input {
@@ -399,11 +541,15 @@ nav a:hover {
 
     padding: 17px;
 
-    border: 1px solid #29394d;
+    border:
+        1px solid
+        rgba(110, 170, 200, 0.25);
 
-    border-radius: 9px 0 0 9px;
+    border-radius:
+        9px 0 0 9px;
 
-    background: #05080f;
+    background:
+        rgba(3, 13, 24, 0.8);
 
     color: white;
 
@@ -414,19 +560,26 @@ nav a:hover {
     border-color: var(--cyan);
 
     box-shadow:
-        0 0 0 3px rgba(25, 211, 255, 0.08);
+        0 0 0 3px
+        rgba(40, 217, 255, 0.08);
 }
 
 .search-box button {
-    padding: 0 26px;
+    padding: 0 27px;
 
     border: none;
 
-    border-radius: 0 9px 9px 0;
+    border-radius:
+        0 9px 9px 0;
 
-    background: var(--cyan);
+    background:
+        linear-gradient(
+            135deg,
+            var(--cyan),
+            #55e3ff
+        );
 
-    color: #031018;
+    color: #03111c;
 
     font-weight: 900;
 
@@ -446,7 +599,12 @@ nav a:hover {
 }
 
 .section h2 {
-    font-size: clamp(40px, 5vw, 58px);
+    font-size:
+        clamp(
+            40px,
+            5vw,
+            58px
+        );
 
     line-height: 1;
 
@@ -462,9 +620,10 @@ nav a:hover {
 .cards {
     display: grid;
 
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns:
+        repeat(3, 1fr);
 
-    gap: 20px;
+    gap: 22px;
 }
 
 .card {
@@ -472,43 +631,50 @@ nav a:hover {
 
     min-height: 260px;
 
-    border: 1px solid var(--line);
+    border-radius: 17px;
+
+    border:
+        1px solid
+        rgba(100, 170, 205, 0.17);
 
     background:
         linear-gradient(
             145deg,
-            #0d1521,
-            #090f18
+            rgba(19, 38, 59, 0.9),
+            rgba(11, 26, 43, 0.88)
         );
 
-    border-radius: 15px;
+    box-shadow:
+        0 18px 50px
+        rgba(0, 0, 0, 0.17);
 
     transition:
-        transform 0.3s ease,
-        border-color 0.3s ease,
-        box-shadow 0.3s ease;
+        0.3s ease;
 }
 
 .card:hover {
-    transform: translateY(-6px);
+    transform:
+        translateY(-7px);
 
-    border-color: rgba(25, 211, 255, 0.5);
+    border-color:
+        rgba(40, 217, 255, 0.45);
 
     box-shadow:
-        0 20px 50px rgba(0, 0, 0, 0.3);
+        0 25px 65px
+        rgba(0, 0, 0, 0.25);
 }
 
 .card.featured {
     background:
         radial-gradient(
-            circle at 80% 10%,
-            rgba(25, 211, 255, 0.12),
+            circle at 85% 10%,
+            rgba(40, 217, 255, 0.16),
             transparent 35%
         ),
         linear-gradient(
             145deg,
-            #102d3b,
-            #0b121d
+            #12384a,
+            #0c1c2e
         );
 }
 
@@ -527,17 +693,21 @@ nav a:hover {
 }
 
 .card p {
-    color: var(--muted);
+    color: #a7bac8;
 
     margin-bottom: 25px;
 }
 
 .card button {
-    padding: 10px 17px;
+    padding:
+        10px 17px;
 
-    background: transparent;
+    background:
+        rgba(255, 255, 255, 0.025);
 
-    border: 1px solid #304153;
+    border:
+        1px solid
+        rgba(120, 180, 210, 0.25);
 
     color: white;
 }
@@ -549,7 +719,8 @@ nav a:hover {
 .sports-container {
     display: grid;
 
-    grid-template-columns: 1.5fr 1fr;
+    grid-template-columns:
+        1.5fr 1fr;
 
     gap: 55px;
 }
@@ -563,7 +734,7 @@ nav a:hover {
 }
 
 .sports-container p {
-    color: #9aa7b7;
+    color: #a7bac8;
 
     max-width: 650px;
 
@@ -577,33 +748,39 @@ nav a:hover {
 
     letter-spacing: 2px;
 
-    font-weight: 800;
+    font-weight: 900;
 }
 
 .sports-list {
-    border-left: 1px solid #263547;
+    border-left:
+        1px solid
+        rgba(100, 170, 205, 0.2);
 
     padding-left: 30px;
 }
 
 .sports-list > div {
-    padding: 18px;
+    padding: 19px;
 
-    border-bottom: 1px solid #1b2939;
+    border-bottom:
+        1px solid
+        rgba(100, 170, 205, 0.12);
 
     transition: 0.25s;
 }
 
 .sports-list > div:hover {
-    background: rgba(25, 211, 255, 0.04);
+    background:
+        rgba(40, 217, 255, 0.05);
 
-    border-color: rgba(25, 211, 255, 0.3);
+    border-color:
+        rgba(40, 217, 255, 0.25);
 }
 
 .sports-list small {
     display: block;
 
-    color: #788698;
+    color: #8299aa;
 
     margin-top: 4px;
 }
@@ -619,7 +796,7 @@ nav a:hover {
 
     letter-spacing: 2px;
 
-    font-weight: 800;
+    font-weight: 900;
 }
 
 /* =========================================================
@@ -629,21 +806,23 @@ nav a:hover {
 .banner {
     padding: 45px;
 
-    border: 1px solid #263547;
+    border-radius: 18px;
+
+    border:
+        1px solid
+        rgba(100, 180, 210, 0.2);
 
     background:
         radial-gradient(
             circle at 10% 50%,
-            rgba(25, 211, 255, 0.08),
+            rgba(40, 217, 255, 0.12),
             transparent 30%
         ),
         linear-gradient(
             120deg,
-            #102532,
-            #0b111a
+            #123349,
+            #0b1c2e
         );
-
-    border-radius: 16px;
 
     display: flex;
 
@@ -663,7 +842,7 @@ nav a:hover {
 }
 
 .banner p {
-    color: var(--muted);
+    color: #a5b9c8;
 }
 
 /* =========================================================
@@ -673,9 +852,11 @@ nav a:hover {
 .future {
     padding: 50px;
 
-    border: 1px dashed #304153;
+    border:
+        1px dashed
+        rgba(110, 180, 210, 0.28);
 
-    border-radius: 15px;
+    border-radius: 17px;
 
     display: flex;
 
@@ -683,7 +864,8 @@ nav a:hover {
 
     gap: 30px;
 
-    background: rgba(12, 18, 28, 0.45);
+    background:
+        rgba(17, 35, 54, 0.55);
 }
 
 .future strong {
@@ -693,7 +875,7 @@ nav a:hover {
 }
 
 .future p {
-    color: var(--muted);
+    color: #9fb2c0;
 }
 
 /* =========================================================
@@ -703,7 +885,9 @@ nav a:hover {
 footer {
     padding: 55px 8%;
 
-    border-top: 1px solid #1b2635;
+    border-top:
+        1px solid
+        rgba(100, 170, 205, 0.15);
 
     display: flex;
 
@@ -713,9 +897,10 @@ footer {
 
     gap: 15px;
 
-    color: #788698;
+    color: #8197a7;
 
-    background: #03060b;
+    background:
+        #06101c;
 }
 
 footer strong {
@@ -732,24 +917,32 @@ footer strong {
     left: 50%;
     bottom: 25px;
 
-    transform: translate(-50%, 20px);
+    transform:
+        translate(-50%, 20px);
 
     opacity: 0;
 
     pointer-events: none;
 
-    background: var(--cyan);
+    background:
+        linear-gradient(
+            135deg,
+            var(--cyan),
+            #63e7ff
+        );
 
-    color: #031018;
+    color: #03111c;
 
-    padding: 13px 20px;
+    padding:
+        13px 20px;
 
     border-radius: 9px;
 
-    font-weight: 800;
+    font-weight: 900;
 
     box-shadow:
-        0 15px 40px rgba(0, 0, 0, 0.35);
+        0 15px 40px
+        rgba(0, 0, 0, 0.3);
 
     transition: 0.3s;
 
@@ -759,7 +952,8 @@ footer strong {
 #toast.show {
     opacity: 1;
 
-    transform: translate(-50%, 0);
+    transform:
+        translate(-50%, 0);
 }
 
 /* =========================================================
@@ -835,7 +1029,9 @@ footer strong {
     .sports-list {
         border-left: none;
 
-        border-top: 1px solid #263547;
+        border-top:
+            1px solid
+            rgba(100, 170, 205, 0.2);
 
         padding-left: 0;
 
@@ -864,6 +1060,7 @@ footer strong {
 
     .search-box {
         flex-direction: column;
+
         gap: 10px;
     }
 

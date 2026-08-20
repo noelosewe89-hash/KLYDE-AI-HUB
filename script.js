@@ -1,4 +1,4 @@
-javascript
+
 // KLYDE AI HUB
 // Phase 2 - AI Chat Experience
 

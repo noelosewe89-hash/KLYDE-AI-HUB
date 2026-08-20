@@ -4,8 +4,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const searchInput = document.getElementById("searchInput");
     const result = document.getElementById("result");
 
-    let conversation = [];
-
     /* =====================================================
        CHAT
     ===================================================== */
@@ -18,7 +16,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const query = searchInput.value.trim();
 
-            if (!query) return;
+            if (!query) {
+                return;
+            }
 
             addMessage("user", query);
 
@@ -43,15 +43,15 @@ document.addEventListener("DOMContentLoaded", function () {
                     })
                 });
 
-                const text = await response.text();
+                const raw = await response.text();
 
                 let data;
 
                 try {
-                    data = JSON.parse(text);
-                } catch {
+                    data = JSON.parse(raw);
+                } catch (error) {
                     throw new Error(
-                        text || "Invalid server response."
+                        raw || "Invalid server response."
                     );
                 }
 
@@ -68,7 +68,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 addMessage(
                     "assistant",
-                    data.reply || "No response received."
+                    data.reply ||
+                    "KLYDE AI returned no response."
                 );
 
             } catch (error) {
@@ -77,35 +78,43 @@ document.addEventListener("DOMContentLoaded", function () {
                     thinking.remove();
                 }
 
+                console.error(
+                    "KLYDE AI ERROR:",
+                    error
+                );
+
                 addMessage(
                     "assistant",
                     "KLYDE AI error: " +
-                    error.message
+                    (
+                        error.message ||
+                        "Unknown error"
+                    )
                 );
             }
 
         });
+
     }
 
 
     /* =====================================================
-       CHAT DISPLAY
+       DISPLAY MESSAGES
     ===================================================== */
 
     function addMessage(type, message) {
 
-        if (!result) return null;
+        if (!result) {
+            return null;
+        }
 
         const wrapper =
             document.createElement("div");
 
         wrapper.className =
-            "klyde-message " +
-            (
-                type === "user"
-                    ? "user-message"
-                    : "ai-message"
-            );
+            type === "user"
+                ? "klyde-message user-message"
+                : "klyde-message ai-message";
 
         const avatar =
             document.createElement("div");
@@ -153,23 +162,107 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     /* =====================================================
-       SPORTS
+       SPORTS BUTTON
     ===================================================== */
 
-    const sportsButtons =
-        document.querySelectorAll(
+    const sportsButton =
+        document.querySelector(
             '[data-tool="Sports Center"]'
         );
 
-    sportsButtons.forEach(function (button) {
+    if (sportsButton) {
+
+        sportsButton.addEventListener(
+            "click",
+            function () {
+
+                if (searchInput) {
+
+                    searchInput.value =
+                        "Tell me the latest sports news, football fixtures, results and standings.";
+
+                    if (searchForm) {
+                        searchForm.dispatchEvent(
+                            new Event("submit", {
+                                bubbles: true,
+                                cancelable: true
+                            })
+                        );
+                    }
+                }
+
+            }
+        );
+    }
+
+
+    /* =====================================================
+       QUICK PROMPTS
+    ===================================================== */
+
+    const quickButtons =
+        document.querySelectorAll(
+            ".quick-prompts button"
+        );
+
+    quickButtons.forEach(function (button) {
 
         button.addEventListener(
             "click",
-            function (event) {
+            function () {
 
-                event.preventDefault();
+                const text =
+                    button.textContent
+                        .trim()
+                        .toLowerCase();
 
-                openSports();
+                let prompt =
+                    "Help me.";
+
+                if (
+                    text.includes("explain")
+                ) {
+                    prompt =
+                        "Explain a difficult topic to me simply with examples.";
+                }
+
+                else if (
+                    text.includes("study")
+                ) {
+                    prompt =
+                        "Help me study for my KCSE exams.";
+                }
+
+                else if (
+                    text.includes("ideas")
+                ) {
+                    prompt =
+                        "Give me some creative ideas.";
+                }
+
+                else if (
+                    text.includes("tech")
+                ) {
+                    prompt =
+                        "Help me solve a technology problem.";
+                }
+
+                if (searchInput) {
+
+                    searchInput.value =
+                        prompt;
+
+                    if (searchForm) {
+
+                        searchForm.dispatchEvent(
+                            new Event("submit", {
+                                bubbles: true,
+                                cancelable: true
+                            })
+                        );
+
+                    }
+                }
 
             }
         );
@@ -177,58 +270,17 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
-    function openSports() {
-
-        const sportsMessage = `
-
-⚽ KLYDE SPORTS CENTER
-
-Choose what you want:
-
-1. ⚽ Football
-2. 🏀 Basketball
-3. 🎾 Tennis
-4. 🏆 Results
-5. 📅 Fixtures
-6. 📊 Standings
-7. 📰 Sports News
-
-You can also ask KLYDE AI directly:
-
-"What's happening in football today?"
-
-"Show me today's fixtures."
-
-"Give me the latest football results."
-
-"Who is top of the league?"
-
-`;
-
-        addMessage(
-            "assistant",
-            sportsMessage
-        );
-
-        if (searchInput) {
-
-            searchInput.focus();
-
-        }
-    }
-
-
     /* =====================================================
-       EDUCATION
+       EDUCATION CARDS
     ===================================================== */
 
-    const educationSection =
+    const education =
         document.getElementById("education");
 
-    if (educationSection) {
+    if (education) {
 
         const cards =
-            educationSection.querySelectorAll(
+            education.querySelectorAll(
                 ".card"
             );
 
@@ -237,7 +289,9 @@ You can also ask KLYDE AI directly:
             const title =
                 card.querySelector("h3");
 
-            if (!title) return;
+            if (!title) {
+                return;
+            }
 
             const subject =
                 title.textContent.trim();
@@ -250,24 +304,27 @@ You can also ask KLYDE AI directly:
             button.textContent =
                 "Study with KLYDE →";
 
-            button.className =
-                "education-action";
-
             button.addEventListener(
                 "click",
                 function () {
 
-                    const prompt =
-                        `Help me study ${subject}. ` +
-                        `Give me a clear explanation, ` +
-                        `examples and a short quiz.`;
+                    if (!searchInput) {
+                        return;
+                    }
 
-                    if (searchInput) {
+                    searchInput.value =
+                        "Teach me " +
+                        subject +
+                        " according to the Kenyan KCSE curriculum. Explain it step by step and give me practice questions.";
 
-                        searchInput.value =
-                            prompt;
+                    if (searchForm) {
 
-                        searchForm.requestSubmit();
+                        searchForm.dispatchEvent(
+                            new Event("submit", {
+                                bubbles: true,
+                                cancelable: true
+                            })
+                        );
 
                     }
 
@@ -279,129 +336,5 @@ You can also ask KLYDE AI directly:
         });
 
     }
-
-
-    /* =====================================================
-       EDUCATION QUICK SUBJECTS
-    ===================================================== */
-
-    const educationSubjects = [
-        "Mathematics",
-        "English",
-        "Kiswahili",
-        "Chemistry",
-        "Physics",
-        "Biology",
-        "CRE",
-        "Computer Studies"
-    ];
-
-
-    window.klydeStudy =
-        function (subject) {
-
-            if (
-                !educationSubjects.includes(
-                    subject
-                )
-            ) {
-                return;
-            }
-
-            if (searchInput) {
-
-                searchInput.value =
-                    `Teach me ${subject} ` +
-                    `according to the Kenyan ` +
-                    `KCSE curriculum. ` +
-                    `Explain step by step and ` +
-                    `give me practice questions.`;
-
-                searchForm.requestSubmit();
-
-            }
-
-        };
-
-
-    /* =====================================================
-       QUICK PROMPTS
-    ===================================================== */
-
-    const toolButtons =
-        document.querySelectorAll(
-            "[data-tool]"
-        );
-
-    toolButtons.forEach(function (button) {
-
-        const tool =
-            button.getAttribute(
-                "data-tool"
-            );
-
-        if (
-            tool === "Sports Center"
-        ) {
-            return;
-        }
-
-        button.addEventListener(
-            "click",
-            function (event) {
-
-                event.preventDefault();
-
-                let prompt = "";
-
-                if (
-                    tool ===
-                    "Explain Something"
-                ) {
-
-                    prompt =
-                        "Explain a difficult topic to me simply.";
-
-                } else if (
-                    tool === "Study Help"
-                ) {
-
-                    prompt =
-                        "Help me study for my KCSE exams.";
-
-                } else if (
-                    tool === "Creative Ideas"
-                ) {
-
-                    prompt =
-                        "Give me creative ideas.";
-
-                } else if (
-                    tool === "Technology Help"
-                ) {
-
-                    prompt =
-                        "Help me solve a technology problem.";
-
-                } else {
-
-                    prompt =
-                        `Tell me more about ${tool}.`;
-
-                }
-
-                if (searchInput) {
-
-                    searchInput.value =
-                        prompt;
-
-                    searchForm.requestSubmit();
-
-                }
-
-            }
-        );
-
-    });
 
 });

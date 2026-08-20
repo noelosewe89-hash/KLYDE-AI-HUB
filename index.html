@@ -1,12 +1,19 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="KLYDE AI HUB - AI, Sports, Creativity, Education and Digital Tools">
+
+    <meta
+        name="description"
+        content="KLYDE AI HUB - AI, Sports, Creativity, Education and Digital Tools"
+    >
+
     <title>KLYDE AI HUB</title>
 
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -15,7 +22,8 @@
 
     <a href="#home" class="logo">
         <span>K</span>
-        KLYDE <b>AI HUB</b>
+        KLYDE
+        <b>AI HUB</b>
     </a>
 
     <nav>
@@ -33,9 +41,9 @@
 
 <main>
 
-<!-- =========================
+<!-- =====================================================
      HERO
-========================= -->
+===================================================== -->
 
 <section class="hero" id="home">
 
@@ -46,21 +54,21 @@
         </p>
 
         <h1>
-            AI. SPORTS.<br>
-            <span>CREATIVITY.</span><br>
-            KNOWLEDGE.
+            AI.<br>
+            <span>SPORTS.</span><br>
+            CREATIVITY.
         </h1>
 
         <p>
-            One powerful platform for intelligent tools,
-            reliable sports updates, creativity, learning
-            and whatever comes next.
+            Welcome to KLYDE AI HUB — one intelligent platform
+            for AI, sports, creativity, learning, information
+            and the digital tools of tomorrow.
         </p>
 
         <div class="buttons">
 
-            <a href="#klyde-chat" class="button">
-                Talk to KLYDE AI
+            <a href="#ai" class="button">
+                Explore KLYDE AI →
             </a>
 
             <a href="#sports" class="button outline">
@@ -72,15 +80,39 @@
     </div>
 
 
+    <!-- 3D AI CORE -->
+
     <div class="hero-logo">
 
-        <div class="circle">
+        <div class="ai-core">
 
-            <strong>K</strong>
+            <div class="core-ring ring-one"></div>
+            <div class="core-ring ring-two"></div>
+            <div class="core-ring ring-three"></div>
 
-            <small>
-                AI HUB
-            </small>
+            <div class="core-orbit orbit-one">
+                <span></span>
+            </div>
+
+            <div class="core-orbit orbit-two">
+                <span></span>
+            </div>
+
+            <div class="core-orbit orbit-three">
+                <span></span>
+            </div>
+
+            <div class="core-sphere">
+
+                <div class="core-glow"></div>
+
+                <strong>K</strong>
+
+                <small>
+                    AI CORE
+                </small>
+
+            </div>
 
         </div>
 
@@ -89,97 +121,67 @@
 </section>
 
 
-<!-- =========================
-     KLYDE AI CHAT
-========================= -->
 
-<section class="search-section" id="klyde-chat">
+<!-- =====================================================
+     SEARCH / AI
+===================================================== -->
 
-    <div class="chat-header">
+<section class="search-section">
 
-        <div>
+    <p class="tag">
+        KLYDE AI
+    </p>
 
-            <p class="tag">
-                KLYDE AI
-            </p>
+    <h2>
+        Ask KLYDE anything.
+    </h2>
 
-            <h2>
-                Your intelligent assistant.
-            </h2>
-
-            <div class="chat-status">
-
-                <span class="status-dot"></span>
-
-                KLYDE AI is online
-
-            </div>
-
-        </div>
+    <p class="search-description">
+        Ask questions, explore ideas, learn something new,
+        get explanations or simply talk to KLYDE AI.
+    </p>
 
 
-        <div class="chat-symbol">
-            K
-        </div>
-
-    </div>
-
-
-    <div class="chat-window" id="chatWindow">
-
-        <div class="chat-message ai-message">
-
-            <div class="message-avatar">
-                K
-            </div>
-
-            <div class="message-content">
-
-                <strong>
-                    KLYDE AI
-                </strong>
-
-                <p>
-                    Hello 👋 I'm KLYDE AI.
-                    Ask me anything and let's get started.
-                </p>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <form class="chat-input-area" id="searchForm">
+    <form
+        class="search-box"
+        id="searchForm"
+    >
 
         <input
             type="text"
             id="searchInput"
+            placeholder="Ask KLYDE AI anything..."
             autocomplete="off"
-            placeholder="Ask KLYDE anything..."
         >
 
-        <button
-            type="submit"
-            aria-label="Send message"
-        >
-            ➤
+        <button type="submit">
+            ASK KLYDE
         </button>
 
     </form>
 
 
-    <div id="result"></div>
+    <div
+        id="result"
+        class="ai-result"
+    >
+        <span>
+            KLYDE AI is ready.
+        </span>
+    </div>
 
 </section>
 
 
-<!-- =========================
-     AI HUB
-========================= -->
 
-<section class="section" id="ai">
+<!-- =====================================================
+     AI HUB
+===================================================== -->
+
+<section
+    class="section"
+    id="ai"
+>
 
     <p class="tag">
         01 · INTELLIGENCE
@@ -200,15 +202,19 @@
             </div>
 
             <h3>
-                Ask Klyde AI
+                Ask KLYDE AI
             </h3>
 
             <p>
-                Your central AI assistant for questions,
-                ideas, learning, writing and planning.
+                Your intelligent assistant for questions,
+                ideas, learning, writing, planning and
+                everyday problem solving.
             </p>
 
-            <a href="#klyde-chat" class="card-link">
+            <a
+                href="#searchForm"
+                class="card button-link"
+            >
                 Launch Assistant →
             </a>
 
@@ -218,7 +224,7 @@
         <div class="card">
 
             <div class="icon">
-                ⌁
+                ◈
             </div>
 
             <h3>
@@ -226,14 +232,11 @@
             </h3>
 
             <p>
-                Turn complicated topics into simple,
-                organized information.
+                Turn complicated subjects into clear,
+                organized and understandable information.
             </p>
 
-            <button
-                type="button"
-                data-tool="AI Research"
-            >
+            <button data-tool="AI Research">
                 Coming Soon →
             </button>
 
@@ -251,30 +254,30 @@
             </h3>
 
             <p>
-                Create intelligent workflows for repetitive
-                digital tasks.
+                Intelligent workflows designed to simplify
+                repetitive digital tasks.
             </p>
 
-            <button
-                type="button"
-                data-tool="AI Automation"
-            >
+            <button data-tool="AI Automation">
                 Coming Soon →
             </button>
 
         </div>
-
 
     </div>
 
 </section>
 
 
-<!-- =========================
-     SPORTS
-========================= -->
 
-<section class="section sports-section" id="sports">
+<!-- =====================================================
+     SPORTS
+===================================================== -->
+
+<section
+    class="section sports-section"
+    id="sports"
+>
 
     <p class="tag">
         02 · LIVE & VERIFIED
@@ -300,13 +303,13 @@
             </h3>
 
             <p>
-                Live scores, fixtures, standings, teams,
-                players and trusted sports news will live here.
+                Live scores, fixtures, standings,
+                teams, players and trusted sports
+                news will live here.
             </p>
 
             <button
                 class="button"
-                type="button"
                 data-tool="Sports Center"
             >
                 Open Sports Center →
@@ -319,9 +322,7 @@
 
 
             <div>
-
                 ⚽
-
                 <strong>
                     Football
                 </strong>
@@ -329,14 +330,11 @@
                 <small>
                     Fixtures · Results · Tables
                 </small>
-
             </div>
 
 
             <div>
-
                 🏀
-
                 <strong>
                     Basketball
                 </strong>
@@ -344,14 +342,11 @@
                 <small>
                     Scores · Teams · News
                 </small>
-
             </div>
 
 
             <div>
-
                 🏃
-
                 <strong>
                     Athletics
                 </strong>
@@ -359,14 +354,11 @@
                 <small>
                     Events · Results · Updates
                 </small>
-
             </div>
 
 
             <div>
-
                 🎾
-
                 <strong>
                     More Sports
                 </strong>
@@ -374,7 +366,6 @@
                 <small>
                     Expanding soon
                 </small>
-
             </div>
 
 
@@ -385,11 +376,15 @@
 </section>
 
 
-<!-- =========================
-     NEWS
-========================= -->
 
-<section class="section" id="news">
+<!-- =====================================================
+     NEWS
+===================================================== -->
+
+<section
+    class="section"
+    id="news"
+>
 
     <p class="tag">
         03 · STAY INFORMED
@@ -416,14 +411,11 @@
 
             <p>
                 News sources and publication times
-                will remain visible so users can verify
-                information.
+                will remain visible so users can
+                verify information.
             </p>
 
-            <button
-                type="button"
-                data-tool="Latest News"
-            >
+            <button data-tool="News">
                 Explore News →
             </button>
 
@@ -441,30 +433,54 @@
             </h3>
 
             <p>
-                AI will summarize complicated stories
-                while keeping the original source visible.
+                AI-powered summaries designed to
+                make complicated stories easier
+                to understand.
             </p>
 
-            <button
-                type="button"
-                data-tool="AI News Summary"
-            >
+            <button data-tool="AI News Summary">
                 Try Summaries →
             </button>
 
         </div>
 
 
+        <div class="card">
+
+            <span class="label">
+                LIVE
+            </span>
+
+            <h3>
+                Information that keeps moving.
+            </h3>
+
+            <p>
+                A future home for continuously
+                updated information and important
+                developments.
+            </p>
+
+            <button data-tool="Live News">
+                Coming Soon →
+            </button>
+
+        </div>
+
     </div>
 
 </section>
 
 
-<!-- =========================
-     MUSIC
-========================= -->
 
-<section class="section" id="music">
+<!-- =====================================================
+     MUSIC
+===================================================== -->
+
+<section
+    class="section"
+    id="music"
+>
 
     <p class="tag">
         04 · CREATIVE MODE
@@ -490,16 +506,13 @@
 
             <p>
                 Song ideas, lyrics, production concepts,
-                chords and future music tools.
+                chords, melodies and future music tools.
             </p>
 
         </div>
 
 
-        <button
-            type="button"
-            data-tool="Music Studio"
-        >
+        <button data-tool="Music Studio">
             Enter Studio →
         </button>
 
@@ -508,11 +521,15 @@
 </section>
 
 
-<!-- =========================
-     EDUCATION
-========================= -->
 
-<section class="section" id="education">
+<!-- =====================================================
+     EDUCATION
+===================================================== -->
+
+<section
+    class="section"
+    id="education"
+>
 
     <p class="tag">
         05 · LEARN SMARTER
@@ -529,7 +546,7 @@
         <div class="card">
 
             <div class="icon">
-                🎓
+                ◉
             </div>
 
             <h3>
@@ -537,8 +554,8 @@
             </h3>
 
             <p>
-                Step-by-step explanations instead
-                of simply giving answers.
+                Step-by-step explanations instead of
+                simply giving answers.
             </p>
 
         </div>
@@ -547,7 +564,7 @@
         <div class="card">
 
             <div class="icon">
-                📚
+                ◆
             </div>
 
             <h3>
@@ -555,7 +572,8 @@
             </h3>
 
             <p>
-                Questions, quizzes and personalized practice.
+                Questions, quizzes and personalized
+                practice for smarter revision.
             </p>
 
         </div>
@@ -564,7 +582,7 @@
         <div class="card">
 
             <div class="icon">
-                🧠
+                ▣
             </div>
 
             <h3>
@@ -572,22 +590,26 @@
             </h3>
 
             <p>
-                Notes, summaries and study plans.
+                Notes, summaries and study plans
+                designed around the learner.
             </p>
 
         </div>
-
 
     </div>
 
 </section>
 
 
-<!-- =========================
-     TOOLS
-========================= -->
 
-<section class="section" id="tools">
+<!-- =====================================================
+     TOOLS
+===================================================== -->
+
+<section
+    class="section"
+    id="tools"
+>
 
     <p class="tag">
         06 · THE TOOLBOX
@@ -626,19 +648,25 @@
 </main>
 
 
-<!-- =========================
+
+<!-- =====================================================
      FOOTER
-========================= -->
+===================================================== -->
 
 <footer>
 
-    <strong>
-        KLYDE AI HUB
-    </strong>
+    <div>
 
-    <p>
-        AI · SPORTS · CREATIVITY · KNOWLEDGE
-    </p>
+        <strong>
+            KLYDE AI HUB
+        </strong>
+
+        <p>
+            AI · SPORTS · CREATIVITY · KNOWLEDGE
+        </p>
+
+    </div>
+
 
     <p>
         © 2026 KLYDE AI HUB
@@ -653,4 +681,6 @@
 <script src="script.js?v=3"></script>
 
 </body>
+
 </html>
+```

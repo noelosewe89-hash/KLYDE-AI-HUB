@@ -1,174 +1,411 @@
-```html
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <meta
         name="description"
-        content="KLYDE AI HUB - AI, Sports, Creativity, Education and Digital Tools"
+        content="KLYDE AI HUB — AI, Sports, Creativity, Education and Digital Tools"
     >
+
+    <meta name="theme-color" content="#eaf8ff">
 
     <title>KLYDE AI HUB</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
 
+
 <body>
+
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
 
 <header>
 
     <a href="#home" class="logo">
+
         <span>K</span>
+
         KLYDE
+
         <b>AI HUB</b>
+
     </a>
 
+
     <nav>
+
         <a href="#home">Home</a>
+
         <a href="#ai">AI Hub</a>
+
         <a href="#sports">Sports</a>
+
         <a href="#news">News</a>
+
         <a href="#music">Music</a>
+
         <a href="#education">Education</a>
+
         <a href="#tools">Tools</a>
+
     </nav>
 
 </header>
 
 
+
 <main>
+
 
 <!-- =====================================================
      HERO
 ===================================================== -->
 
-<section class="hero" id="home">
+<section
+    class="hero"
+    id="home"
+>
+
 
     <div class="hero-text">
 
+
         <p class="tag">
-            THE NEXT-GENERATION DIGITAL HUB
+            THE INTELLIGENCE PLATFORM OF TOMORROW
         </p>
+
 
         <h1>
-            AI.<br>
-            <span>SPORTS.</span><br>
-            CREATIVITY.
+
+            THINK.
+
+            <span>
+                CREATE.
+            </span>
+
+            <br>
+
+            DISCOVER.
+
         </h1>
 
+
         <p>
-            Welcome to KLYDE AI HUB — one intelligent platform
-            for AI, sports, creativity, learning, information
-            and the digital tools of tomorrow.
+
+            Welcome to <strong>KLYDE AI HUB</strong> —
+            an intelligent digital platform bringing
+            AI, sports, creativity, education and
+            powerful tools together.
+
         </p>
+
 
         <div class="buttons">
 
-            <a href="#ai" class="button">
+
+            <a
+                href="#ai"
+                class="button"
+            >
+
                 Explore KLYDE AI →
+
             </a>
 
-            <a href="#sports" class="button outline">
+
+            <a
+                href="#sports"
+                class="button outline"
+            >
+
                 Sports Center
+
             </a>
+
 
         </div>
+
+
+        <div class="hero-stats">
+
+            <div>
+
+                <strong>
+                    AI
+                </strong>
+
+                <span>
+                    Intelligence
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <strong>
+                    24/7
+                </strong>
+
+                <span>
+                    Digital Hub
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <strong>
+                    ∞
+                </strong>
+
+                <span>
+                    Possibilities
+                </span>
+
+            </div>
+
+        </div>
+
 
     </div>
 
 
-    <!-- 3D AI CORE -->
+
+    <!-- =================================================
+         3D AI CORE
+    ================================================= -->
 
     <div class="hero-logo">
 
+
         <div class="ai-core">
 
+
             <div class="core-ring ring-one"></div>
+
             <div class="core-ring ring-two"></div>
+
             <div class="core-ring ring-three"></div>
 
+
             <div class="core-orbit orbit-one">
+
                 <span></span>
+
             </div>
+
 
             <div class="core-orbit orbit-two">
+
                 <span></span>
+
             </div>
 
+
             <div class="core-orbit orbit-three">
+
                 <span></span>
+
             </div>
+
 
             <div class="core-sphere">
 
+
                 <div class="core-glow"></div>
 
-                <strong>K</strong>
+
+                <strong>
+                    K
+                </strong>
+
 
                 <small>
-                    AI CORE
+                    KLYDE AI
                 </small>
+
 
             </div>
 
+
         </div>
 
+
     </div>
+
 
 </section>
 
 
 
 <!-- =====================================================
-     SEARCH / AI
+     AI CHAT
 ===================================================== -->
 
-<section class="search-section">
+<section
+    class="search-section"
+    id="ask"
+>
 
-    <p class="tag">
-        KLYDE AI
-    </p>
 
-    <h2>
-        Ask KLYDE anything.
-    </h2>
+    <div class="ai-heading">
 
-    <p class="search-description">
-        Ask questions, explore ideas, learn something new,
-        get explanations or simply talk to KLYDE AI.
-    </p>
 
+        <div>
+
+            <p class="tag">
+                KLYDE INTELLIGENCE
+            </p>
+
+
+            <h2>
+                Ask KLYDE anything.
+            </h2>
+
+
+            <p class="search-description">
+
+                Your intelligent assistant for questions,
+                ideas, learning, technology, creativity,
+                planning and everyday problems.
+
+            </p>
+
+        </div>
+
+
+        <div class="ai-status">
+
+            <span></span>
+
+            KLYDE AI ONLINE
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- CHAT AREA -->
+
+    <div
+        id="result"
+        class="ai-result"
+    >
+
+        <div class="klyde-welcome">
+
+            <div class="welcome-icon">
+                K
+            </div>
+
+            <div>
+
+                <strong>
+                    KLYDE AI
+                </strong>
+
+                <p>
+                    Hello! I'm KLYDE AI.
+                    Ask me anything and let's explore it together.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- INPUT -->
 
     <form
         class="search-box"
         id="searchForm"
     >
 
+
+        <div class="input-icon">
+            ✦
+        </div>
+
+
         <input
             type="text"
             id="searchInput"
-            placeholder="Ask KLYDE AI anything..."
+            placeholder="Ask KLYDE anything..."
             autocomplete="off"
         >
 
-        <button type="submit">
+
+        <button
+            type="submit"
+        >
+
             ASK KLYDE
+
+            <span>
+                →
+            </span>
+
         </button>
+
 
     </form>
 
 
-    <div
-        id="result"
-        class="ai-result"
-    >
-        <span>
-            KLYDE AI is ready.
-        </span>
+    <div class="quick-prompts">
+
+
+        <button
+            type="button"
+            data-tool="Explain Something"
+        >
+            Explain something
+        </button>
+
+
+        <button
+            type="button"
+            data-tool="Study Help"
+        >
+            Help me study
+        </button>
+
+
+        <button
+            type="button"
+            data-tool="Creative Ideas"
+        >
+            Give me ideas
+        </button>
+
+
+        <button
+            type="button"
+            data-tool="Technology Help"
+        >
+            Tech help
+        </button>
+
+
     </div>
+
 
 </section>
 
@@ -183,9 +420,11 @@
     id="ai"
 >
 
+
     <p class="tag">
         01 · INTELLIGENCE
     </p>
+
 
     <h2>
         AI HUB
@@ -197,74 +436,111 @@
 
         <div class="card featured">
 
+
             <div class="icon">
                 ✦
             </div>
+
 
             <h3>
                 Ask KLYDE AI
             </h3>
 
+
             <p>
+
                 Your intelligent assistant for questions,
                 ideas, learning, writing, planning and
                 everyday problem solving.
+
             </p>
 
+
             <a
-                href="#searchForm"
-                class="card button-link"
+                href="#ask"
+                class="button-link"
             >
+
                 Launch Assistant →
+
             </a>
+
 
         </div>
 
 
+
         <div class="card">
+
 
             <div class="icon">
                 ◈
             </div>
 
+
             <h3>
                 AI Research
             </h3>
 
+
             <p>
+
                 Turn complicated subjects into clear,
                 organized and understandable information.
+
             </p>
 
-            <button data-tool="AI Research">
+
+            <button
+                type="button"
+                data-tool="AI Research"
+            >
+
                 Coming Soon →
+
             </button>
+
 
         </div>
 
 
+
         <div class="card">
+
 
             <div class="icon">
                 ⚙
             </div>
 
+
             <h3>
                 AI Automation
             </h3>
 
+
             <p>
+
                 Intelligent workflows designed to simplify
                 repetitive digital tasks.
+
             </p>
 
-            <button data-tool="AI Automation">
+
+            <button
+                type="button"
+                data-tool="AI Automation"
+            >
+
                 Coming Soon →
+
             </button>
+
 
         </div>
 
+
     </div>
+
 
 </section>
 
@@ -279,9 +555,11 @@
     id="sports"
 >
 
+
     <p class="tag">
         02 · LIVE & VERIFIED
     </p>
+
 
     <h2>
         SPORTS CENTER
@@ -293,36 +571,48 @@
 
         <div>
 
+
             <span class="live">
                 ● SPORTS CENTER
             </span>
 
+
             <h3>
-                Reliable sports information,
-                without the noise.
+                The game never stops.
             </h3>
 
+
             <p>
-                Live scores, fixtures, standings,
-                teams, players and trusted sports
-                news will live here.
+
+                A future home for live scores,
+                fixtures, standings, teams,
+                players and trusted sports news.
+
             </p>
 
+
             <button
+                type="button"
                 class="button"
                 data-tool="Sports Center"
             >
+
                 Open Sports Center →
+
             </button>
 
+
         </div>
+
 
 
         <div class="sports-list">
 
 
             <div>
+
                 ⚽
+
                 <strong>
                     Football
                 </strong>
@@ -330,11 +620,14 @@
                 <small>
                     Fixtures · Results · Tables
                 </small>
+
             </div>
 
 
             <div>
+
                 🏀
+
                 <strong>
                     Basketball
                 </strong>
@@ -342,11 +635,14 @@
                 <small>
                     Scores · Teams · News
                 </small>
+
             </div>
 
 
             <div>
+
                 🏃
+
                 <strong>
                     Athletics
                 </strong>
@@ -354,11 +650,14 @@
                 <small>
                     Events · Results · Updates
                 </small>
+
             </div>
 
 
             <div>
+
                 🎾
+
                 <strong>
                     More Sports
                 </strong>
@@ -366,12 +665,15 @@
                 <small>
                     Expanding soon
                 </small>
+
             </div>
 
 
         </div>
 
+
     </div>
+
 
 </section>
 
@@ -386,9 +688,11 @@
     id="news"
 >
 
+
     <p class="tag">
         03 · STAY INFORMED
     </p>
+
 
     <h2>
         LATEST NEWS
@@ -404,22 +708,31 @@
                 NEWS
             </span>
 
+
             <h3>
-                Trusted information,
-                clearly presented.
+                Information without the noise.
             </h3>
 
+
             <p>
-                News sources and publication times
-                will remain visible so users can
-                verify information.
+
+                A future home for trusted information,
+                clearly presented and easy to understand.
+
             </p>
 
-            <button data-tool="News">
+
+            <button
+                type="button"
+                data-tool="News"
+            >
+
                 Explore News →
+
             </button>
 
         </div>
+
 
 
         <div class="card">
@@ -428,21 +741,31 @@
                 AI SUMMARY
             </span>
 
+
             <h3>
                 Understand stories faster.
             </h3>
 
+
             <p>
-                AI-powered summaries designed to
-                make complicated stories easier
-                to understand.
+
+                AI-powered summaries designed to make
+                complicated stories easier to understand.
+
             </p>
 
-            <button data-tool="AI News Summary">
+
+            <button
+                type="button"
+                data-tool="AI News Summary"
+            >
+
                 Try Summaries →
+
             </button>
 
         </div>
+
 
 
         <div class="card">
@@ -451,23 +774,34 @@
                 LIVE
             </span>
 
+
             <h3>
                 Information that keeps moving.
             </h3>
 
+
             <p>
-                A future home for continuously
-                updated information and important
-                developments.
+
+                A future home for continuously updated
+                information and important developments.
+
             </p>
 
-            <button data-tool="Live News">
+
+            <button
+                type="button"
+                data-tool="Live News"
+            >
+
                 Coming Soon →
+
             </button>
 
         </div>
 
+
     </div>
+
 
 </section>
 
@@ -482,9 +816,11 @@
     id="music"
 >
 
+
     <p class="tag">
         04 · CREATIVE MODE
     </p>
+
 
     <h2>
         MUSIC STUDIO
@@ -492,6 +828,7 @@
 
 
     <div class="banner">
+
 
         <div class="icon">
             ♫
@@ -504,19 +841,29 @@
                 Create without limits.
             </h3>
 
+
             <p>
+
                 Song ideas, lyrics, production concepts,
                 chords, melodies and future music tools.
+
             </p>
 
         </div>
 
 
-        <button data-tool="Music Studio">
+        <button
+            type="button"
+            data-tool="Music Studio"
+        >
+
             Enter Studio →
+
         </button>
 
+
     </div>
+
 
 </section>
 
@@ -531,9 +878,11 @@
     id="education"
 >
 
+
     <p class="tag">
         05 · LEARN SMARTER
     </p>
+
 
     <h2>
         EDUCATION
@@ -545,58 +894,80 @@
 
         <div class="card">
 
+
             <div class="icon">
                 ◉
             </div>
+
 
             <h3>
                 AI Tutor
             </h3>
 
+
             <p>
+
                 Step-by-step explanations instead of
                 simply giving answers.
+
             </p>
+
 
         </div>
 
 
+
         <div class="card">
+
 
             <div class="icon">
                 ◆
             </div>
 
+
             <h3>
                 Revision
             </h3>
 
+
             <p>
+
                 Questions, quizzes and personalized
                 practice for smarter revision.
+
             </p>
+
 
         </div>
 
 
+
         <div class="card">
+
 
             <div class="icon">
                 ▣
             </div>
 
+
             <h3>
                 Study Tools
             </h3>
 
+
             <p>
+
                 Notes, summaries and study plans
                 designed around the learner.
+
             </p>
+
 
         </div>
 
+
     </div>
+
 
 </section>
 
@@ -611,9 +982,11 @@
     id="tools"
 >
 
+
     <p class="tag">
         06 · THE TOOLBOX
     </p>
+
 
     <h2>
         BUILT TO GROW.
@@ -621,6 +994,7 @@
 
 
     <div class="future">
+
 
         <strong>
             +
@@ -633,17 +1007,23 @@
                 More is coming.
             </h3>
 
+
             <p>
+
                 Every new idea can become another
                 KLYDE AI HUB module without rebuilding
                 the platform.
+
             </p>
 
         </div>
 
+
     </div>
 
+
 </section>
+
 
 </main>
 
@@ -655,11 +1035,13 @@
 
 <footer>
 
+
     <div>
 
         <strong>
             KLYDE AI HUB
         </strong>
+
 
         <p>
             AI · SPORTS · CREATIVITY · KNOWLEDGE
@@ -668,19 +1050,31 @@
     </div>
 
 
-    <p>
-        © 2026 KLYDE AI HUB
-    </p>
+    <div>
+
+        <p>
+            BUILT FOR THE FUTURE
+        </p>
+
+        <p>
+            © 2026 KLYDE AI HUB
+        </p>
+
+    </div>
+
 
 </footer>
+
 
 
 <div id="toast"></div>
 
 
-<script src="script.js?v=3"></script>
+
+<script src="script.js?v=4"></script>
+
 
 </body>
 
 </html>
-```
+

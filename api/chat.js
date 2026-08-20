@@ -13,100 +13,240 @@ export default async function handler(req, res) {
         });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-        return res.status(500).json({
-            error: "GEMINI_API_KEY is not configured."
-        });
-    }
+    const providers = [
+        {
+            name: "Groq",
+            key: process.env.GROQ_API_KEY,
+            call: () => callGroq(message)
+        },
+        {
+            name: "Gemini",
+            key: process.env.GEMINI_API_KEY,
+            call: () => callGemini(message)
+        }
+    ];
 
-    try {
-       const model =
-    process.env.GEMINI_MODEL ||
-    "gemini-3.6-flash";
+    const failures = [];
 
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(process.env.GEMINI_API_KEY)}`,
-            {
-                method: "POST",
+    for (const provider of providers) {
 
-                headers: {
-                    "Content-Type": "application/json"
-                },
+        if (!provider.key) {
+            failures.push(
+                `${provider.name}: API key not configured`
+            );
+            continue;
+        }
 
-                body: JSON.stringify({
-                    systemInstruction: {
-                        parts: [
-                            {
-                                text:
-                                    "You are KLYDE AI, the intelligent assistant inside KLYDE AI HUB. Be helpful, clear, friendly and practical. If asked who you are, say you are KLYDE AI."
-                            }
-                        ]
-                    },
+        try {
 
-                    contents: [
-                        {
-                            role: "user",
-                            parts: [
-                                {
-                                    text: message
-                                }
-                            ]
-                        }
-                    ]
-                })
-            }
-        );
-
-        const data = await response.json();
-
-        console.log(
-            "Gemini status:",
-            response.status
-        );
-
-        if (!response.ok) {
-            console.error(
-                "Gemini error:",
-                data
+            console.log(
+                `KLYDE AI trying ${provider.name}`
             );
 
-            return res.status(response.status).json({
-                error:
-                    data?.error?.message ||
-                    `Gemini HTTP ${response.status}`
-            });
+            const reply = await provider.call();
+
+            if (reply && reply.trim()) {
+
+                console.log(
+                    `KLYDE AI answered using ${provider.name}`
+                );
+
+                return res.status(200).json({
+                    reply: reply.trim()
+                });
+            }
+
+            failures.push(
+                `${provider.name}: empty response`
+            );
+
+        } catch (error) {
+
+            console.error(
+                `${provider.name} failed:`,
+                error?.message || error
+            );
+
+            failures.push(
+                `${provider.name}: ${
+                    error?.message ||
+                    "Unknown provider error"
+                }`
+            );
         }
+    }
 
-        const reply =
-            data?.candidates?.[0]
-                ?.content?.parts
-                ?.map(part => part.text || "")
-                ?.join("") ||
-            null;
+    console.error(
+        "KLYDE AI provider failures:",
+        failures
+    );
 
-        if (!reply) {
-            return res.status(502).json({
-                error:
-                    "Gemini returned an empty response."
-            });
+    return res.status(503).json({
+        error:
+            "KLYDE AI could not connect to any available AI provider."
+    });
+}
+
+
+/* =========================================================
+   KLYDE AI IDENTITY
+========================================================= */
+
+const KLYDE_SYSTEM_PROMPT = `
+You are KLYDE AI, the intelligent assistant inside KLYDE AI HUB.
+
+Your identity is KLYDE AI.
+
+Be helpful, intelligent, clear, friendly, confident and practical.
+
+If the user asks who you are, say:
+
+"I am KLYDE AI, the intelligent assistant inside KLYDE AI HUB."
+
+Never introduce yourself as Groq or Gemini.
+
+The underlying AI provider is an internal implementation detail.
+
+Only mention the provider if the user specifically asks which
+AI technology or provider is powering the response.
+`;
+
+
+/* =========================================================
+   GROQ
+========================================================= */
+
+async function callGroq(message) {
+
+    const response = await fetch(
+        "https://api.groq.com/openai/v1/chat/completions",
+        {
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json",
+
+                "Authorization":
+                    `Bearer ${process.env.GROQ_API_KEY}`
+            },
+
+            body: JSON.stringify({
+
+                model:
+                    process.env.GROQ_MODEL ||
+                    "groq/compound-mini",
+
+                messages: [
+
+                    {
+                        role: "system",
+                        content: KLYDE_SYSTEM_PROMPT
+                    },
+
+                    {
+                        role: "user",
+                        content: message
+                    }
+
+                ]
+            })
         }
+    );
 
-        return res.status(200).json({
-            reply: reply.trim(),
-            provider: "Gemini"
-        });
+    const data = await response.json();
 
-    } catch (error) {
+    if (!response.ok) {
 
-        console.error(
-            "KLYDE GEMINI ERROR:",
-            error
+        throw new Error(
+            data?.error?.message ||
+            `Groq HTTP ${response.status}`
+        );
+    }
+
+    return (
+        data?.choices?.[0]
+            ?.message
+            ?.content ||
+        null
+    );
+}
+
+
+/* =========================================================
+   GEMINI
+========================================================= */
+
+async function callGemini(message) {
+
+    const model =
+        process.env.GEMINI_MODEL ||
+        "gemini-3.6-flash";
+
+    const url =
+        "https://generativelanguage.googleapis.com/v1beta/models/" +
+        model +
+        ":generateContent?key=" +
+        encodeURIComponent(
+            process.env.GEMINI_API_KEY
         );
 
-        return res.status(500).json({
-            error:
-                error?.message ||
-                "Gemini connection failed."
-        });
+    const response = await fetch(
+        url,
+        {
+            method: "POST",
+
+            headers: {
+                "Content-Type":
+                    "application/json"
+            },
+
+            body: JSON.stringify({
+
+                systemInstruction: {
+
+                    parts: [
+                        {
+                            text:
+                                KLYDE_SYSTEM_PROMPT
+                        }
+                    ]
+                },
+
+                contents: [
+
+                    {
+                        role: "user",
+
+                        parts: [
+                            {
+                                text: message
+                            }
+                        ]
+                    }
+
+                ]
+            })
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+
+        throw new Error(
+            data?.error?.message ||
+            `Gemini HTTP ${response.status}`
+        );
     }
+
+    return (
+        data?.candidates?.[0]
+            ?.content
+            ?.parts
+            ?.map(
+                part => part.text || ""
+            )
+            ?.join("") ||
+        null
+    );
 }

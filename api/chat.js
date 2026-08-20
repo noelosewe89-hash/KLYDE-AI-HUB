@@ -115,11 +115,16 @@ export default async function handler(req, res) {
         failures
     );
 
-    return res.status(503).json({
-        error:
-            "KLYDE AI could not get a response from any available AI provider. Please try again shortly."
-    });
-}
+   return res.status(503).json({
+    error: "No AI provider produced a response.",
+    configured: {
+        openai: !!process.env.OPENAI_API_KEY,
+        gemini: !!process.env.GEMINI_API_KEY,
+        groq: !!process.env.GROQ_API_KEY,
+        openrouter: !!process.env.OPENROUTER_API_KEY
+    },
+    failures
+});
 
 
 /* =========================================================

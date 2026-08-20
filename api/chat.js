@@ -41,19 +41,24 @@ export default async function handler(req, res) {
     for (const provider of providers) {
 
         if (!provider.key) {
-            failures.push(`${provider.name}: API key not configured`);
+            failures.push(
+                `${provider.name}: API key not configured`
+            );
             continue;
         }
 
         try {
-            console.log(`KLYDE AI → trying ${provider.name}`);
+
+            console.log(
+                `KLYDE AI trying ${provider.name}`
+            );
 
             const reply = await provider.call();
 
-            if (typeof reply === "string" && reply.trim()) {
+            if (reply && reply.trim()) {
 
                 console.log(
-                    `KLYDE AI → answered by ${provider.name}`
+                    `KLYDE AI answered using ${provider.name}`
                 );
 
                 return res.status(200).json({
@@ -63,42 +68,34 @@ export default async function handler(req, res) {
             }
 
             failures.push(
-                `${provider.name}: provider returned no usable answer`
+                `${provider.name}: empty response`
             );
 
         } catch (error) {
 
-            const errorMessage =
-                error?.message ||
-                "Unknown provider error";
-
             console.error(
-                `KLYDE AI → ${provider.name} failed:`,
-                errorMessage
+                `${provider.name} failed:`,
+                error
             );
 
             failures.push(
-                `${provider.name}: ${errorMessage}`
+                `${provider.name}: ${
+                    error?.message || "Unknown error"
+                }`
             );
         }
     }
 
-    /*
-    IMPORTANT:
-    We return the provider failures temporarily so we can
-    identify the actual problem in Vercel.
-    No API key is exposed.
-    */
-
     return res.status(503).json({
-        error: "KLYDE AI could not connect to an available provider.",
+        error:
+            "KLYDE AI could not connect to any available AI provider.",
         provider_errors: failures
     });
 }
 
 
 /* =========================================================
-   KLYDE AI PERSONALITY
+   KLYDE AI SYSTEM PROMPT
 ========================================================= */
 
 const KLYDE_SYSTEM_PROMPT = `
@@ -106,21 +103,13 @@ You are KLYDE AI, the intelligent assistant inside KLYDE AI HUB.
 
 Your identity is KLYDE AI.
 
-Be:
-- helpful
-- intelligent
-- clear
-- friendly
-- confident
-- practical
-
-Answer naturally and directly.
+Be helpful, intelligent, clear, friendly, confident and practical.
 
 If the user asks who you are, say:
 
 "I am KLYDE AI, the intelligent assistant inside KLYDE AI HUB."
 
-Do not introduce yourself as OpenAI, Gemini, Groq, or OpenRouter.
+Do not introduce yourself as OpenAI, Gemini, Groq or OpenRouter.
 
 Only mention the underlying provider if the user specifically
 asks what AI technology or provider is being used.
@@ -132,10 +121,6 @@ asks what AI technology or provider is being used.
 ========================================================= */
 
 async function callOpenAI(message) {
-
-    const model =
-        process.env.OPENAI_MODEL ||
-        "gpt-4o-mini";
 
     const response = await fetch(
         "https://api.openai.com/v1/chat/completions",
@@ -149,7 +134,10 @@ async function callOpenAI(message) {
             },
 
             body: JSON.stringify({
-                model: model,
+
+                model:
+                    process.env.OPENAI_MODEL ||
+                    "gpt-4o-mini",
 
                 messages: [
                     {
@@ -161,6 +149,7 @@ async function callOpenAI(message) {
                         content: message
                     }
                 ]
+
             })
         }
     );
@@ -197,35 +186,40 @@ async function callGemini(message) {
         ":generateContent?key=" +
         process.env.GEMINI_API_KEY;
 
-    const response = await fetch(url, {
-        method: "POST",
+    const response = await fetch(
+        url,
+        {
+            method: "POST",
 
-        headers: {
-            "Content-Type": "application/json"
-        },
-
-        body: JSON.stringify({
-
-            systemInstruction: {
-                parts: [
-                    {
-                        text: KLYDE_SYSTEM_PROMPT
-                    }
-                ]
+            headers: {
+                "Content-Type": "application/json"
             },
 
-            contents: [
-                {
+            body: JSON.stringify({
+
+                systemInstruction: {
                     parts: [
                         {
-                            text: message
+                            text: KLYDE_SYSTEM_PROMPT
                         }
                     ]
-                }
-            ]
+                },
 
-        })
-    });
+                contents: [
+                    {
+                        role: "user",
+
+                        parts: [
+                            {
+                                text: message
+                            }
+                        ]
+                    }
+                ]
+
+            })
+        }
+    );
 
     const data = await response.json();
 
@@ -251,10 +245,6 @@ async function callGemini(message) {
 
 async function callGroq(message) {
 
-    const model =
-        process.env.GROQ_MODEL ||
-        "llama-3.3-70b-versatile";
-
     const response = await fetch(
         "https://api.groq.com/openai/v1/chat/completions",
         {
@@ -262,13 +252,16 @@ async function callGroq(message) {
 
             headers: {
                 "Content-Type": "application/json",
+
                 "Authorization":
                     `Bearer ${process.env.GROQ_API_KEY}`
             },
 
             body: JSON.stringify({
 
-                model: model,
+                model:
+                    process.env.GROQ_MODEL ||
+                    "llama-3.3-70b-versatile",
 
                 messages: [
                     {
@@ -280,6 +273,7 @@ async function callGroq(message) {
                         content: message
                     }
                 ]
+
             })
         }
     );
@@ -306,10 +300,6 @@ async function callGroq(message) {
 
 async function callOpenRouter(message) {
 
-    const model =
-        process.env.OPENROUTER_MODEL ||
-        "openai/gpt-oss-20b:free";
-
     const response = await fetch(
         "https://openrouter.ai/api/v1/chat/completions",
         {
@@ -319,7 +309,7 @@ async function callOpenRouter(message) {
                 "Content-Type": "application/json",
 
                 "Authorization":
-                    `Bearer ${process.env.OPENROUTER_API_KEY`,
+                    `Bearer ${process.env.OPENROUTER_API_KEY}`,
 
                 "HTTP-Referer":
                     "https://klyde-ai-jh39hlmkq-klydexszn.vercel.app",
@@ -330,7 +320,9 @@ async function callOpenRouter(message) {
 
             body: JSON.stringify({
 
-                model: model,
+                model:
+                    process.env.OPENROUTER_MODEL ||
+                    "openai/gpt-oss-20b:free",
 
                 messages: [
                     {
@@ -342,6 +334,7 @@ async function callOpenRouter(message) {
                         content: message
                     }
                 ]
+
             })
         }
     );

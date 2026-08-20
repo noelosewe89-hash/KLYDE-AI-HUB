@@ -5,97 +5,118 @@ export default async function handler(req, res) {
         });
     }
 
-    const { message } = req.body || {};
+    try {
+        const body = req.body || {};
+        const message = body.message;
 
-    if (!message || typeof message !== "string") {
-        return res.status(400).json({
-            error: "Message is required"
-        });
-    }
-
-    const providers = [
-        {
-            name: "OpenAI",
-            key: process.env.OPENAI_API_KEY,
-            call: () => callOpenAI(message)
-        },
-        {
-            name: "Gemini",
-            key: process.env.GEMINI_API_KEY,
-            call: () => callGemini(message)
-        },
-        {
-            name: "Groq",
-            key: process.env.GROQ_API_KEY,
-            call: () => callGroq(message)
-        },
-        {
-            name: "OpenRouter",
-            key: process.env.OPENROUTER_API_KEY,
-            call: () => callOpenRouter(message)
-        }
-    ];
-
-    const failures = [];
-
-    for (const provider of providers) {
-
-        if (!provider.key) {
-            failures.push(
-                `${provider.name}: API key not configured`
-            );
-            continue;
+        if (!message || typeof message !== "string") {
+            return res.status(400).json({
+                error: "Message is required"
+            });
         }
 
-        try {
+        const providers = [
+            {
+                name: "OpenAI",
+                key: process.env.OPENAI_API_KEY,
+                call: () => callOpenAI(message)
+            },
+            {
+                name: "Gemini",
+                key: process.env.GEMINI_API_KEY,
+                call: () => callGemini(message)
+            },
+            {
+                name: "Groq",
+                key: process.env.GROQ_API_KEY,
+                call: () => callGroq(message)
+            },
+            {
+                name: "OpenRouter",
+                key: process.env.OPENROUTER_API_KEY,
+                call: () => callOpenRouter(message)
+            }
+        ];
 
-            console.log(
-                `KLYDE AI trying ${provider.name}`
-            );
+        const failures = [];
 
-            const reply = await provider.call();
+        for (const provider of providers) {
 
-            if (reply && reply.trim()) {
-
-                console.log(
-                    `KLYDE AI answered using ${provider.name}`
+            if (!provider.key) {
+                failures.push(
+                    `${provider.name}: key missing`
                 );
-
-                return res.status(200).json({
-                    reply: reply.trim(),
-                    provider: provider.name
-                });
+                continue;
             }
 
-            failures.push(
-                `${provider.name}: empty response`
-            );
+            try {
+                console.log(
+                    `KLYDE AI trying ${provider.name}`
+                );
 
-        } catch (error) {
+                const reply = await provider.call();
 
-            console.error(
-                `${provider.name} failed:`,
-                error
-            );
+                if (reply && typeof reply === "string" && reply.trim()) {
 
-            failures.push(
-                `${provider.name}: ${
-                    error?.message || "Unknown error"
-                }`
-            );
+                    console.log(
+                        `KLYDE AI answered using ${provider.name}`
+                    );
+
+                    return res.status(200).json({
+                        reply: reply.trim(),
+                        provider: provider.name
+                    });
+                }
+
+                failures.push(
+                    `${provider.name}: empty response`
+                );
+
+            } catch (error) {
+
+                console.error(
+                    `${provider.name} failed`,
+                    error
+                );
+
+                failures.push(
+                    `${provider.name}: ${
+                        error?.message || "provider failed"
+                    }`
+                );
+            }
         }
-    }
 
-    return res.status(503).json({
-        error:
-            "KLYDE AI could not connect to any available AI provider.",
-        provider_errors: failures
-    });
+        console.error(
+            "All providers failed:",
+            failures
+        );
+
+        return res.status(503).json({
+            error:
+                "KLYDE AI could not connect to any available AI provider.",
+            provider_errors: failures
+        });
+
+    } catch (error) {
+
+        console.error(
+            "KLYDE API CRITICAL ERROR:",
+            error
+        );
+
+        return res.status(500).json({
+            error:
+                "KLYDE AI server error.",
+            details:
+                error?.message || "Unknown server error"
+        });
+    }
 }
 
 
 /* =========================================================
-   KLYDE AI SYSTEM PROMPT
+   KLYDE AI IDENTITY
 ========================================================= */
 
 const KLYDE_SYSTEM_PROMPT = `
@@ -103,17 +124,39 @@ You are KLYDE AI, the intelligent assistant inside KLYDE AI HUB.
 
 Your identity is KLYDE AI.
 
-Be helpful, intelligent, clear, friendly, confident and practical.
+Be intelligent, helpful, clear, friendly, confident and practical.
 
-If the user asks who you are, say:
+If asked who you are, say:
 
 "I am KLYDE AI, the intelligent assistant inside KLYDE AI HUB."
 
 Do not introduce yourself as OpenAI, Gemini, Groq or OpenRouter.
 
-Only mention the underlying provider if the user specifically
-asks what AI technology or provider is being used.
+Only mention the underlying AI provider if the user specifically
+asks what technology powers you.
 `;
+
+
+/* =========================================================
+   SAFE JSON
+========================================================= */
+
+async function readJSON(response) {
+
+    const text = await response.text();
+
+    if (!text) {
+        return {};
+    }
+
+    try {
+        return JSON.parse(text);
+    } catch {
+        throw new Error(
+            `Invalid response from provider (HTTP ${response.status})`
+        );
+    }
+}
 
 
 /* =========================================================
@@ -134,7 +177,6 @@ async function callOpenAI(message) {
             },
 
             body: JSON.stringify({
-
                 model:
                     process.env.OPENAI_MODEL ||
                     "gpt-4o-mini",
@@ -149,12 +191,11 @@ async function callOpenAI(message) {
                         content: message
                     }
                 ]
-
             })
         }
     );
 
-    const data = await response.json();
+    const data = await readJSON(response);
 
     if (!response.ok) {
         throw new Error(
@@ -216,12 +257,11 @@ async function callGemini(message) {
                         ]
                     }
                 ]
-
             })
         }
     );
 
-    const data = await response.json();
+    const data = await readJSON(response);
 
     if (!response.ok) {
         throw new Error(
@@ -273,12 +313,11 @@ async function callGroq(message) {
                         content: message
                     }
                 ]
-
             })
         }
     );
 
-    const data = await response.json();
+    const data = await readJSON(response);
 
     if (!response.ok) {
         throw new Error(
@@ -334,12 +373,11 @@ async function callOpenRouter(message) {
                         content: message
                     }
                 ]
-
             })
         }
     );
 
-    const data = await response.json();
+    const data = await readJSON(response);
 
     if (!response.ok) {
         throw new Error(

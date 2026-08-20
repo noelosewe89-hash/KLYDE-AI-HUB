@@ -1,1104 +1,561 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+// KLYDE AI HUB
+// Phase 1 AI Chat Interface
 
-html {
-    scroll-behavior: smooth;
-}
+document.addEventListener("DOMContentLoaded", function () {
 
-body {
-    font-family: Arial, Helvetica, sans-serif;
-    background: #070b12;
-    color: #ffffff;
-    line-height: 1.6;
-}
 
-a {
-    text-decoration: none;
-    color: inherit;
-}
+    /* =========================
+       KLYDE AI CHAT
+    ========================= */
 
+    const searchForm =
+        document.getElementById("searchForm");
 
-/* =========================
-   HEADER
-========================= */
+    const searchInput =
+        document.getElementById("searchInput");
 
-header {
-    height: 75px;
-    width: 100%;
-    background: rgba(7, 11, 18, 0.95);
-    border-bottom: 1px solid #1b2635;
+    const chatWindow =
+        document.getElementById("chatWindow");
 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    const result =
+        document.getElementById("result");
 
-    padding: 0 6%;
+    const sendButton =
+        searchForm
+            ? searchForm.querySelector("button")
+            : null;
 
-    position: sticky;
-    top: 0;
 
-    z-index: 1000;
+    // Conversation memory
+    let conversation = [];
 
-    backdrop-filter: blur(15px);
-}
 
-.logo {
-    font-size: 21px;
-    font-weight: bold;
-    letter-spacing: 1px;
-}
+    /* =========================
+       SEND MESSAGE
+    ========================= */
 
-.logo span {
-    display: inline-flex;
+    if (searchForm) {
 
-    width: 36px;
-    height: 36px;
+        searchForm.addEventListener(
+            "submit",
+            async function (event) {
 
-    align-items: center;
-    justify-content: center;
+                event.preventDefault();
 
-    border-radius: 10px;
 
-    background: #19d3ff;
-    color: #071018;
+                const query =
+                    searchInput.value.trim();
 
-    margin-right: 8px;
-}
 
-.logo b {
-    color: #19d3ff;
-}
+                if (query === "") {
 
-nav {
-    display: flex;
-    gap: 28px;
-}
+                    showMessage(
+                        "Type something to ask KLYDE AI."
+                    );
 
-nav a {
-    color: #aeb8c7;
-    font-size: 14px;
+                    return;
+                }
 
-    transition: 0.3s;
-}
 
-nav a:hover {
-    color: #19d3ff;
-}
+                // Disable input while AI thinks
+                searchInput.disabled = true;
 
+                if (sendButton) {
+                    sendButton.disabled = true;
+                }
 
-/* =========================
-   HERO
-========================= */
 
-.hero {
-    min-height: 680px;
+                // Display user's message
+                addMessage(
+                    "user",
+                    query
+                );
 
-    padding: 100px 8%;
 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+                // Save user message
+                conversation.push({
+                    role: "user",
+                    message: query
+                });
 
-    gap: 60px;
 
-    background:
-        radial-gradient(
-            circle at 75% 50%,
-            #103447 0%,
-            transparent 35%
-        ),
-        #070b12;
-}
+                // Clear input
+                searchInput.value = "";
 
-.hero-text {
-    max-width: 700px;
-}
 
-.tag,
-.eyebrow {
-    color: #19d3ff;
+                // Show thinking indicator
+                const thinkingMessage =
+                    addThinkingMessage();
 
-    font-size: 12px;
-    font-weight: bold;
 
-    letter-spacing: 3px;
+                try {
 
-    margin-bottom: 15px;
-}
 
-.hero h1 {
-    font-size: clamp(55px, 7vw, 100px);
+                    const response =
+                        await fetch(
+                            "/api/chat",
+                            {
+                                method: "POST",
 
-    line-height: 0.95;
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
 
-    letter-spacing: -4px;
-}
+                                body:
+                                    JSON.stringify({
+                                        message:
+                                            buildConversationPrompt()
+                                    })
+                            }
+                        );
 
-.hero h1 span {
-    color: #19d3ff;
-}
 
-.hero-text > p:not(.tag) {
-    color: #9ba8b8;
+                    const data =
+                        await response.json();
 
-    max-width: 600px;
 
-    margin: 28px 0;
+                    if (!response.ok) {
 
-    font-size: 17px;
-}
+                        throw new Error(
+                            data.error ||
+                            "Something went wrong."
+                        );
 
-.buttons {
-    display: flex;
+                    }
 
-    gap: 15px;
 
-    flex-wrap: wrap;
-}
+                    const reply =
+                        data.reply ||
+                        "KLYDE AI could not generate a response.";
 
 
-/* =========================
-   BUTTONS
-========================= */
+                    // Remove thinking indicator
+                    removeMessage(
+                        thinkingMessage
+                    );
 
-.button,
-.card button,
-.card-link,
-.banner button {
 
-    border: none;
+                    // Display AI response
+                    addMessage(
+                        "ai",
+                        reply
+                    );
 
-    cursor: pointer;
 
-    padding: 14px 24px;
+                    // Save AI response
+                    conversation.push({
+                        role: "assistant",
+                        message: reply
+                    });
 
-    border-radius: 8px;
 
-    background: #19d3ff;
+                } catch (error) {
 
-    color: #061019;
 
-    font-weight: bold;
+                    removeMessage(
+                        thinkingMessage
+                    );
 
-    display: inline-block;
 
-    transition: 0.3s;
-}
+                    addMessage(
+                        "ai",
+                        "I'm sorry, something went wrong while processing your request."
+                    );
 
-.button:hover,
-.card button:hover,
-.card-link:hover,
-.banner button:hover {
 
-    transform: translateY(-3px);
+                    console.error(
+                        "KLYDE AI:",
+                        error
+                    );
 
-    box-shadow:
-        0 10px 30px
-        rgba(25, 211, 255, 0.2);
-}
+                }
 
-.outline {
-    background: transparent;
 
-    border: 1px solid #304153;
+                // Enable input again
+                searchInput.disabled = false;
 
-    color: white;
-}
+                if (sendButton) {
+                    sendButton.disabled = false;
+                }
 
 
-/* =========================
-   HERO ORB
-========================= */
+                searchInput.focus();
 
-.hero-logo {
-
-    width: 360px;
-    height: 360px;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-}
-
-.circle {
-
-    width: 270px;
-    height: 270px;
-
-    border-radius: 50%;
-
-    border: 1px solid #19d3ff;
-
-    box-shadow:
-        0 0 50px rgba(25, 211, 255, 0.2),
-        inset 0 0 50px rgba(25, 211, 255, 0.08);
-
-    display: flex;
-
-    flex-direction: column;
-
-    justify-content: center;
-    align-items: center;
-
-    animation: pulseOrb 4s ease-in-out infinite;
-}
-
-.circle strong {
-
-    font-size: 130px;
-
-    line-height: 1;
-
-    color: #19d3ff;
-}
-
-.circle small {
-
-    letter-spacing: 5px;
-
-    color: #aeb8c7;
-}
-
-@keyframes pulseOrb {
-
-    0%,
-    100% {
-        box-shadow:
-            0 0 50px rgba(25, 211, 255, 0.2),
-            inset 0 0 50px rgba(25, 211, 255, 0.08);
-    }
-
-    50% {
-        box-shadow:
-            0 0 80px rgba(25, 211, 255, 0.35),
-            inset 0 0 70px rgba(25, 211, 255, 0.12);
-    }
-}
-
-
-/* =========================
-   KLYDE AI CHAT
-========================= */
-
-.search-section {
-
-    margin: 0 8%;
-
-    padding: 40px;
-
-    border: 1px solid #1c2a3a;
-
-    background:
-        linear-gradient(
-            145deg,
-            #0d1723,
-            #0a1019
+            }
         );
 
-    border-radius: 20px;
-
-    box-shadow:
-        0 20px 70px rgba(0, 0, 0, 0.25);
-
-    overflow: hidden;
-}
-
-.chat-header {
-
-    display: flex;
-
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 20px;
-
-    padding-bottom: 25px;
-
-    border-bottom: 1px solid #1b2939;
-}
-
-.chat-header h2 {
-
-    font-size: 32px;
-
-    margin-bottom: 5px;
-}
-
-.chat-status {
-
-    color: #7f91a5;
-
-    font-size: 13px;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 8px;
-}
-
-.status-dot {
-
-    width: 8px;
-    height: 8px;
-
-    border-radius: 50%;
-
-    background: #4cff91;
-
-    box-shadow:
-        0 0 10px #4cff91;
-
-    display: inline-block;
-}
-
-.chat-symbol {
-
-    width: 65px;
-    height: 65px;
-
-    border-radius: 18px;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    background: #19d3ff;
-
-    color: #061019;
-
-    font-size: 34px;
-
-    font-weight: 900;
-
-    box-shadow:
-        0 0 30px rgba(25, 211, 255, 0.2);
-}
-
-
-/* CHAT WINDOW */
-
-.chat-window {
-
-    min-height: 330px;
-    max-height: 520px;
-
-    overflow-y: auto;
-
-    padding: 30px 5px;
-
-    scroll-behavior: smooth;
-}
-
-
-/* MESSAGE */
-
-.chat-message {
-
-    display: flex;
-
-    gap: 14px;
-
-    margin-bottom: 25px;
-
-    animation: messageIn 0.3s ease;
-}
-
-@keyframes messageIn {
-
-    from {
-        opacity: 0;
-        transform: translateY(8px);
     }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
 
-.message-avatar {
+    /* =========================
+       ADD MESSAGE
+    ========================= */
 
-    flex-shrink: 0;
+    function addMessage(
+        type,
+        message
+    ) {
 
-    width: 38px;
-    height: 38px;
+        if (!chatWindow) {
+            return;
+        }
 
-    border-radius: 12px;
 
-    display: flex;
+        const wrapper =
+            document.createElement("div");
 
-    align-items: center;
-    justify-content: center;
 
-    font-weight: bold;
-}
+        wrapper.className =
+            "chat-message " +
+            (
+                type === "user"
+                    ? "user-message"
+                    : "ai-message"
+            );
 
-.ai-message .message-avatar {
 
-    background: #19d3ff;
+        const avatar =
+            document.createElement("div");
 
-    color: #061019;
-}
 
-.user-message {
+        avatar.className =
+            "message-avatar";
 
-    flex-direction: row-reverse;
-}
 
-.user-message .message-avatar {
+        avatar.textContent =
+            type === "user"
+                ? "YOU"
+                : "K";
 
-    background: #263547;
 
-    color: white;
-}
+        const content =
+            document.createElement("div");
 
-.message-content {
 
-    max-width: 78%;
-}
+        content.className =
+            "message-content";
 
-.message-content strong {
 
-    display: block;
+        const name =
+            document.createElement("strong");
 
-    font-size: 12px;
 
-    letter-spacing: 1px;
+        name.textContent =
+            type === "user"
+                ? "YOU"
+                : "KLYDE AI";
 
-    color: #19d3ff;
 
-    margin-bottom: 5px;
-}
+        const paragraph =
+            document.createElement("p");
 
-.user-message .message-content {
 
-    text-align: right;
-}
+        paragraph.textContent =
+            message;
 
-.user-message .message-content strong {
 
-    color: #aeb8c7;
-}
+        content.appendChild(name);
 
-.message-content p {
+        content.appendChild(paragraph);
 
-    color: #dce5ef;
 
-    background: #101925;
+        wrapper.appendChild(avatar);
 
-    border: 1px solid #1d2c3e;
+        wrapper.appendChild(content);
 
-    border-radius: 14px;
 
-    padding: 13px 16px;
+        chatWindow.appendChild(wrapper);
 
-    white-space: pre-wrap;
 
-    word-wrap: break-word;
-}
+        scrollChatToBottom();
 
-.user-message .message-content p {
 
-    background: #102d3b;
-
-    border-color: #1d5265;
-}
-
-
-/* INPUT */
-
-.chat-input-area {
-
-    display: flex;
-
-    gap: 10px;
-
-    padding-top: 20px;
-
-    border-top: 1px solid #1b2939;
-}
-
-.chat-input-area input {
-
-    flex: 1;
-
-    min-width: 0;
-
-    padding: 17px 18px;
-
-    border: 1px solid #29394d;
-
-    border-radius: 12px;
-
-    background: #070b12;
-
-    color: white;
-
-    outline: none;
-
-    font-size: 15px;
-
-    transition: 0.3s;
-}
-
-.chat-input-area input:focus {
-
-    border-color: #19d3ff;
-
-    box-shadow:
-        0 0 0 3px
-        rgba(25, 211, 255, 0.08);
-}
-
-.chat-input-area button {
-
-    width: 55px;
-
-    border: none;
-
-    border-radius: 12px;
-
-    background: #19d3ff;
-
-    color: #061019;
-
-    font-size: 23px;
-
-    font-weight: bold;
-
-    cursor: pointer;
-
-    transition: 0.3s;
-}
-
-.chat-input-area button:hover {
-
-    transform: translateY(-2px);
-
-    box-shadow:
-        0 10px 25px
-        rgba(25, 211, 255, 0.2);
-}
-
-.chat-input-area button:disabled {
-
-    opacity: 0.5;
-
-    cursor: not-allowed;
-
-    transform: none;
-}
-
-
-/* THINKING */
-
-.thinking-dots {
-
-    display: flex;
-
-    gap: 5px;
-
-    padding: 4px 0;
-}
-
-.thinking-dots span {
-
-    width: 7px;
-    height: 7px;
-
-    background: #19d3ff;
-
-    border-radius: 50%;
-
-    animation: thinking 1.2s infinite;
-}
-
-.thinking-dots span:nth-child(2) {
-    animation-delay: 0.2s;
-}
-
-.thinking-dots span:nth-child(3) {
-    animation-delay: 0.4s;
-}
-
-@keyframes thinking {
-
-    0%,
-    60%,
-    100% {
-        opacity: 0.25;
-        transform: translateY(0);
+        return wrapper;
     }
 
-    30% {
-        opacity: 1;
-        transform: translateY(-4px);
+
+    /* =========================
+       THINKING INDICATOR
+    ========================= */
+
+    function addThinkingMessage() {
+
+        if (!chatWindow) {
+            return null;
+        }
+
+
+        const wrapper =
+            document.createElement("div");
+
+
+        wrapper.className =
+            "chat-message ai-message";
+
+
+        const avatar =
+            document.createElement("div");
+
+
+        avatar.className =
+            "message-avatar";
+
+
+        avatar.textContent =
+            "K";
+
+
+        const content =
+            document.createElement("div");
+
+
+        content.className =
+            "message-content";
+
+
+        const name =
+            document.createElement("strong");
+
+
+        name.textContent =
+            "KLYDE AI";
+
+
+        const dots =
+            document.createElement("div");
+
+
+        dots.className =
+            "thinking-dots";
+
+
+        dots.innerHTML =
+            "<span></span>" +
+            "<span></span>" +
+            "<span></span>";
+
+
+        content.appendChild(name);
+
+        content.appendChild(dots);
+
+
+        wrapper.appendChild(avatar);
+
+        wrapper.appendChild(content);
+
+
+        chatWindow.appendChild(wrapper);
+
+
+        scrollChatToBottom();
+
+
+        return wrapper;
     }
-}
 
 
-/* HIDDEN TECHNICAL RESULT */
+    /* =========================
+       REMOVE MESSAGE
+    ========================= */
 
-#result {
+    function removeMessage(element) {
 
-    display: none;
-}
+        if (
+            element &&
+            element.parentNode
+        ) {
 
+            element.parentNode.removeChild(
+                element
+            );
 
-/* =========================
-   SECTIONS
-========================= */
+        }
 
-.section {
+    }
 
-    padding: 110px 8%;
-}
 
-.section h2 {
+    /* =========================
+       SCROLL CHAT
+    ========================= */
 
-    font-size: 50px;
+    function scrollChatToBottom() {
 
-    margin-bottom: 45px;
-}
+        if (!chatWindow) {
+            return;
+        }
 
 
-/* =========================
-   CARDS
-========================= */
+        setTimeout(function () {
 
-.cards {
+            chatWindow.scrollTop =
+                chatWindow.scrollHeight;
 
-    display: grid;
+        }, 50);
 
-    grid-template-columns:
-        repeat(3, 1fr);
+    }
 
-    gap: 20px;
-}
 
-.card {
+    /* =========================
+       BUILD AI PROMPT
+    ========================= */
 
-    padding: 35px;
+    function buildConversationPrompt() {
 
-    min-height: 260px;
 
-    border: 1px solid #1b2939;
+        const systemInstruction = `
 
-    background: #0c121c;
+You are KLYDE AI, the intelligent assistant
+inside KLYDE AI HUB.
 
-    border-radius: 14px;
+Your personality:
 
-    transition: 0.3s;
-}
+- Intelligent
+- Helpful
+- Confident
+- Friendly
+- Clear
+- Practical
 
-.card:hover {
+Answer naturally and directly.
 
-    transform: translateY(-5px);
+Understand follow-up questions using the
+conversation history provided below.
 
-    border-color: #19d3ff;
-}
+Do not mention Gemini unless the user
+specifically asks what technology powers you.
 
-.card.featured {
+Keep answers useful and easy to understand.
 
-    background:
-        linear-gradient(
-            145deg,
-            #102d3b,
-            #0c121c
-        );
-}
+Conversation:
 
-.icon {
+`;
 
-    font-size: 30px;
 
-    color: #19d3ff;
+        let prompt =
+            systemInstruction + "\n";
 
-    margin-bottom: 20px;
-}
 
-.card h3 {
+        conversation.forEach(
+            function (item) {
 
-    font-size: 23px;
+                if (
+                    item.role === "user"
+                ) {
 
-    margin-bottom: 12px;
-}
+                    prompt +=
+                        "USER: " +
+                        item.message +
+                        "\n";
 
-.card p {
+                }
 
-    color: #8f9bab;
 
-    margin-bottom: 25px;
-}
+                if (
+                    item.role === "assistant"
+                ) {
 
-.card button {
+                    prompt +=
+                        "KLYDE AI: " +
+                        item.message +
+                        "\n";
 
-    padding: 10px 17px;
+                }
 
-    background: transparent;
-
-    border: 1px solid #304153;
-
-    color: white;
-}
-
-.card-link {
-
-    padding: 10px 17px;
-}
-
-
-/* =========================
-   SPORTS
-========================= */
-
-.sports-container {
-
-    display: grid;
-
-    grid-template-columns:
-        1.5fr 1fr;
-
-    gap: 50px;
-}
-
-.sports-container h3 {
-
-    font-size: 35px;
-
-    margin: 25px 0;
-}
-
-.sports-container > div > p {
-
-    color: #9aa7b7;
-
-    max-width: 650px;
-
-    margin-bottom: 30px;
-}
-
-.live {
-
-    color: #4cff91;
-
-    font-size: 12px;
-
-    letter-spacing: 2px;
-}
-
-.sports-list {
-
-    border-left: 1px solid #263547;
-
-    padding-left: 30px;
-}
-
-.sports-list > div {
-
-    padding: 18px;
-
-    border-bottom:
-        1px solid #1b2939;
-
-    font-size: 16px;
-}
-
-.sports-list small {
-
-    display: block;
-
-    color: #788698;
-
-    margin-top: 4px;
-}
-
-
-/* =========================
-   NEWS
-========================= */
-
-.label {
-
-    color: #19d3ff;
-
-    font-size: 11px;
-
-    letter-spacing: 2px;
-}
-
-
-/* =========================
-   MUSIC
-========================= */
-
-.banner {
-
-    padding: 45px;
-
-    border: 1px solid #263547;
-
-    background:
-        linear-gradient(
-            120deg,
-            #102532,
-            #0b111a
+            }
         );
 
-    border-radius: 16px;
 
-    display: flex;
-
-    align-items: center;
-
-    gap: 30px;
-}
-
-.banner div:nth-child(2) {
-
-    flex: 1;
-}
-
-.banner h3 {
-
-    font-size: 30px;
-}
-
-.banner p {
-
-    color: #8f9bab;
-}
-
-
-/* =========================
-   FUTURE
-========================= */
-
-.future {
-
-    padding: 50px;
-
-    border: 1px dashed #304153;
-
-    border-radius: 15px;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 30px;
-}
-
-.future strong {
-
-    font-size: 70px;
-
-    color: #19d3ff;
-}
-
-.future p {
-
-    color: #8f9bab;
-}
-
-
-/* =========================
-   FOOTER
-========================= */
-
-footer {
-
-    padding: 50px 8%;
-
-    border-top: 1px solid #1b2635;
-
-    display: flex;
-
-    justify-content: space-between;
-
-    flex-wrap: wrap;
-
-    gap: 15px;
-
-    color: #788698;
-}
-
-footer strong {
-
-    color: white;
-}
-
-
-/* =========================
-   TOAST
-========================= */
-
-#toast {
-
-    position: fixed;
-
-    left: 50%;
-
-    bottom: 25px;
-
-    transform:
-        translate(-50%, 100px);
-
-    padding: 13px 20px;
-
-    background: #101925;
-
-    border: 1px solid #19d3ff;
-
-    border-radius: 10px;
-
-    color: white;
-
-    opacity: 0;
-
-    pointer-events: none;
-
-    transition: 0.3s;
-
-    z-index: 9999;
-}
-
-#toast.show {
-
-    opacity: 1;
-
-    transform:
-        translate(-50%, 0);
-}
-
-
-/* =========================
-   MOBILE
-========================= */
-
-@media (max-width: 850px) {
-
-    nav {
-        display: none;
+        return prompt;
     }
 
-    .hero {
 
-        flex-direction: column;
+    /* =========================
+       TOOL BUTTONS
+    ========================= */
 
-        text-align: center;
+    const buttons =
+        document.querySelectorAll(
+            "[data-tool]"
+        );
 
-        padding-top: 70px;
+
+    buttons.forEach(
+        function (button) {
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    const tool =
+                        button.getAttribute(
+                            "data-tool"
+                        );
+
+
+                    showMessage(
+                        tool +
+                        " will be available in a future KLYDE AI HUB update."
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+    /* =========================
+       GENERAL MESSAGE
+    ========================= */
+
+    function showMessage(message) {
+
+
+        let toast =
+            document.getElementById(
+                "toast"
+            );
+
+
+        if (!toast) {
+
+            toast =
+                document.createElement(
+                    "div"
+                );
+
+            toast.id =
+                "toast";
+
+            document.body.appendChild(
+                toast
+            );
+
+        }
+
+
+        toast.textContent =
+            message;
+
+
+        toast.classList.add(
+            "show"
+        );
+
+
+        setTimeout(
+            function () {
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            },
+            3000
+        );
+
     }
 
-    .hero-text {
-
-        display: flex;
-
-        flex-direction: column;
-
-        align-items: center;
-    }
-
-    .hero h1 {
-
-        font-size: 55px;
-    }
-
-    .hero-logo {
-
-        width: 280px;
-        height: 280px;
-    }
-
-    .circle {
-
-        width: 210px;
-        height: 210px;
-    }
-
-    .circle strong {
-
-        font-size: 90px;
-    }
-
-    .cards {
-
-        grid-template-columns: 1fr;
-    }
-
-    .sports-container {
-
-        grid-template-columns: 1fr;
-    }
-
-    .sports-list {
-
-        border-left: none;
-
-        padding-left: 0;
-    }
-
-    .banner {
-
-        flex-direction: column;
-
-        align-items: flex-start;
-    }
-
-    .section h2 {
-
-        font-size: 40px;
-    }
-
-    .search-section {
-
-        margin: 0 5%;
-
-        padding: 25px 18px;
-    }
-
-    .chat-header h2 {
-
-        font-size: 25px;
-    }
-
-    .chat-symbol {
-
-        width: 52px;
-        height: 52px;
-
-        font-size: 27px;
-
-        border-radius: 14px;
-    }
-
-    .chat-window {
-
-        min-height: 280px;
-
-        padding: 25px 0;
-    }
-
-    .message-content {
-
-        max-width: 85%;
-    }
-
-    .chat-input-area input {
-
-        padding: 14px;
-    }
-
-    .chat-input-area button {
-
-        width: 50px;
-    }
-
-}
+});

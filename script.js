@@ -141,11 +141,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
 
-            const answer =
-                data?.answer ||
-                data?.message ||
-                data?.response ||
-                "KLYDE could not generate a response.";
+           const answer =
+    data?.reply ||
+    data?.answer ||
+    data?.message ||
+    data?.response ||
+    "KLYDE could not generate a response.";
 
 
             result.innerHTML = `

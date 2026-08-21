@@ -13,7 +13,7 @@ export default async function handler(req, res) {
         });
     }
 
-    const type = req.query.type || "fixtures";
+    const type = req.query.type || "fixtures"; // KLYDE SPORTS
 
     let url;
 

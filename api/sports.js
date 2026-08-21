@@ -7,6 +7,10 @@ export default async function handler(req, res) {
 
     const apiKey = process.env.API_FOOTBALL_KEY;
 
+console.log(
+    "KLYDE SPORTS KEY STATUS:",
+    apiKey ? "FOUND" : "MISSING"
+);
     if (!apiKey) {
         return res.status(500).json({
             error: "Sports API key is missing."

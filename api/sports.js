@@ -7,47 +7,48 @@ export default async function handler(req, res) {
 
     const apiKey = process.env.API_FOOTBALL_KEY;
 
-console.log(
-    "KLYDE SPORTS KEY STATUS:",
-    apiKey ? "FOUND" : "MISSING"
-);
     if (!apiKey) {
         return res.status(500).json({
             error: "Sports API key is missing."
         });
     }
 
-    const type = req.query.type || "fixtures"; // KLYDE SPORTS
+    const type = req.query.type || "fixtures";
+
+    const today = new Date()
+        .toISOString()
+        .split("T")[0];
+
+    const date = req.query.date || today;
 
     let url;
 
     if (type === "live") {
+
         url =
             "https://v3.football.api-sports.io/fixtures?live=all";
-    }
 
-    else if (type === "fixtures") {
+    } else if (type === "fixtures") {
+
         url =
-            "https://v3.football.api-sports.io/fixtures?next=10";
-    }
+            `https://v3.football.api-sports.io/fixtures?date=${date}`;
 
-    else if (type === "results") {
+    } else if (type === "results") {
+
         url =
-            "https://v3.football.api-sports.io/fixtures?last=10";
-    }
+            `https://v3.football.api-sports.io/fixtures?date=${date}`;
 
-    else {
+    } else {
+
         return res.status(400).json({
             error:
-                "Invalid type. Use live, fixtures or results."
+                "Invalid sports request."
         });
     }
 
     try {
 
         const response = await fetch(url, {
-            method: "GET",
-
             headers: {
                 "x-apisports-key": apiKey
             }
@@ -59,15 +60,82 @@ console.log(
             return res.status(response.status).json({
                 error:
                     data?.message ||
-                    "Sports provider request failed."
+                    "Sports provider error."
             });
         }
 
+        const matches =
+            (data?.response || []).map(match => ({
+
+                id: match.fixture?.id,
+
+                status:
+                    match.fixture?.status?.short,
+
+                elapsed:
+                    match.fixture?.status?.elapsed,
+
+                date:
+                    match.fixture?.date,
+
+                league: {
+                    id:
+                        match.league?.id,
+
+                    name:
+                        match.league?.name,
+
+                    country:
+                        match.league?.country,
+
+                    logo:
+                        match.league?.logo
+                },
+
+                home: {
+                    id:
+                        match.teams?.home?.id,
+
+                    name:
+                        match.teams?.home?.name,
+
+                    logo:
+                        match.teams?.home?.logo,
+
+                    score:
+                        match.goals?.home
+                },
+
+                away: {
+                    id:
+                        match.teams?.away?.id,
+
+                    name:
+                        match.teams?.away?.name,
+
+                    logo:
+                        match.teams?.away?.logo,
+
+                    score:
+                        match.goals?.away
+                }
+
+            }));
+
+
         return res.status(200).json({
+
             success: true,
+
             type: type,
-            results: data?.results || 0,
-            response: data?.response || []
+
+            date: date,
+
+            results:
+                matches.length,
+
+            matches: matches
+
         });
 
     } catch (error) {
@@ -78,9 +146,12 @@ console.log(
         );
 
         return res.status(500).json({
+
             error:
                 error?.message ||
-                "Could not connect to sports provider."
+                "Sports service unavailable."
+
         });
+
     }
 }

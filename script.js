@@ -2321,6 +2321,4 @@ Make the material clear, organized and easy to study.
     );
 
 }
-```
-
 });

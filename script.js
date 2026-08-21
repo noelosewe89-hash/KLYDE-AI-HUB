@@ -1833,5 +1833,494 @@ Answer the user's latest message naturally.
 
             }
         );
+```js
+/* =====================================================
+   KLYDE AI HUB — EDUCATION MODULE
+   AI TUTOR + REVISION + STUDY TOOLS
+   ADD-ON ONLY — DOES NOT REPLACE EXISTING FEATURES
+===================================================== */
+
+const educationSection =
+    document.getElementById("education");
+
+
+/* =====================================================
+   EDUCATION BUTTONS
+===================================================== */
+
+if (educationSection) {
+
+    const educationCards =
+        educationSection.querySelectorAll(".card");
+
+
+    educationCards.forEach(card => {
+
+        const heading =
+            card.querySelector("h3");
+
+        const text =
+            heading
+                ? heading.textContent.trim()
+                : "";
+
+
+        const button =
+            card.querySelector("button");
+
+
+        /* ---------------------------------------------
+           AI TUTOR
+        --------------------------------------------- */
+
+        if (
+            text === "AI Tutor" &&
+            !button
+        ) {
+
+            const tutorButton =
+                document.createElement("button");
+
+            tutorButton.type = "button";
+
+            tutorButton.className = "button";
+
+            tutorButton.dataset.tool =
+                "AI Tutor";
+
+            tutorButton.textContent =
+                "Start AI Tutor →";
+
+            card.appendChild(
+                tutorButton
+            );
+
+            tutorButton.addEventListener(
+                "click",
+                event => {
+
+                    event.preventDefault();
+
+                    openEducationPrompt(
+                        "AI Tutor",
+                        "What subject or topic would you like KLYDE to teach you?"
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* ---------------------------------------------
+           REVISION
+        --------------------------------------------- */
+
+        if (
+            text === "Revision" &&
+            !button
+        ) {
+
+            const revisionButton =
+                document.createElement("button");
+
+            revisionButton.type = "button";
+
+            revisionButton.className = "button";
+
+            revisionButton.dataset.tool =
+                "Revision";
+
+            revisionButton.textContent =
+                "Start Revision →";
+
+            card.appendChild(
+                revisionButton
+            );
+
+            revisionButton.addEventListener(
+                "click",
+                event => {
+
+                    event.preventDefault();
+
+                    openEducationPrompt(
+                        "Revision",
+                        "Which subject or topic do you want to revise?"
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* ---------------------------------------------
+           STUDY TOOLS
+        --------------------------------------------- */
+
+        if (
+            text === "Study Tools" &&
+            !button
+        ) {
+
+            const studyButton =
+                document.createElement("button");
+
+            studyButton.type = "button";
+
+            studyButton.className = "button";
+
+            studyButton.dataset.tool =
+                "Study Tools";
+
+            studyButton.textContent =
+                "Open Study Tools →";
+
+            card.appendChild(
+                studyButton
+            );
+
+            studyButton.addEventListener(
+                "click",
+                event => {
+
+                    event.preventDefault();
+
+                    openEducationPrompt(
+                        "Study Tools",
+                        "What do you need help creating — notes, summary, quiz or study plan?"
+                    );
+
+                }
+            );
+
+        }
+
+    });
+
+}
+
+
+/* =====================================================
+   EDUCATION PROMPT
+===================================================== */
+
+function openEducationPrompt(
+    mode,
+    message
+) {
+
+    const popup =
+        document.createElement("div");
+
+
+    popup.className =
+        "klyde-education-popup";
+
+
+    popup.style.cssText = `
+
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,.82);
+        z-index:99999;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:20px;
+
+    `;
+
+
+    popup.innerHTML = `
+
+        <div
+            style="
+                width:100%;
+                max-width:520px;
+                background:white;
+                color:#111;
+                border-radius:20px;
+                padding:28px;
+                box-sizing:border-box;
+            "
+        >
+
+            <div
+                style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center;
+                    gap:15px;
+                "
+            >
+
+                <div>
+
+                    <span
+                        style="
+                            font-size:13px;
+                            opacity:.6;
+                        "
+                    >
+                        KLYDE EDUCATION
+                    </span>
+
+                    <h2
+                        style="
+                            margin:5px 0 0;
+                        "
+                    >
+                        🎓 ${escapeHTML(mode)}
+                    </h2>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="klyde-education-close"
+                    style="
+                        width:35px;
+                        height:35px;
+                        border:0;
+                        border-radius:50%;
+                        font-size:22px;
+                        cursor:pointer;
+                    "
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <p
+                style="
+                    margin-top:20px;
+                    line-height:1.6;
+                "
+            >
+                ${escapeHTML(message)}
+            </p>
+
+
+            <input
+                type="text"
+                class="klyde-education-input"
+                placeholder="e.g. Form 4 Chemistry — Organic Chemistry"
+                autocomplete="off"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:14px;
+                    border:1px solid #ccc;
+                    border-radius:10px;
+                    margin-top:10px;
+                    font-size:15px;
+                "
+            >
+
+
+            <button
+                type="button"
+                class="button klyde-education-submit"
+                style="
+                    width:100%;
+                    margin-top:15px;
+                "
+            >
+                CONTINUE →
+            </button>
+
+
+            <small
+                style="
+                    display:block;
+                    margin-top:12px;
+                    opacity:.55;
+                    line-height:1.5;
+                "
+            >
+                KLYDE will use its AI assistant to
+                provide the educational response.
+            </small>
+
+        </div>
+
+    `;
+
+
+    document.body.appendChild(
+        popup
+    );
+
+
+    const input =
+        popup.querySelector(
+            ".klyde-education-input"
+        );
+
+
+    const submit =
+        popup.querySelector(
+            ".klyde-education-submit"
+        );
+
+
+    const close =
+        popup.querySelector(
+            ".klyde-education-close"
+        );
+
+
+    close.onclick = () => {
+
+        popup.remove();
+
+    };
+
+
+    input.focus();
+
+
+    /* ---------------------------------------------
+       SUBMIT EDUCATION REQUEST
+    --------------------------------------------- */
+
+    async function submitEducation() {
+
+        const topic =
+            input.value.trim();
+
+
+        if (!topic) {
+
+            input.focus();
+
+            return;
+
+        }
+
+
+        popup.remove();
+
+
+        let prompt = "";
+
+
+        if (mode === "AI Tutor") {
+
+            prompt = `
+Act as a professional KLYDE AI Tutor.
+
+Teach me:
+${topic}
+
+Explain it step-by-step in simple language.
+
+If appropriate:
+- Give a clear definition.
+- Explain the important concepts.
+- Give examples.
+- Show the method or procedure.
+- Give a short practice question.
+- Give the answer separately.
+
+Do not simply give a final answer.
+Help me understand the topic.
+`;
+
+        }
+
+
+        else if (mode === "Revision") {
+
+            prompt = `
+Act as a KLYDE AI examination revision tutor.
+
+Create a revision session for:
+${topic}
+
+Include:
+- Key points to remember.
+- Important definitions.
+- Common examination questions.
+- Practice questions.
+- Answers after the questions.
+- Common mistakes students make.
+
+Keep it clear and suitable for a student.
+`;
+
+        }
+
+
+        else if (mode === "Study Tools") {
+
+            prompt = `
+Act as KLYDE AI Study Tools.
+
+Help me with:
+${topic}
+
+Choose the most useful format based on my request.
+
+You may create:
+- Revision notes.
+- A summary.
+- A study plan.
+- Flashcards.
+- A quiz.
+- Key definitions.
+- Examination tips.
+
+Make the material clear, organized and easy to study.
+`;
+
+        }
+
+
+        if (searchInput) {
+
+            searchInput.value =
+                prompt.trim();
+
+            searchInput.focus();
+
+        }
+
+
+        await askKlyde(
+            prompt.trim()
+        );
+
+    }
+
+
+    submit.onclick =
+        submitEducation;
+
+
+    input.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key === "Enter"
+            ) {
+
+                event.preventDefault();
+
+                submitEducation();
+
+            }
+
+        }
+    );
+
+}
+```
 
 });

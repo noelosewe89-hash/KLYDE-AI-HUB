@@ -906,30 +906,23 @@ Answer the user's latest message naturally.
                     const fixture =
                         match.fixture || {};
 
-
                     const league =
                         match.league || {};
-
 
                     const teams =
                         match.teams || {};
 
-
                     const goals =
                         match.goals || {};
-
 
                     const status =
                         fixture.status || {};
 
-
                     const home =
                         teams.home || {};
 
-
                     const away =
                         teams.away || {};
-
 
                     const isLive =
                         type === "live";
@@ -1399,7 +1392,6 @@ Answer the user's latest message naturally.
                                 broadcaster.tvstation ||
                                 {};
 
-
                             const name =
 
                                 station.name ||
@@ -1409,7 +1401,6 @@ Answer the user's latest message naturally.
                                 broadcaster.station ||
 
                                 "Official Broadcaster";
-
 
                             const url =
 
@@ -1833,386 +1824,403 @@ Answer the user's latest message naturally.
 
             }
         );
-```js
-/* =====================================================
-   KLYDE AI HUB — EDUCATION MODULE
-   AI TUTOR + REVISION + STUDY TOOLS
-   ADD-ON ONLY — DOES NOT REPLACE EXISTING FEATURES
-===================================================== */
-
-const educationSection =
-    document.getElementById("education");
 
 
-/* =====================================================
-   EDUCATION BUTTONS
-===================================================== */
+    /* =================================================
+       EDUCATION MODULE
+       ADD-ON ONLY
+       ORIGINAL FEATURES ABOVE ARE UNCHANGED
+    ================================================= */
 
-if (educationSection) {
-
-    const educationCards =
-        educationSection.querySelectorAll(".card");
-
-
-    educationCards.forEach(card => {
-
-        const heading =
-            card.querySelector("h3");
-
-        const text =
-            heading
-                ? heading.textContent.trim()
-                : "";
+    const educationSection =
+        document.getElementById("education");
 
 
-        const button =
-            card.querySelector("button");
+    if (educationSection) {
 
-
-        /* ---------------------------------------------
-           AI TUTOR
-        --------------------------------------------- */
-
-        if (
-            text === "AI Tutor" &&
-            !button
-        ) {
-
-            const tutorButton =
-                document.createElement("button");
-
-            tutorButton.type = "button";
-
-            tutorButton.className = "button";
-
-            tutorButton.dataset.tool =
-                "AI Tutor";
-
-            tutorButton.textContent =
-                "Start AI Tutor →";
-
-            card.appendChild(
-                tutorButton
+        const educationCards =
+            educationSection.querySelectorAll(
+                ".card"
             );
 
-            tutorButton.addEventListener(
-                "click",
-                event => {
 
-                    event.preventDefault();
+        educationCards.forEach(card => {
 
-                    openEducationPrompt(
-                        "AI Tutor",
-                        "What subject or topic would you like KLYDE to teach you?"
-                    );
-
-                }
-            );
-
-        }
+            const heading =
+                card.querySelector("h3");
 
 
-        /* ---------------------------------------------
-           REVISION
-        --------------------------------------------- */
-
-        if (
-            text === "Revision" &&
-            !button
-        ) {
-
-            const revisionButton =
-                document.createElement("button");
-
-            revisionButton.type = "button";
-
-            revisionButton.className = "button";
-
-            revisionButton.dataset.tool =
-                "Revision";
-
-            revisionButton.textContent =
-                "Start Revision →";
-
-            card.appendChild(
-                revisionButton
-            );
-
-            revisionButton.addEventListener(
-                "click",
-                event => {
-
-                    event.preventDefault();
-
-                    openEducationPrompt(
-                        "Revision",
-                        "Which subject or topic do you want to revise?"
-                    );
-
-                }
-            );
-
-        }
+            const text =
+                heading
+                    ? heading.textContent.trim()
+                    : "";
 
 
-        /* ---------------------------------------------
-           STUDY TOOLS
-        --------------------------------------------- */
-
-        if (
-            text === "Study Tools" &&
-            !button
-        ) {
-
-            const studyButton =
-                document.createElement("button");
-
-            studyButton.type = "button";
-
-            studyButton.className = "button";
-
-            studyButton.dataset.tool =
-                "Study Tools";
-
-            studyButton.textContent =
-                "Open Study Tools →";
-
-            card.appendChild(
-                studyButton
-            );
-
-            studyButton.addEventListener(
-                "click",
-                event => {
-
-                    event.preventDefault();
-
-                    openEducationPrompt(
-                        "Study Tools",
-                        "What do you need help creating — notes, summary, quiz or study plan?"
-                    );
-
-                }
-            );
-
-        }
-
-    });
-
-}
+            const existingButton =
+                card.querySelector("button");
 
 
-/* =====================================================
-   EDUCATION PROMPT
-===================================================== */
+            /* -----------------------------------------
+               AI TUTOR
+            ----------------------------------------- */
 
-function openEducationPrompt(
-    mode,
-    message
-) {
+            if (
+                text === "AI Tutor" &&
+                !existingButton
+            ) {
 
-    const popup =
-        document.createElement("div");
-
-
-    popup.className =
-        "klyde-education-popup";
+                const tutorButton =
+                    document.createElement("button");
 
 
-    popup.style.cssText = `
-
-        position:fixed;
-        inset:0;
-        background:rgba(0,0,0,.82);
-        z-index:99999;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        padding:20px;
-
-    `;
+                tutorButton.type =
+                    "button";
 
 
-    popup.innerHTML = `
+                tutorButton.className =
+                    "button";
 
-        <div
-            style="
-                width:100%;
-                max-width:520px;
-                background:white;
-                color:#111;
-                border-radius:20px;
-                padding:28px;
-                box-sizing:border-box;
-            "
-        >
+
+                tutorButton.textContent =
+                    "Start AI Tutor →";
+
+
+                card.appendChild(
+                    tutorButton
+                );
+
+
+                tutorButton.addEventListener(
+                    "click",
+                    event => {
+
+                        event.preventDefault();
+
+
+                        openEducationPrompt(
+                            "AI Tutor",
+                            "What subject or topic would you like KLYDE to teach you?"
+                        );
+
+                    }
+                );
+
+            }
+
+
+            /* -----------------------------------------
+               REVISION
+            ----------------------------------------- */
+
+            if (
+                text === "Revision" &&
+                !existingButton
+            ) {
+
+                const revisionButton =
+                    document.createElement("button");
+
+
+                revisionButton.type =
+                    "button";
+
+
+                revisionButton.className =
+                    "button";
+
+
+                revisionButton.textContent =
+                    "Start Revision →";
+
+
+                card.appendChild(
+                    revisionButton
+                );
+
+
+                revisionButton.addEventListener(
+                    "click",
+                    event => {
+
+                        event.preventDefault();
+
+
+                        openEducationPrompt(
+                            "Revision",
+                            "Which subject or topic do you want to revise?"
+                        );
+
+                    }
+                );
+
+            }
+
+
+            /* -----------------------------------------
+               STUDY TOOLS
+            ----------------------------------------- */
+
+            if (
+                text === "Study Tools" &&
+                !existingButton
+            ) {
+
+                const studyButton =
+                    document.createElement("button");
+
+
+                studyButton.type =
+                    "button";
+
+
+                studyButton.className =
+                    "button";
+
+
+                studyButton.textContent =
+                    "Open Study Tools →";
+
+
+                card.appendChild(
+                    studyButton
+                );
+
+
+                studyButton.addEventListener(
+                    "click",
+                    event => {
+
+                        event.preventDefault();
+
+
+                        openEducationPrompt(
+                            "Study Tools",
+                            "What do you need help creating — notes, summary, quiz or study plan?"
+                        );
+
+                    }
+                );
+
+            }
+
+        });
+
+    }
+
+
+    /* =================================================
+       EDUCATION PROMPT
+    ================================================= */
+
+    function openEducationPrompt(
+        mode,
+        message
+    ) {
+
+        const popup =
+            document.createElement("div");
+
+
+        popup.className =
+            "klyde-education-popup";
+
+
+        popup.style.cssText = `
+
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,.82);
+            z-index:99999;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:20px;
+
+        `;
+
+
+        popup.innerHTML = `
 
             <div
                 style="
-                    display:flex;
-                    justify-content:space-between;
-                    align-items:center;
-                    gap:15px;
+                    width:100%;
+                    max-width:520px;
+                    background:white;
+                    color:#111;
+                    border-radius:20px;
+                    padding:28px;
+                    box-sizing:border-box;
                 "
             >
 
-                <div>
+                <div
+                    style="
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                        gap:15px;
+                    "
+                >
 
-                    <span
+                    <div>
+
+                        <span
+                            style="
+                                font-size:13px;
+                                opacity:.6;
+                            "
+                        >
+                            KLYDE EDUCATION
+                        </span>
+
+                        <h2
+                            style="
+                                margin:5px 0 0;
+                            "
+                        >
+                            🎓 ${escapeHTML(mode)}
+                        </h2>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="klyde-education-close"
                         style="
-                            font-size:13px;
-                            opacity:.6;
+                            width:35px;
+                            height:35px;
+                            border:0;
+                            border-radius:50%;
+                            font-size:22px;
+                            cursor:pointer;
                         "
                     >
-                        KLYDE EDUCATION
-                    </span>
-
-                    <h2
-                        style="
-                            margin:5px 0 0;
-                        "
-                    >
-                        🎓 ${escapeHTML(mode)}
-                    </h2>
+                        ×
+                    </button>
 
                 </div>
 
 
-                <button
-                    type="button"
-                    class="klyde-education-close"
+                <p
                     style="
-                        width:35px;
-                        height:35px;
-                        border:0;
-                        border-radius:50%;
-                        font-size:22px;
-                        cursor:pointer;
+                        margin-top:20px;
+                        line-height:1.6;
                     "
                 >
-                    ×
+                    ${escapeHTML(message)}
+                </p>
+
+
+                <input
+                    type="text"
+                    class="klyde-education-input"
+                    placeholder="e.g. Form 4 Chemistry — Organic Chemistry"
+                    autocomplete="off"
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:14px;
+                        border:1px solid #ccc;
+                        border-radius:10px;
+                        margin-top:10px;
+                        font-size:15px;
+                    "
+                >
+
+
+                <button
+                    type="button"
+                    class="button klyde-education-submit"
+                    style="
+                        width:100%;
+                        margin-top:15px;
+                    "
+                >
+                    CONTINUE →
                 </button>
+
+
+                <small
+                    style="
+                        display:block;
+                        margin-top:12px;
+                        opacity:.55;
+                        line-height:1.5;
+                    "
+                >
+                    KLYDE will use its AI assistant to
+                    provide the educational response.
+                </small>
 
             </div>
 
-
-            <p
-                style="
-                    margin-top:20px;
-                    line-height:1.6;
-                "
-            >
-                ${escapeHTML(message)}
-            </p>
+        `;
 
 
-            <input
-                type="text"
-                class="klyde-education-input"
-                placeholder="e.g. Form 4 Chemistry — Organic Chemistry"
-                autocomplete="off"
-                style="
-                    width:100%;
-                    box-sizing:border-box;
-                    padding:14px;
-                    border:1px solid #ccc;
-                    border-radius:10px;
-                    margin-top:10px;
-                    font-size:15px;
-                "
-            >
-
-
-            <button
-                type="button"
-                class="button klyde-education-submit"
-                style="
-                    width:100%;
-                    margin-top:15px;
-                "
-            >
-                CONTINUE →
-            </button>
-
-
-            <small
-                style="
-                    display:block;
-                    margin-top:12px;
-                    opacity:.55;
-                    line-height:1.5;
-                "
-            >
-                KLYDE will use its AI assistant to
-                provide the educational response.
-            </small>
-
-        </div>
-
-    `;
-
-
-    document.body.appendChild(
-        popup
-    );
-
-
-    const input =
-        popup.querySelector(
-            ".klyde-education-input"
+        document.body.appendChild(
+            popup
         );
 
 
-    const submit =
-        popup.querySelector(
-            ".klyde-education-submit"
-        );
+        const input =
+            popup.querySelector(
+                ".klyde-education-input"
+            );
 
 
-    const close =
-        popup.querySelector(
-            ".klyde-education-close"
-        );
+        const submit =
+            popup.querySelector(
+                ".klyde-education-submit"
+            );
 
 
-    close.onclick = () => {
-
-        popup.remove();
-
-    };
-
-
-    input.focus();
+        const close =
+            popup.querySelector(
+                ".klyde-education-close"
+            );
 
 
-    /* ---------------------------------------------
-       SUBMIT EDUCATION REQUEST
-    --------------------------------------------- */
+        close.onclick = () => {
 
-    async function submitEducation() {
+            popup.remove();
 
-        const topic =
-            input.value.trim();
+        };
 
 
-        if (!topic) {
-
-            input.focus();
-
-            return;
-
-        }
+        input.focus();
 
 
-        popup.remove();
+        /* -----------------------------------------
+           EDUCATION SUBMIT
+        ----------------------------------------- */
+
+        async function submitEducation() {
+
+            const topic =
+                input.value.trim();
 
 
-        let prompt = "";
+            if (!topic) {
+
+                input.focus();
+
+                return;
+
+            }
 
 
-        if (mode === "AI Tutor") {
+            popup.remove();
 
-            prompt = `
+
+            let prompt = "";
+
+
+            if (
+                mode === "AI Tutor"
+            ) {
+
+                prompt = `
 Act as a professional KLYDE AI Tutor.
 
 Teach me:
@@ -2232,12 +2240,14 @@ Do not simply give a final answer.
 Help me understand the topic.
 `;
 
-        }
+            }
 
 
-        else if (mode === "Revision") {
+            else if (
+                mode === "Revision"
+            ) {
 
-            prompt = `
+                prompt = `
 Act as a KLYDE AI examination revision tutor.
 
 Create a revision session for:
@@ -2254,12 +2264,14 @@ Include:
 Keep it clear and suitable for a student.
 `;
 
-        }
+            }
 
 
-        else if (mode === "Study Tools") {
+            else if (
+                mode === "Study Tools"
+            ) {
 
-            prompt = `
+                prompt = `
 Act as KLYDE AI Study Tools.
 
 Help me with:
@@ -2279,46 +2291,48 @@ You may create:
 Make the material clear, organized and easy to study.
 `;
 
+            }
+
+
+            /*
+             * IMPORTANT:
+             * We call the ORIGINAL askKlyde()
+             * function. Nothing has been replaced.
+             */
+
+            await askKlyde(
+                prompt.trim()
+            );
+
         }
 
 
-        if (searchInput) {
-
-            searchInput.value =
-                prompt.trim();
-
-            searchInput.focus();
-
-        }
+        submit.onclick =
+            submitEducation;
 
 
-        await askKlyde(
-            prompt.trim()
+        input.addEventListener(
+            "keydown",
+            event => {
+
+                if (
+                    event.key === "Enter"
+                ) {
+
+                    event.preventDefault();
+
+                    submitEducation();
+
+                }
+
+            }
         );
 
     }
 
 
-    submit.onclick =
-        submitEducation;
+    /* =================================================
+       END OF KLYDE AI HUB SCRIPT
+    ================================================= */
 
-
-    input.addEventListener(
-        "keydown",
-        event => {
-
-            if (
-                event.key === "Enter"
-            ) {
-
-                event.preventDefault();
-
-                submitEducation();
-
-            }
-
-        }
-    );
-
-}
 });

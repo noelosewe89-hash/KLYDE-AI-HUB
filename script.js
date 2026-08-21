@@ -210,6 +210,12 @@ Now answer the user's latest message naturally.
                         <p>
                             ${escapeHTML(answer)}
                         </p>
+                           <button
+    type="button"
+    class="klyde-copy-response"
+>
+    📋 Copy
+</button>
 
                     </div>
 
@@ -226,6 +232,46 @@ Now answer the user's latest message naturally.
                 error
             );
 
+const copyButton =
+    result.querySelector(
+        ".klyde-copy-response"
+    );
+
+if (copyButton) {
+
+    copyButton.addEventListener(
+        "click",
+        async () => {
+
+            try {
+
+                await navigator.clipboard.writeText(
+                    answer
+                );
+
+                copyButton.textContent =
+                    "Copied ✓";
+
+                setTimeout(() => {
+
+                    copyButton.textContent =
+                        "📋 Copy";
+
+                }, 1500);
+
+            }
+
+            catch {
+
+                copyButton.textContent =
+                    "Copy unavailable";
+
+            }
+
+        }
+    );
+
+}
 
             result.innerHTML = `
 

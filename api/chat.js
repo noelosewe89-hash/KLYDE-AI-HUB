@@ -1,8 +1,24 @@
+/* =========================================================
+   KLYDE AI HUB — MULTI-PROVIDER AI ENGINE
+
+   PROVIDER ORDER:
+   1. Groq
+   2. Gemini
+   3. OpenRouter FREE MODEL
+   4. Hugging Face
+   5. Cerebras
+   6. Mistral
+
+   Existing KLYDE frontend expects:
+   { reply: "..." }
+========================================================= */
+
+
 export default async function handler(req, res) {
 
-    /* =========================================================
+    /* =====================================================
        METHOD CHECK
-    ========================================================= */
+    ===================================================== */
 
     if (req.method !== "POST") {
 
@@ -13,11 +29,12 @@ export default async function handler(req, res) {
     }
 
 
-    /* =========================================================
-       GET USER MESSAGE
-    ========================================================= */
+    /* =====================================================
+       READ REQUEST
+    ===================================================== */
 
-    const { message } = req.body || {};
+    const { message } =
+        req.body || {};
 
 
     if (
@@ -32,33 +49,46 @@ export default async function handler(req, res) {
     }
 
 
-    /* =========================================================
-       AI PROVIDERS
-       KLYDE keeps fallback support
-    ========================================================= */
+    /* =====================================================
+       PROVIDERS
+    ===================================================== */
 
     const providers = [
 
         {
             name: "Groq",
-
-            key:
-                process.env.GROQ_API_KEY,
-
-            call:
-                () => callGroq(message)
-
+            key: process.env.GROQ_API_KEY,
+            call: () => callGroq(message)
         },
 
         {
             name: "Gemini",
+            key: process.env.GEMINI_API_KEY,
+            call: () => callGemini(message)
+        },
 
-            key:
-                process.env.GEMINI_API_KEY,
+        {
+            name: "OpenRouter",
+            key: process.env.OPENROUTER_API_KEY,
+            call: () => callOpenRouter(message)
+        },
 
-            call:
-                () => callGemini(message)
+        {
+            name: "Hugging Face",
+            key: process.env.HUGGINGFACE_API_KEY,
+            call: () => callHuggingFace(message)
+        },
 
+        {
+            name: "Cerebras",
+            key: process.env.CEREBRAS_API_KEY,
+            call: () => callCerebras(message)
+        },
+
+        {
+            name: "Mistral",
+            key: process.env.MISTRAL_API_KEY,
+            call: () => callMistral(message)
         }
 
     ];
@@ -67,9 +97,9 @@ export default async function handler(req, res) {
     const failures = [];
 
 
-    /* =========================================================
-       TRY PROVIDERS ONE BY ONE
-    ========================================================= */
+    /* =====================================================
+       PROVIDER FALLBACK LOOP
+    ===================================================== */
 
     for (
         const provider of providers
@@ -146,22 +176,15 @@ export default async function handler(req, res) {
     }
 
 
-    /* =========================================================
-       BOTH PROVIDERS FAILED
-    ========================================================= */
+    /* =====================================================
+       ALL PROVIDERS FAILED
+    ===================================================== */
 
     console.error(
         "KLYDE AI provider failures:",
         failures
     );
 
-
-    /*
-       IMPORTANT:
-       We return the actual provider failure so we can see
-       exactly what is wrong instead of the vague:
-       "could not connect to any available AI provider."
-    */
 
     return res.status(503).json({
 
@@ -176,9 +199,9 @@ export default async function handler(req, res) {
 }
 
 
-/* =============================================================
+/* =========================================================
    KLYDE AI IDENTITY
-============================================================= */
+========================================================= */
 
 const KLYDE_SYSTEM_PROMPT = `
 
@@ -188,97 +211,37 @@ inside KLYDE AI HUB.
 Your identity is KLYDE AI.
 
 Be intelligent, helpful, clear, natural,
-confident and practical.
+confident, friendly and practical.
 
-Give useful answers instead of unnecessary
-disclaimers.
+Answer the user's actual question.
 
-Remember that you are the assistant inside
-KLYDE AI HUB.
+Use simple explanations when appropriate.
+
+If the user asks a follow-up question,
+use the conversation information supplied
+by the user.
+
+Never introduce yourself as Groq, Gemini,
+OpenRouter, Hugging Face, Cerebras or Mistral.
+
+Those are internal providers.
 
 If the user asks who you are, say:
 
-"I am KLYDE AI, the intelligent assistant inside KLYDE AI HUB."
+"I am KLYDE AI, the intelligent assistant
+inside KLYDE AI HUB."
 
-Never introduce yourself as Groq or Gemini.
-
-The underlying AI provider is an internal
-implementation detail.
-
-Only mention the provider if the user
-specifically asks which AI technology or
-provider is powering the response.
+Do not reveal internal provider details
+unless the user specifically asks.
 
 `;
 
 
-/* =============================================================
-   GROQ
-============================================================= */
+/* =========================================================
+   GENERIC SAFE JSON READER
+========================================================= */
 
-async function callGroq(message) {
-
-    const model =
-        process.env.GROQ_MODEL ||
-        "groq/compound-mini";
-
-
-    const response =
-        await fetch(
-
-            "https://api.groq.com/openai/v1/chat/completions",
-
-            {
-
-                method: "POST",
-
-
-                headers: {
-
-                    "Content-Type":
-                        "application/json",
-
-                    "Authorization":
-                        `Bearer ${process.env.GROQ_API_KEY}`
-
-                },
-
-
-                body:
-                    JSON.stringify({
-
-                        model: model,
-
-                        messages: [
-
-                            {
-                                role: "system",
-
-                                content:
-                                    KLYDE_SYSTEM_PROMPT
-
-                            },
-
-                            {
-                                role: "user",
-
-                                content:
-                                    message
-
-                            }
-
-                        ]
-
-                    })
-
-            }
-
-        );
-
-
-    /* =========================================================
-       READ GROQ RESPONSE SAFELY
-    ========================================================= */
+async function readJSON(response, providerName) {
 
     const rawText =
         await response.text();
@@ -299,23 +262,94 @@ async function callGroq(message) {
     catch {
 
         throw new Error(
-            `Groq returned a non-JSON response (HTTP ${response.status})`
+
+            `${providerName} returned invalid JSON ` +
+            `(HTTP ${response.status})`
+
         );
 
     }
 
 
-    /* =========================================================
-       GROQ ERROR
-    ========================================================= */
+    return data;
+
+}
+
+
+/* =========================================================
+   GROQ
+========================================================= */
+
+async function callGroq(message) {
+
+    const model =
+        process.env.GROQ_MODEL ||
+        "llama-3.3-70b-versatile";
+
+
+    const response =
+        await fetch(
+
+            "https://api.groq.com/openai/v1/chat/completions",
+
+            {
+
+                method: "POST",
+
+                headers: {
+
+                    "Content-Type":
+                        "application/json",
+
+                    "Authorization":
+                        `Bearer ${process.env.GROQ_API_KEY}`
+
+                },
+
+                body:
+                    JSON.stringify({
+
+                        model,
+
+                        messages: [
+
+                            {
+                                role:
+                                    "system",
+
+                                content:
+                                    KLYDE_SYSTEM_PROMPT
+                            },
+
+                            {
+                                role:
+                                    "user",
+
+                                content:
+                                    message
+                            }
+
+                        ]
+
+                    })
+
+            }
+
+        );
+
+
+    const data =
+        await readJSON(
+            response,
+            "Groq"
+        );
+
 
     if (!response.ok) {
 
         throw new Error(
 
             data?.error?.message ||
-
-            data?.message ||
 
             `Groq HTTP ${response.status}`
 
@@ -324,86 +358,44 @@ async function callGroq(message) {
     }
 
 
-    /* =========================================================
-       GROQ ANSWER
-    ========================================================= */
-
-    const answer =
+    return (
 
         data
             ?.choices?.[0]
-            ?.message?.content;
+            ?.message?.content ||
 
+        null
 
-    if (
-        !answer ||
-        typeof answer !== "string"
-    ) {
-
-        throw new Error(
-            "Groq returned no usable answer."
-        );
-
-    }
-
-
-    return answer;
+    );
 
 }
 
 
-/* =============================================================
+/* =========================================================
    GEMINI
-============================================================= */
+========================================================= */
 
 async function callGemini(message) {
 
-    /*
-       You can override this in Vercel with:
-
-       GEMINI_MODEL=gemini-3.6-flash
-
-       Otherwise KLYDE uses this default.
-    */
-
     const model =
-
         process.env.GEMINI_MODEL ||
-
         "gemini-3.6-flash";
 
 
-    const apiKey =
-        process.env.GEMINI_API_KEY;
-
-
-    if (!apiKey) {
-
-        throw new Error(
-            "GEMINI_API_KEY is not configured."
-        );
-
-    }
-
-
-    /* =========================================================
-       GEMINI URL
-    ========================================================= */
-
     const url =
 
-        "https://generativelanguage.googleapis.com/v1beta/models/" +
+        "https://generativelanguage.googleapis.com/" +
+
+        "v1beta/models/" +
 
         encodeURIComponent(model) +
 
         ":generateContent?key=" +
 
-        encodeURIComponent(apiKey);
+        encodeURIComponent(
+            process.env.GEMINI_API_KEY
+        );
 
-
-    /* =========================================================
-       GEMINI REQUEST
-    ========================================================= */
 
     const response =
         await fetch(
@@ -414,14 +406,12 @@ async function callGemini(message) {
 
                 method: "POST",
 
-
                 headers: {
 
                     "Content-Type":
                         "application/json"
 
                 },
-
 
                 body:
                     JSON.stringify({
@@ -438,7 +428,6 @@ async function callGemini(message) {
                             ]
 
                         },
-
 
                         contents: [
 
@@ -467,48 +456,18 @@ async function callGemini(message) {
         );
 
 
-    /* =========================================================
-       READ GEMINI RESPONSE SAFELY
-    ========================================================= */
-
-    const rawText =
-        await response.text();
-
-
-    let data = {};
-
-
-    try {
-
-        data =
-            rawText
-                ? JSON.parse(rawText)
-                : {};
-
-    }
-
-    catch {
-
-        throw new Error(
-
-            `Gemini returned a non-JSON response (HTTP ${response.status})`
-
+    const data =
+        await readJSON(
+            response,
+            "Gemini"
         );
 
-    }
-
-
-    /* =========================================================
-       GEMINI ERROR
-    ========================================================= */
 
     if (!response.ok) {
 
         throw new Error(
 
             data?.error?.message ||
-
-            data?.message ||
 
             `Gemini HTTP ${response.status}`
 
@@ -517,34 +476,415 @@ async function callGemini(message) {
     }
 
 
-    /* =========================================================
-       GEMINI ANSWER
-    ========================================================= */
-
-    const answer =
+    return (
 
         data
             ?.candidates?.[0]
-            ?.content?.parts
+            ?.content
+            ?.parts
             ?.map(
                 part =>
                     part?.text || ""
             )
-            ?.join("");
+            ?.join("") ||
+
+        null
+
+    );
+
+}
 
 
-    if (
-        !answer ||
-        !answer.trim()
-    ) {
+/* =========================================================
+   OPENROUTER
+   FREE MODEL
+========================================================= */
+
+async function callOpenRouter(message) {
+
+    const model =
+        process.env.OPENROUTER_MODEL ||
+        "openrouter/free";
+
+
+    const response =
+        await fetch(
+
+            "https://openrouter.ai/api/v1/chat/completions",
+
+            {
+
+                method: "POST",
+
+                headers: {
+
+                    "Content-Type":
+                        "application/json",
+
+                    "Authorization":
+                        `Bearer ${process.env.OPENROUTER_API_KEY}`,
+
+                    "HTTP-Referer":
+                        "https://klyde-ai-hub.vercel.app",
+
+                    "X-Title":
+                        "KLYDE AI HUB"
+
+                },
+
+                body:
+                    JSON.stringify({
+
+                        model,
+
+                        messages: [
+
+                            {
+                                role:
+                                    "system",
+
+                                content:
+                                    KLYDE_SYSTEM_PROMPT
+                            },
+
+                            {
+                                role:
+                                    "user",
+
+                                content:
+                                    message
+                            }
+
+                        ]
+
+                    })
+
+            }
+
+        );
+
+
+    const data =
+        await readJSON(
+            response,
+            "OpenRouter"
+        );
+
+
+    if (!response.ok) {
 
         throw new Error(
-            "Gemini returned no usable answer."
+
+            data?.error?.message ||
+
+            `OpenRouter HTTP ${response.status}`
+
         );
 
     }
 
 
-    return answer;
+    return (
+
+        data
+            ?.choices?.[0]
+            ?.message?.content ||
+
+        null
+
+    );
+
+}
+
+
+/* =========================================================
+   HUGGING FACE
+========================================================= */
+
+async function callHuggingFace(message) {
+
+    const model =
+        process.env.HUGGINGFACE_MODEL ||
+
+        "HuggingFaceH4/zephyr-7b-beta";
+
+
+    const response =
+        await fetch(
+
+            "https://router.huggingface.co/" +
+            "hf-inference/models/" +
+            encodeURIComponent(model) +
+            "/v1/chat/completions",
+
+            {
+
+                method: "POST",
+
+                headers: {
+
+                    "Content-Type":
+                        "application/json",
+
+                    "Authorization":
+                        `Bearer ${process.env.HUGGINGFACE_API_KEY}`
+
+                },
+
+                body:
+                    JSON.stringify({
+
+                        model,
+
+                        messages: [
+
+                            {
+                                role:
+                                    "system",
+
+                                content:
+                                    KLYDE_SYSTEM_PROMPT
+                            },
+
+                            {
+                                role:
+                                    "user",
+
+                                content:
+                                    message
+                            }
+
+                        ]
+
+                    })
+
+            }
+
+        );
+
+
+    const data =
+        await readJSON(
+            response,
+            "Hugging Face"
+        );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+
+            data?.error?.message ||
+
+            data?.error ||
+
+            `Hugging Face HTTP ${response.status}`
+
+        );
+
+    }
+
+
+    return (
+
+        data
+            ?.choices?.[0]
+            ?.message?.content ||
+
+        null
+
+    );
+
+}
+
+
+/* =========================================================
+   CEREBRAS
+========================================================= */
+
+async function callCerebras(message) {
+
+    const model =
+        process.env.CEREBRAS_MODEL ||
+
+        "llama-3.3-70b";
+
+
+    const response =
+        await fetch(
+
+            "https://api.cerebras.ai/v1/chat/completions",
+
+            {
+
+                method: "POST",
+
+                headers: {
+
+                    "Content-Type":
+                        "application/json",
+
+                    "Authorization":
+                        `Bearer ${process.env.CEREBRAS_API_KEY}`
+
+                },
+
+                body:
+                    JSON.stringify({
+
+                        model,
+
+                        messages: [
+
+                            {
+                                role:
+                                    "system",
+
+                                content:
+                                    KLYDE_SYSTEM_PROMPT
+                            },
+
+                            {
+                                role:
+                                    "user",
+
+                                content:
+                                    message
+                            }
+
+                        ]
+
+                    })
+
+            }
+
+        );
+
+
+    const data =
+        await readJSON(
+            response,
+            "Cerebras"
+        );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+
+            data?.error?.message ||
+
+            `Cerebras HTTP ${response.status}`
+
+        );
+
+    }
+
+
+    return (
+
+        data
+            ?.choices?.[0]
+            ?.message?.content ||
+
+        null
+
+    );
+
+}
+
+
+/* =========================================================
+   MISTRAL
+========================================================= */
+
+async function callMistral(message) {
+
+    const model =
+        process.env.MISTRAL_MODEL ||
+
+        "mistral-small-latest";
+
+
+    const response =
+        await fetch(
+
+            "https://api.mistral.ai/v1/chat/completions",
+
+            {
+
+                method: "POST",
+
+                headers: {
+
+                    "Content-Type":
+                        "application/json",
+
+                    "Authorization":
+                        `Bearer ${process.env.MISTRAL_API_KEY}`
+
+                },
+
+                body:
+                    JSON.stringify({
+
+                        model,
+
+                        messages: [
+
+                            {
+                                role:
+                                    "system",
+
+                                content:
+                                    KLYDE_SYSTEM_PROMPT
+                            },
+
+                            {
+                                role:
+                                    "user",
+
+                                content:
+                                    message
+                            }
+
+                        ]
+
+                    })
+
+            }
+
+        );
+
+
+    const data =
+        await readJSON(
+            response,
+            "Mistral"
+        );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+
+            data?.error?.message ||
+
+            `Mistral HTTP ${response.status}`
+
+        );
+
+    }
+
+
+    return (
+
+        data
+            ?.choices?.[0]
+            ?.message?.content ||
+
+        null
+
+    );
 
 }

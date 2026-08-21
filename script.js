@@ -1,10 +1,10 @@
 /* =====================================================
    KLYDE AI HUB — MAIN SCRIPT
-   AI + SPORTS + BROADCASTERS + EDUCATION
+   AI + MEMORY + THINKING + COPY
+   SPORTS + BROADCASTERS + EDUCATION
 ===================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
-   let conversation = [];
 
     /* =================================================
        BASIC ELEMENTS
@@ -24,6 +24,16 @@ document.addEventListener("DOMContentLoaded", () => {
             ".quick-prompts button"
         );
 
+    const sportsSection =
+        document.getElementById("sports");
+
+
+    /* =================================================
+       AI MEMORY
+    ================================================= */
+
+    let conversation = [];
+
 
     /* =================================================
        ESCAPE HTML
@@ -31,7 +41,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function escapeHTML(value) {
 
-        if (value === null || value === undefined) {
+        if (
+            value === null ||
+            value === undefined
+        ) {
             return "";
         }
 
@@ -74,41 +87,81 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =================================================
-       AI CHAT
+       BUILD AI MEMORY PROMPT
     ================================================= */
 
-   function buildConversationPrompt() {
+    function buildConversationPrompt() {
 
-    return `
-You are KLYDE AI, the intelligent assistant inside KLYDE AI HUB.
+        const history =
+            conversation
+                .map(item => {
 
-Be intelligent, helpful, clear, friendly, confident and practical.
+                    return `${
+                        item.role === "user"
+                            ? "USER"
+                            : "KLYDE AI"
+                    }: ${item.message}`;
 
-Use the conversation history below to understand follow-up questions
-and maintain context.
+                })
+                .join("\n");
+
+        return `
+You are KLYDE AI, the intelligent assistant
+inside KLYDE AI HUB.
+
+Be intelligent, helpful, clear, natural,
+confident and practical.
+
+Remember the conversation history below.
+Use previous messages when answering
+follow-up questions.
+
+Do not pretend to remember information
+that is not contained in the conversation.
 
 CONVERSATION HISTORY:
 
-${conversation.map(item => {
-
-    return `${item.role === "user"
-        ? "USER"
-        : "KLYDE AI"}: ${item.message}`;
-
-}).join("\n")}
+${history}
 
 END CONVERSATION HISTORY.
 
-Now answer the user's latest message naturally.
+Answer the user's latest message naturally.
 `;
-}
-   async function askKlyde(question) {
+    }
 
-        if (!question) {
-            return;
-        }
 
-       result.innerHTML = thinkingHTML();
+    /* =================================================
+       THINKING ANIMATION
+    ================================================= */
+
+    function thinkingHTML() {
+
+        return `
+
+            <div class="klyde-welcome">
+
+                <div class="welcome-icon">
+                    K
+                </div>
+
+                <div>
+
+                    <strong>
+                        KLYDE AI
+                    </strong>
+
+                    <p>
+
+                        KLYDE is thinking
+
+                        <span class="thinking-dots">
+
+                            <span>.</span>
+                            <span>.</span>
+                            <span>.</span>
+
+                        </span>
+
                     </p>
 
                 </div>
@@ -117,111 +170,253 @@ Now answer the user's latest message naturally.
 
         `;
 
+    }
 
-       conversation.push({
-    role: "user",
-    message: question
-});
-       try {
+
+    /* =================================================
+       DISPLAY AI RESPONSE
+    ================================================= */
+
+    function displayAIResponse(answer) {
+
+        result.innerHTML = `
+
+            <div class="klyde-welcome">
+
+                <div class="welcome-icon">
+                    K
+                </div>
+
+                <div>
+
+                    <strong>
+                        KLYDE AI
+                    </strong>
+
+                    <p style="white-space:pre-wrap;">
+                        ${escapeHTML(answer)}
+                    </p>
+
+                    <button
+                        type="button"
+                        class="klyde-copy-response"
+                    >
+                        📋 Copy
+                    </button>
+
+                </div>
+
+            </div>
+
+        `;
+
+
+        const copyButton =
+            result.querySelector(
+                ".klyde-copy-response"
+            );
+
+
+        if (copyButton) {
+
+            copyButton.addEventListener(
+                "click",
+                async () => {
+
+                    try {
+
+                        await navigator
+                            .clipboard
+                            .writeText(answer);
+
+                        copyButton.textContent =
+                            "Copied ✓";
+
+
+                        setTimeout(
+                            () => {
+
+                                copyButton.textContent =
+                                    "📋 Copy";
+
+                            },
+                            1500
+                        );
+
+                    }
+
+                    catch (error) {
+
+                        console.error(
+                            "COPY ERROR:",
+                            error
+                        );
+
+                        copyButton.textContent =
+                            "Copy unavailable";
+
+                    }
+
+                }
+            );
+
+        }
+
+    }
+
+
+    /* =================================================
+       AI CHAT
+    ================================================= */
+
+    async function askKlyde(question) {
+
+        if (!question) {
+            return;
+        }
+
+
+        /* ---------------------------------------------
+           SHOW THINKING
+        --------------------------------------------- */
+
+        result.innerHTML =
+            thinkingHTML();
+
+
+        /* ---------------------------------------------
+           SAVE USER MESSAGE
+        --------------------------------------------- */
+
+        conversation.push({
+
+            role: "user",
+
+            message: question
+
+        });
+
+
+        try {
+
+            /* -----------------------------------------
+               SEND MEMORY TO BACKEND
+            ----------------------------------------- */
 
             const response =
                 await fetch(
                     "/api/chat",
                     {
+
                         method: "POST",
 
                         headers: {
+
                             "Content-Type":
                                 "application/json"
+
                         },
 
-                     body: JSON.stringify({
-    message: buildConversationPrompt()
-       function buildConversationPrompt() {
+                        body: JSON.stringify({
 
-    return `
-You are KLYDE AI, the intelligent assistant inside KLYDE AI HUB.
+                            message:
+                                buildConversationPrompt()
 
-Be intelligent, helpful, clear, friendly, confident and practical.
+                        })
 
-Use the conversation history below to understand follow-up questions
-and maintain context.
-
-CONVERSATION HISTORY:
-
-${conversation.map(item => {
-
-    return `${item.role === "user"
-        ? "USER"
-        : "KLYDE AI"}: ${item.message}`;
-
-}).join("\n")}
-
-END CONVERSATION HISTORY.
-
-Now answer the user's latest message naturally.
-`;
-}
-})
                     }
                 );
 
 
-            const data =
-                await response.json();
+            /* -----------------------------------------
+               READ RESPONSE SAFELY
+            ----------------------------------------- */
 
+            let data = {};
 
-            if (!response.ok) {
+            try {
+
+                data =
+                    await response.json();
+
+            }
+
+            catch {
 
                 throw new Error(
-                    data?.error ||
-                    "KLYDE AI request failed."
+                    "KLYDE received an invalid response from the AI server."
                 );
 
             }
 
 
-           const answer =
-    data?.reply ||
-    data?.answer ||
-    data?.message ||
-    data?.response ||
-    "KLYDE could not generate a response.";
-    conversation.push({
-    role: "assistant",
-    message: answer
-});
+            /* -----------------------------------------
+               API ERROR
+            ----------------------------------------- */
+
+            if (!response.ok) {
+
+                throw new Error(
+
+                    data?.error ||
+
+                    data?.message ||
+
+                    "KLYDE AI request failed."
+
+                );
+
+            }
 
 
-            result.innerHTML = `
+            /* -----------------------------------------
+               GET AI ANSWER
+            ----------------------------------------- */
 
-                <div class="klyde-welcome">
+            const answer =
 
-                    <div class="welcome-icon">
-                        K
-                    </div>
+                data?.reply ||
 
-                    <div>
+                data?.answer ||
 
-                        <strong>
-                            KLYDE AI
-                        </strong>
+                data?.message ||
 
-                        <p>
-                            ${escapeHTML(answer)}
-                        </p>
-                           <button
-    type="button"
-    class="klyde-copy-response"
->
-    📋 Copy
-</button>
+                data?.response ||
 
-                    </div>
+                "KLYDE could not generate a response.";
 
-                </div>
 
-            `;
+            /* -----------------------------------------
+               SAVE AI RESPONSE TO MEMORY
+            ----------------------------------------- */
+
+            conversation.push({
+
+                role: "assistant",
+
+                message: answer
+
+            });
+
+
+            /* -----------------------------------------
+               DISPLAY ANSWER
+            ----------------------------------------- */
+
+            displayAIResponse(
+                answer
+            );
+
+
+            /* -----------------------------------------
+               CLEAR INPUT
+            ----------------------------------------- */
+
+            if (searchInput) {
+
+                searchInput.value = "";
+
+            }
 
         }
 
@@ -232,46 +427,13 @@ Now answer the user's latest message naturally.
                 error
             );
 
-const copyButton =
-    result.querySelector(
-        ".klyde-copy-response"
-    );
 
-if (copyButton) {
+            /* -----------------------------------------
+               REMOVE FAILED USER MESSAGE
+            ----------------------------------------- */
 
-    copyButton.addEventListener(
-        "click",
-        async () => {
+            conversation.pop();
 
-            try {
-
-                await navigator.clipboard.writeText(
-                    answer
-                );
-
-                copyButton.textContent =
-                    "Copied ✓";
-
-                setTimeout(() => {
-
-                    copyButton.textContent =
-                        "📋 Copy";
-
-                }, 1500);
-
-            }
-
-            catch {
-
-                copyButton.textContent =
-                    "Copy unavailable";
-
-            }
-
-        }
-    );
-
-}
 
             result.innerHTML = `
 
@@ -317,7 +479,9 @@ if (copyButton) {
                 event.preventDefault();
 
                 const question =
-                    searchInput.value.trim();
+                    searchInput
+                        ? searchInput.value.trim()
+                        : "";
 
                 if (!question) {
                     return;
@@ -335,40 +499,49 @@ if (copyButton) {
        QUICK PROMPTS
     ================================================= */
 
-    quickPrompts.forEach(button => {
+    quickPrompts.forEach(
+        button => {
 
-        button.addEventListener(
-            "click",
-            () => {
+            button.addEventListener(
+                "click",
+                event => {
 
-                const prompt =
-                    button.dataset.tool ||
-                    button.textContent.trim();
+                    event.preventDefault();
 
-                if (searchInput) {
+                    const prompt =
 
-                    searchInput.value =
-                        prompt;
+                        button.dataset.tool ||
 
-                    searchInput.focus();
+                        button.textContent.trim();
+
+
+                    if (!prompt) {
+                        return;
+                    }
+
+
+                    if (searchInput) {
+
+                        searchInput.value =
+                            prompt;
+
+                        searchInput.focus();
+
+                    }
+
+
+                    askKlyde(prompt);
 
                 }
+            );
 
-                askKlyde(prompt);
-
-            }
-        );
-
-    });
+        }
+    );
 
 
     /* =================================================
-       SPORTS SECTION
+       SPORTS INITIALIZATION
     ================================================= */
-
-    const sportsSection =
-        document.getElementById("sports");
-
 
     if (sportsSection) {
 
@@ -394,10 +567,6 @@ if (copyButton) {
         }
 
 
-        const original =
-            container.innerHTML;
-
-
         container.innerHTML = `
 
             <div
@@ -418,7 +587,8 @@ if (copyButton) {
                     <p>
                         Live football scores,
                         fixtures, results and
-                        verified broadcaster information.
+                        verified broadcaster
+                        information.
                     </p>
 
                 </div>
@@ -488,20 +658,25 @@ if (copyButton) {
             );
 
 
-        controls.forEach(button => {
+        controls.forEach(
+            button => {
 
-            button.addEventListener(
-                "click",
-                () => {
+                button.addEventListener(
+                    "click",
+                    event => {
 
-                    loadSports(
-                        button.dataset.sportsType
-                    );
+                        event.preventDefault();
 
-                }
-            );
+                        loadSports(
+                            button.dataset
+                                .sportsType
+                        );
 
-        });
+                    }
+                );
+
+            }
+        );
 
 
         loadSports("live");
@@ -532,8 +707,11 @@ if (copyButton) {
 
 
         status.textContent =
+
             type === "live"
+
                 ? "Loading live matches..."
+
                 : "Loading matches...";
 
 
@@ -546,7 +724,8 @@ if (copyButton) {
                 </strong>
 
                 <p>
-                    Getting the latest football data...
+                    Getting the latest
+                    football data...
                 </p>
 
             </div>
@@ -564,15 +743,32 @@ if (copyButton) {
                 );
 
 
-            const data =
-                await response.json();
+            let data = {};
+
+            try {
+
+                data =
+                    await response.json();
+
+            }
+
+            catch {
+
+                throw new Error(
+                    "Sports server returned an invalid response."
+                );
+
+            }
 
 
             if (!response.ok) {
 
                 throw new Error(
+
                     data?.error ||
+
                     "Sports API request failed."
+
                 );
 
             }
@@ -585,26 +781,41 @@ if (copyButton) {
             status.innerHTML = `
 
                 <strong>
+
                     ${
                         type === "live"
+
                             ? "🔴 LIVE NOW"
+
                             : type === "fixtures"
+
                                 ? "📅 UPCOMING FIXTURES"
+
                                 : "🏆 RECENT RESULTS"
+
                     }
+
                 </strong>
 
                 <span style="opacity:.7;">
-                    — ${matches.length} matches
+
+                    —
+                    ${matches.length}
+                    matches
+
                 </span>
 
             `;
 
 
             renderSportsMatches(
+
                 matches,
+
                 type,
+
                 matchesContainer
+
             );
 
         }
@@ -645,7 +856,7 @@ if (copyButton) {
 
 
     /* =================================================
-       RENDER SPORTS
+       RENDER SPORTS MATCHES
     ================================================= */
 
     function renderSportsMatches(
@@ -661,11 +872,16 @@ if (copyButton) {
                 <div class="card">
 
                     <strong>
+
                         ${
                             type === "live"
+
                                 ? "🔴 NO LIVE MATCHES"
+
                                 : "⚽ NO MATCHES FOUND"
+
                         }
+
                     </strong>
 
                     <p>
@@ -683,227 +899,255 @@ if (copyButton) {
 
 
         container.innerHTML =
-            matches.map(match => {
 
-                const fixture =
-                    match.fixture || {};
+            matches.map(
+                match => {
 
-                const league =
-                    match.league || {};
-
-                const teams =
-                    match.teams || {};
-
-                const goals =
-                    match.goals || {};
-
-                const status =
-                    fixture.status || {};
+                    const fixture =
+                        match.fixture || {};
 
 
-                const home =
-                    teams.home || {};
-
-                const away =
-                    teams.away || {};
+                    const league =
+                        match.league || {};
 
 
-                const homeScore =
-                    goals.home ?? 0;
-
-                const awayScore =
-                    goals.away ?? 0;
+                    const teams =
+                        match.teams || {};
 
 
-                const isLive =
-                    type === "live";
+                    const goals =
+                        match.goals || {};
 
 
-                return `
-
-                    <div
-                        class="card klyde-match-card"
-                        style="margin-bottom:15px;"
-                    >
-
-                        <span
-                            class="${
-                                isLive
-                                    ? "live"
-                                    : "label"
-                            }"
-                        >
-
-                            ${
-                                isLive
-                                    ? `● LIVE ${
-                                        status.elapsed
-                                            ? status.elapsed + "'"
-                                            : ""
-                                      }`
-                                    : escapeHTML(
-                                        status.long ||
-                                        "MATCH"
-                                      )
-                            }
-
-                        </span>
+                    const status =
+                        fixture.status || {};
 
 
-                        <small>
-                            ${escapeHTML(
-                                league.name ||
-                                "Football"
-                            )}
+                    const home =
+                        teams.home || {};
 
-                            ${
-                                league.country
-                                    ? " · " +
-                                      escapeHTML(
-                                        league.country
-                                      )
-                                    : ""
-                            }
 
-                        </small>
+                    const away =
+                        teams.away || {};
 
+
+                    const isLive =
+                        type === "live";
+
+
+                    return `
 
                         <div
+                            class="card klyde-match-card"
                             style="
-                                display:flex;
-                                align-items:center;
-                                justify-content:space-between;
-                                gap:15px;
-                                margin-top:15px;
+                                margin-bottom:15px;
                             "
                         >
 
-                            <div
-                                style="
-                                    flex:1;
-                                    text-align:center;
-                                "
+                            <span
+                                class="${
+                                    isLive
+                                        ? "live"
+                                        : "label"
+                                }"
                             >
 
                                 ${
-                                    home.logo
-                                        ? `
-                                            <img
-                                                src="${escapeHTML(
-                                                    home.logo
-                                                )}"
-                                                alt=""
-                                                style="
-                                                    width:45px;
-                                                    height:45px;
-                                                    object-fit:contain;
-                                                "
-                                            >
-                                        `
+                                    isLive
+
+                                        ? `● LIVE ${
+                                            status.elapsed
+                                                ? status.elapsed + "'"
+                                                : ""
+                                          }`
+
+                                        : escapeHTML(
+                                            status.long ||
+                                            "MATCH"
+                                          )
+
+                                }
+
+                            </span>
+
+
+                            <small>
+
+                                ${escapeHTML(
+                                    league.name ||
+                                    "Football"
+                                )}
+
+                                ${
+                                    league.country
+
+                                        ? " · " +
+                                          escapeHTML(
+                                            league.country
+                                          )
+
                                         : ""
                                 }
 
-
-                                <strong>
-                                    ${escapeHTML(
-                                        home.name ||
-                                        "Home"
-                                    )}
-                                </strong>
-
-                            </div>
+                            </small>
 
 
                             <div
                                 style="
-                                    min-width:80px;
-                                    text-align:center;
+                                    display:flex;
+                                    align-items:center;
+                                    justify-content:space-between;
+                                    gap:15px;
+                                    margin-top:15px;
                                 "
                             >
 
-                                <strong
+                                <div
                                     style="
-                                        display:block;
-                                        font-size:25px;
+                                        flex:1;
+                                        text-align:center;
                                     "
                                 >
-                                    ${homeScore}
-                                    -
-                                    ${awayScore}
-                                </strong>
-
-
-                                <small>
 
                                     ${
-                                        isLive
-                                            ? escapeHTML(
-                                                status.long ||
-                                                ""
-                                              )
-                                            : formatTime(
-                                                fixture.date
-                                              )
+                                        home.logo
+
+                                            ? `
+                                                <img
+                                                    src="${escapeHTML(
+                                                        home.logo
+                                                    )}"
+                                                    alt=""
+                                                    style="
+                                                        width:45px;
+                                                        height:45px;
+                                                        object-fit:contain;
+                                                    "
+                                                >
+                                              `
+
+                                            : ""
                                     }
 
-                                </small>
 
-                            </div>
+                                    <strong>
 
+                                        ${escapeHTML(
+                                            home.name ||
+                                            "Home"
+                                        )}
 
-                            <div
-                                style="
-                                    flex:1;
-                                    text-align:center;
-                                "
-                            >
+                                    </strong>
 
-                                ${
-                                    away.logo
-                                        ? `
-                                            <img
-                                                src="${escapeHTML(
-                                                    away.logo
-                                                )}"
-                                                alt=""
-                                                style="
-                                                    width:45px;
-                                                    height:45px;
-                                                    object-fit:contain;
-                                                "
-                                            />
-                                        `
-                                        : ""
-                                }
+                                </div>
 
 
-                                <strong>
-                                    ${escapeHTML(
-                                        away.name ||
-                                        "Away"
-                                    )}
-                                </strong>
+                                <div
+                                    style="
+                                        min-width:80px;
+                                        text-align:center;
+                                    "
+                                >
 
-                            </div>
-
-                        </div>
-
-
-                        ${
-                            match.events &&
-                            match.events.length
-                                ? `
-
-                                    <div
+                                    <strong
                                         style="
-                                            margin-top:15px;
-                                            font-size:13px;
-                                            opacity:.8;
+                                            display:block;
+                                            font-size:25px;
                                         "
                                     >
 
                                         ${
-                                            match.events
+                                            goals.home ??
+                                            0
+                                        }
+
+                                        -
+
+                                        ${
+                                            goals.away ??
+                                            0
+                                        }
+
+                                    </strong>
+
+
+                                    <small>
+
+                                        ${
+                                            isLive
+
+                                                ? escapeHTML(
+                                                    status.long ||
+                                                    ""
+                                                  )
+
+                                                : formatTime(
+                                                    fixture.date
+                                                  )
+                                        }
+
+                                    </small>
+
+                                </div>
+
+
+                                <div
+                                    style="
+                                        flex:1;
+                                        text-align:center;
+                                    "
+                                >
+
+                                    ${
+                                        away.logo
+
+                                            ? `
+                                                <img
+                                                    src="${escapeHTML(
+                                                        away.logo
+                                                    )}"
+                                                    alt=""
+                                                    style="
+                                                        width:45px;
+                                                        height:45px;
+                                                        object-fit:contain;
+                                                    "
+                                                >
+                                              `
+
+                                            : ""
+                                    }
+
+
+                                    <strong>
+
+                                        ${escapeHTML(
+                                            away.name ||
+                                            "Away"
+                                        )}
+
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+
+                            ${
+                                match.events &&
+                                match.events.length
+
+                                    ? `
+
+                                        <div
+                                            style="
+                                                margin-top:15px;
+                                                font-size:13px;
+                                                opacity:.8;
+                                            "
+                                        >
+
+                                            ${match.events
                                                 .slice(-3)
                                                 .map(
                                                     event => `
@@ -919,54 +1163,59 @@ if (copyButton) {
 
                                                             —
 
-                                                            ${
-                                                                escapeHTML(
-                                                                    event.player?.name ||
-                                                                    "Goal"
-                                                                )
-                                                            }
+                                                            ${escapeHTML(
+                                                                event.player?.name ||
+                                                                "Goal"
+                                                            )}
 
                                                         </div>
 
                                                     `
                                                 )
                                                 .join("")
-                                        }
+                                            }
 
-                                    </div>
+                                        </div>
 
-                                `
-                                : ""
-                        }
+                                      `
+
+                                    : ""
+                            }
 
 
-                        ${
-                            isLive
-                                ? `
+                            ${
+                                isLive
 
-                                    <button
-                                        type="button"
-                                        class="button klyde-watch-live"
-                                        data-fixture-id="${escapeHTML(
-                                            fixture.id
-                                        )}"
-                                        style="
-                                            width:100%;
-                                            margin-top:18px;
-                                        "
-                                    >
-                                        📺 WATCH LIVE
-                                    </button>
+                                    ? `
 
-                                `
-                                : ""
-                        }
+                                        <button
+                                            type="button"
+                                            class="button klyde-watch-live"
+                                            data-fixture-id="${escapeHTML(
+                                                fixture.id
+                                            )}"
+                                            style="
+                                                width:100%;
+                                                margin-top:18px;
+                                            "
+                                        >
 
-                    </div>
+                                            📺 WATCH LIVE
 
-                `;
+                                        </button>
 
-            }).join("");
+                                      `
+
+                                    : ""
+                            }
+
+                        </div>
+
+                    `;
+
+                }
+            )
+            .join("");
 
 
         /* =============================================
@@ -977,27 +1226,33 @@ if (copyButton) {
             .querySelectorAll(
                 ".klyde-watch-live"
             )
-            .forEach(button => {
+            .forEach(
+                button => {
 
-                button.addEventListener(
-                    "click",
-                    () => {
+                    button.addEventListener(
+                        "click",
+                        event => {
 
-                        loadBroadcasters(
-                            button.dataset.fixtureId,
-                            button
-                        );
+                            event.preventDefault();
 
-                    }
-                );
+                            loadBroadcasters(
+                                button.dataset
+                                    .fixtureId,
 
-            });
+                                button
+                            );
+
+                        }
+                    );
+
+                }
+            );
 
     }
 
 
     /* =================================================
-       BROADCASTERS
+       BROADCASTER LOOKUP
     ================================================= */
 
     async function loadBroadcasters(
@@ -1030,39 +1285,43 @@ if (copyButton) {
                 );
 
 
-            const data =
-                await response.json();
+            let data = {};
+
+            try {
+
+                data =
+                    await response.json();
+
+            }
+
+            catch {
+
+                throw new Error(
+                    "Broadcaster server returned an invalid response."
+                );
+
+            }
 
 
             if (!response.ok) {
 
                 throw new Error(
+
                     data?.error ||
+
                     "Broadcaster lookup failed."
+
                 );
-
-            }
-
-
-            const broadcasters =
-                data?.broadcasters || [];
-
-
-            if (!broadcasters.length) {
-
-                showBroadcastPopup(
-                    [],
-                    fixtureId
-                );
-
-                return;
 
             }
 
 
             showBroadcastPopup(
-                broadcasters,
+
+                data?.broadcasters || [],
+
                 fixtureId
+
             );
 
         }
@@ -1076,8 +1335,11 @@ if (copyButton) {
 
 
             showSimplePopup(
+
                 "⚠️ BROADCAST ERROR",
+
                 error.message
+
             );
 
         }
@@ -1126,94 +1388,114 @@ if (copyButton) {
 
 
         const list =
+
             broadcasters.length
 
-                ? broadcasters.map(
-                    broadcaster => {
+                ? broadcasters
+                    .map(
+                        broadcaster => {
 
-                        const station =
-                            broadcaster.tvstation ||
-                            {};
-
-                        const name =
-                            station.name ||
-                            broadcaster.name ||
-                            broadcaster.station ||
-                            "Official Broadcaster";
+                            const station =
+                                broadcaster.tvstation ||
+                                {};
 
 
-                        const url =
-                            station.url ||
-                            broadcaster.url ||
-                            broadcaster.link ||
-                            "";
+                            const name =
+
+                                station.name ||
+
+                                broadcaster.name ||
+
+                                broadcaster.station ||
+
+                                "Official Broadcaster";
 
 
-                        return `
+                            const url =
 
-                            <div
-                                style="
-                                    padding:15px;
-                                    border:1px solid #ddd;
-                                    border-radius:12px;
-                                    margin-bottom:10px;
-                                "
-                            >
+                                station.url ||
 
-                                <strong>
-                                    📺
-                                    ${escapeHTML(
-                                        name
-                                    )}
-                                </strong>
+                                broadcaster.url ||
+
+                                broadcaster.link ||
+
+                                "";
 
 
-                                ${
-                                    url
-                                        ? `
+                            return `
 
-                                            <button
-                                                type="button"
-                                                class="klyde-open-stream"
-                                                data-url="${escapeHTML(
-                                                    url
-                                                )}"
-                                                style="
-                                                    display:block;
-                                                    width:100%;
-                                                    margin-top:10px;
-                                                    padding:11px;
-                                                    border:0;
-                                                    border-radius:9px;
-                                                    cursor:pointer;
-                                                "
-                                            >
-                                                WATCH →
-                                            </button>
+                                <div
+                                    style="
+                                        padding:15px;
+                                        border:1px solid #ddd;
+                                        border-radius:12px;
+                                        margin-bottom:10px;
+                                    "
+                                >
 
-                                        `
-                                        : `
+                                    <strong>
 
-                                            <p
-                                                style="
-                                                    font-size:13px;
-                                                    opacity:.6;
-                                                "
-                                            >
-                                                Broadcaster found,
-                                                but no viewing
-                                                URL was supplied.
-                                            </p>
+                                        📺
+                                        ${escapeHTML(
+                                            name
+                                        )}
 
-                                        `
-                                }
+                                    </strong>
 
-                            </div>
 
-                        `;
+                                    ${
+                                        url
 
-                    }
-                ).join("")
+                                            ? `
+
+                                                <button
+                                                    type="button"
+                                                    class="klyde-open-stream"
+                                                    data-url="${escapeHTML(
+                                                        url
+                                                    )}"
+                                                    style="
+                                                        display:block;
+                                                        width:100%;
+                                                        margin-top:10px;
+                                                        padding:11px;
+                                                        border:0;
+                                                        border-radius:9px;
+                                                        cursor:pointer;
+                                                    "
+                                                >
+
+                                                    WATCH →
+
+                                                </button>
+
+                                              `
+
+                                            : `
+
+                                                <p
+                                                    style="
+                                                        font-size:13px;
+                                                        opacity:.6;
+                                                    "
+                                                >
+
+                                                    Broadcaster found,
+                                                    but no viewing
+                                                    URL was supplied.
+
+                                                </p>
+
+                                              `
+                                    }
+
+                                </div>
+
+                            `;
+
+                        }
+                    )
+                    .join("")
 
                 : `
 
@@ -1226,18 +1508,22 @@ if (copyButton) {
                     >
 
                         <strong>
+
                             📺 NO VERIFIED BROADCAST
+
                         </strong>
 
                         <p>
+
                             Sportmonks currently has
                             no broadcaster information
                             for this fixture.
+
                         </p>
 
                     </div>
 
-                `;
+                  `;
 
 
         popup.innerHTML = `
@@ -1270,7 +1556,8 @@ if (copyButton) {
                         </h2>
 
                         <small>
-                            Fixture ${escapeHTML(
+                            Fixture
+                            ${escapeHTML(
                                 fixtureId
                             )}
                         </small>
@@ -1290,13 +1577,17 @@ if (copyButton) {
                             cursor:pointer;
                         "
                     >
+
                         ×
+
                     </button>
 
                 </div>
 
 
-                <div style="margin-top:20px;">
+                <div
+                    style="margin-top:20px;"
+                >
 
                     ${list}
 
@@ -1310,9 +1601,11 @@ if (copyButton) {
                         margin-top:15px;
                     "
                 >
+
                     KLYDE only displays broadcaster
                     information returned by its connected
                     sports data provider.
+
                 </p>
 
             </div>
@@ -1340,32 +1633,34 @@ if (copyButton) {
             .querySelectorAll(
                 ".klyde-open-stream"
             )
-            .forEach(button => {
+            .forEach(
+                button => {
 
-                button.onclick = () => {
+                    button.onclick = () => {
 
-                    const url =
-                        button.dataset.url;
+                        const url =
+                            button.dataset.url;
 
 
-                    if (
-                        url &&
-                        /^https?:\/\//i.test(
-                            url
-                        )
-                    ) {
+                        if (
+                            url &&
+                            /^https?:\/\//i.test(
+                                url
+                            )
+                        ) {
 
-                        window.open(
-                            url,
-                            "_blank",
-                            "noopener,noreferrer"
-                        );
+                            window.open(
+                                url,
+                                "_blank",
+                                "noopener,noreferrer"
+                            );
 
-                    }
+                        }
 
-                };
+                    };
 
-            });
+                }
+            );
 
     }
 
@@ -1419,12 +1714,15 @@ if (copyButton) {
                     ${escapeHTML(message)}
                 </p>
 
+
                 <button
                     type="button"
                     class="button klyde-close-popup"
                     style="margin-top:15px;"
                 >
+
                     CLOSE
+
                 </button>
 
             </div>
@@ -1458,75 +1756,82 @@ if (copyButton) {
         .querySelectorAll(
             "[data-tool]"
         )
-        .forEach(button => {
+        .forEach(
+            button => {
 
-            if (
-                button.closest(
-                    ".quick-prompts"
-                )
-            ) {
-                return;
-            }
-
-
-            if (
-                button.classList.contains(
-                    "klyde-watch-live"
-                )
-            ) {
-                return;
-            }
+                if (
+                    button.closest(
+                        ".quick-prompts"
+                    )
+                ) {
+                    return;
+                }
 
 
-            button.addEventListener(
-                "click",
-                () => {
+                if (
+                    button.classList.contains(
+                        "klyde-watch-live"
+                    )
+                ) {
+                    return;
+                }
 
-                    const tool =
-                        button.dataset.tool;
+
+                button.addEventListener(
+                    "click",
+                    event => {
+
+                        event.preventDefault();
 
 
-                    if (
-                        tool ===
-                        "Sports Center"
-                    ) {
+                        const tool =
+                            button.dataset.tool;
 
-                        if (sportsSection) {
 
-                            sportsSection
-                                .scrollIntoView({
-                                    behavior:
-                                        "smooth"
-                                });
+                        if (
+                            tool ===
+                            "Sports Center"
+                        ) {
 
-                            loadSports(
-                                "live"
-                            );
+                            if (
+                                sportsSection
+                            ) {
+
+                                sportsSection
+                                    .scrollIntoView({
+                                        behavior:
+                                            "smooth"
+                                    });
+
+
+                                loadSports(
+                                    "live"
+                                );
+
+                            }
+
+                            return;
 
                         }
 
-                        return;
+
+                        if (
+                            searchInput
+                        ) {
+
+                            searchInput.value =
+                                tool;
+
+                            searchInput.focus();
+
+                            askKlyde(tool);
+
+                        }
 
                     }
+                );
 
-
-                    if (
-                        searchInput &&
-                        searchForm
-                    ) {
-
-                        searchInput.value =
-                            tool;
-
-                        searchInput.focus();
-
-                        askKlyde(tool);
-
-                    }
-
-                }
-            );
-
-        });
+            }
+        );
 
 });

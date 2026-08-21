@@ -1,49 +1,38 @@
 export default async function handler(req, res) {
-    const token = process.env.SPORTMONKS_API_KEY;
-
-    if (!token) {
-        return res.status(500).json({
-            error: "SPORTMONKS_API_KEY is not configured."
-        });
-    }
-
-    const fixtureId = req.query.fixture;
-
-    if (!fixtureId) {
-        return res.status(400).json({
-            error: "Fixture ID is required."
-        });
-    }
 
     try {
-        const url =
-            `https://api.sportmonks.com/v3/football/fixtures/${fixtureId}?api_token=${encodeURIComponent(token)}&include=tvStations`;
 
-        const response = await fetch(url);
-        const data = await response.json();
+        const token = process.env.SPORTMONKS_API_KEY;
 
-        if (!response.ok) {
-            return res.status(response.status).json({
-                error:
-                    data?.message ||
-                    "Sportmonks request failed."
+        const fixture =
+            req.query.fixture || "1522004";
+
+        if (!token) {
+
+            return res.status(500).json({
+                error: "Sportmonks token not available to this function."
             });
+
         }
 
-        const stations =
-            data?.data?.tvStations ||
-            data?.data?.tv_stations ||
-            [];
+        const response = await fetch(
+            `https://api.sportmonks.com/v3/football/fixtures/${fixture}?api_token=${token}&include=tvStations`
+        );
 
-        return res.status(200).json({
-            success: true,
-            fixture: fixtureId,
-            broadcasters: stations
+        const data = await response.json();
+
+        return res.status(response.status).json({
+            success: response.ok,
+            fixture: fixture,
+            data: data
         });
 
     } catch (error) {
+
         return res.status(500).json({
             error: error.message
         });
+
     }
+
 }

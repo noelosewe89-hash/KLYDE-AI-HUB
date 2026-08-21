@@ -1206,7 +1206,529 @@
 <div id="toast"></div>
 
 
+<script>
 
+(function () {
+
+    const sportsMatches =
+        document.getElementById("sportsMatches");
+
+    const sportsStatus =
+        document.getElementById("sportsStatus");
+
+    const loadLive =
+        document.getElementById("loadLive");
+
+    const loadFixtures =
+        document.getElementById("loadFixtures");
+
+    const loadResults =
+        document.getElementById("loadResults");
+
+
+    function escapeHTML(value) {
+
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+
+    }
+
+
+    function formatTime(dateString) {
+
+        if (!dateString) return "";
+
+        const date =
+            new Date(dateString);
+
+        return date.toLocaleTimeString(
+            "en-KE",
+            {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false
+            }
+        );
+
+    }
+
+
+    function renderMatches(matches, type) {
+
+        if (!matches || !matches.length) {
+
+            sportsMatches.innerHTML = `
+
+                <div class="card">
+
+                    <strong>
+                        ${type === "live"
+                            ? "🔴 NO LIVE MATCHES"
+                            : "⚽ NO MATCHES FOUND"}
+                    </strong>
+
+                    <p>
+                        KLYDE SPORTS is connected,
+                        but there are no matches available
+                        for this request right now.
+                    </p>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        sportsMatches.innerHTML =
+            matches.map(match => {
+
+                const fixture =
+                    match.fixture || {};
+
+                const league =
+                    match.league || {};
+
+                const teams =
+                    match.teams || {};
+
+                const goals =
+                    match.goals || {};
+
+                const status =
+                    fixture.status || {};
+
+
+                const home =
+                    teams.home || {};
+
+                const away =
+                    teams.away || {};
+
+
+                const homeScore =
+                    goals.home ?? 0;
+
+                const awayScore =
+                    goals.away ?? 0;
+
+
+                const isLive =
+                    type === "live";
+
+
+                const elapsed =
+                    status.elapsed
+                    ? `${status.elapsed}'`
+                    : "";
+
+
+                const statusText =
+                    status.long || "";
+
+
+                return `
+
+                    <div
+                        class="card"
+                        style="
+                            margin-bottom:15px;
+                            position:relative;
+                        "
+                    >
+
+                        ${
+                            isLive
+                            ? `
+                                <span
+                                    class="live"
+                                >
+                                    ● LIVE ${escapeHTML(elapsed)}
+                                </span>
+                            `
+                            : `
+                                <span
+                                    class="label"
+                                >
+                                    ${escapeHTML(
+                                        statusText ||
+                                        "MATCH"
+                                    )}
+                                </span>
+                            `
+                        }
+
+
+                        <small>
+                            ${escapeHTML(
+                                league.name ||
+                                "Football"
+                            )}
+
+                            ·
+
+                            ${escapeHTML(
+                                league.country ||
+                                ""
+                            )}
+                        </small>
+
+
+                        <div
+                            style="
+                                display:flex;
+                                align-items:center;
+                                justify-content:space-between;
+                                gap:15px;
+                                margin-top:15px;
+                            "
+                        >
+
+                            <div
+                                style="
+                                    flex:1;
+                                    text-align:center;
+                                "
+                            >
+
+                                ${
+                                    home.logo
+                                    ? `
+                                        <img
+                                            src="${escapeHTML(
+                                                home.logo
+                                            )}"
+                                            alt=""
+                                            style="
+                                                width:42px;
+                                                height:42px;
+                                                object-fit:contain;
+                                            "
+                                        >
+                                    `
+                                    : ""
+                                }
+
+                                <strong>
+                                    ${escapeHTML(
+                                        home.name ||
+                                        "Home"
+                                    )}
+                                </strong>
+
+                            </div>
+
+
+                            <div
+                                style="
+                                    min-width:80px;
+                                    text-align:center;
+                                "
+                            >
+
+                                <strong
+                                    style="
+                                        font-size:25px;
+                                    "
+                                >
+                                    ${homeScore}
+                                    -
+                                    ${awayScore}
+                                </strong>
+
+                                ${
+                                    isLive
+                                    ? `
+                                        <small>
+                                            ${escapeHTML(
+                                                statusText
+                                            )}
+                                        </small>
+                                    `
+                                    : `
+                                        <small>
+                                            ${formatTime(
+                                                fixture.date
+                                            )}
+                                        </small>
+                                    `
+                                }
+
+                            </div>
+
+
+                            <div
+                                style="
+                                    flex:1;
+                                    text-align:center;
+                                "
+                            >
+
+                                ${
+                                    away.logo
+                                    ? `
+                                        <img
+                                            src="${escapeHTML(
+                                                away.logo
+                                            )}"
+                                            alt=""
+                                            style="
+                                                width:42px;
+                                                height:42px;
+                                                object-fit:contain;
+                                            "
+                                        >
+                                    `
+                                    : ""
+                                }
+
+                                <strong>
+                                    ${escapeHTML(
+                                        away.name ||
+                                        "Away"
+                                    )}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        ${
+                            match.events &&
+                            match.events.length
+                            ? `
+
+                                <div
+                                    style="
+                                        margin-top:15px;
+                                        font-size:13px;
+                                        opacity:.8;
+                                    "
+                                >
+
+                                    ${match.events
+                                        .slice(-3)
+                                        .map(event => `
+
+                                            <div>
+                                                ⚽
+                                                ${escapeHTML(
+                                                    event.time?.elapsed ||
+                                                    ""
+                                                )}'
+                                                —
+                                                ${escapeHTML(
+                                                    event.player?.name ||
+                                                    "Goal"
+                                                )}
+                                            </div>
+
+                                        `)
+                                        .join("")}
+
+                                </div>
+
+                            `
+                            : ""
+                        }
+
+                    </div>
+
+                `;
+
+            }).join("");
+
+    }
+
+
+    async function loadSports(type) {
+
+        sportsStatus.textContent =
+            "KLYDE SPORTS · LOADING...";
+
+
+        sportsMatches.innerHTML = `
+
+            <div class="card">
+
+                <strong>
+                    ⚽ Loading ${type} football...
+                </strong>
+
+                <p>
+                    Please wait...
+                </p>
+
+            </div>
+
+        `;
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/sports?type=${encodeURIComponent(type)}`
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok ||
+                data.error) {
+
+                throw new Error(
+                    data.error ||
+                    "Sports request failed."
+                );
+
+            }
+
+
+            renderMatches(
+                data.matches || [],
+                type
+            );
+
+
+            sportsStatus.textContent =
+                `KLYDE SPORTS ONLINE · ${
+                    data.results || 0
+                } MATCHES`;
+
+        }
+
+
+        catch (error) {
+
+            console.error(
+                "KLYDE SPORTS:",
+                error
+            );
+
+
+            sportsMatches.innerHTML = `
+
+                <div class="card">
+
+                    <strong>
+                        ⚠️ Sports error
+                    </strong>
+
+                    <p>
+                        ${escapeHTML(
+                            error.message
+                        )}
+                    </p>
+
+                </div>
+
+            `;
+
+
+            sportsStatus.textContent =
+                "KLYDE SPORTS · ERROR";
+
+        }
+
+    }
+
+
+    if (loadLive) {
+
+        loadLive.addEventListener(
+            "click",
+            function () {
+
+                loadSports("live");
+
+            }
+        );
+
+    }
+
+
+    if (loadFixtures) {
+
+        loadFixtures.addEventListener(
+            "click",
+            function () {
+
+                loadSports("fixtures");
+
+            }
+        );
+
+    }
+
+
+    if (loadResults) {
+
+        loadResults.addEventListener(
+            "click",
+            function () {
+
+                loadSports("results");
+
+            }
+        );
+
+    }
+
+
+    /*
+       Load live football automatically
+       when the Sports section is opened.
+    */
+
+    loadSports("live");
+
+
+    /*
+       Watch Live
+
+       We intentionally do not insert
+       unauthorized/pirated streams.
+
+       This button can later connect to
+       official broadcaster URLs.
+    */
+
+    const watchLiveButton =
+        document.getElementById(
+            "watchLiveButton"
+        );
+
+
+    if (watchLiveButton) {
+
+        watchLiveButton.addEventListener(
+            "click",
+            function () {
+
+                alert(
+                    "KLYDE LIVE: Official football streams will appear here when available."
+                );
+
+            }
+        );
+
+    }
+
+})();
+
+</script>
+
+<script src="script.js?v=4"></script>
 <script src="script.js?v=4"></script>
 
 

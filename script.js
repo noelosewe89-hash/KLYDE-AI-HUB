@@ -77,28 +77,38 @@ document.addEventListener("DOMContentLoaded", () => {
        AI CHAT
     ================================================= */
 
-    async function askKlyde(question) {
+   function buildConversationPrompt() {
+
+    return `
+You are KLYDE AI, the intelligent assistant inside KLYDE AI HUB.
+
+Be intelligent, helpful, clear, friendly, confident and practical.
+
+Use the conversation history below to understand follow-up questions
+and maintain context.
+
+CONVERSATION HISTORY:
+
+${conversation.map(item => {
+
+    return `${item.role === "user"
+        ? "USER"
+        : "KLYDE AI"}: ${item.message}`;
+
+}).join("\n")}
+
+END CONVERSATION HISTORY.
+
+Now answer the user's latest message naturally.
+`;
+}
+   async function askKlyde(question) {
 
         if (!question) {
             return;
         }
 
-        result.innerHTML = `
-
-            <div class="klyde-welcome">
-
-                <div class="welcome-icon">
-                    K
-                </div>
-
-                <div>
-
-                    <strong>
-                        KLYDE AI
-                    </strong>
-
-                    <p>
-                        KLYDE is thinking...
+       result.innerHTML = thinkingHTML();
                     </p>
 
                 </div>
@@ -108,7 +118,11 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
 
 
-        try {
+       conversation.push({
+    role: "user",
+    message: question
+});
+       try {
 
             const response =
                 await fetch(
@@ -121,9 +135,34 @@ document.addEventListener("DOMContentLoaded", () => {
                                 "application/json"
                         },
 
-                        body: JSON.stringify({
-                            message: question
-                        })
+                     body: JSON.stringify({
+    message: buildConversationPrompt()
+       function buildConversationPrompt() {
+
+    return `
+You are KLYDE AI, the intelligent assistant inside KLYDE AI HUB.
+
+Be intelligent, helpful, clear, friendly, confident and practical.
+
+Use the conversation history below to understand follow-up questions
+and maintain context.
+
+CONVERSATION HISTORY:
+
+${conversation.map(item => {
+
+    return `${item.role === "user"
+        ? "USER"
+        : "KLYDE AI"}: ${item.message}`;
+
+}).join("\n")}
+
+END CONVERSATION HISTORY.
+
+Now answer the user's latest message naturally.
+`;
+}
+})
                     }
                 );
 

@@ -4,6 +4,7 @@
 ===================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
+   let conversation = [];
 
     /* =================================================
        BASIC ELEMENTS

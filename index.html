@@ -1703,26 +1703,304 @@
        official broadcaster URLs.
     */
 
-    const watchLiveButton =
-        document.getElementById(
-            "watchLiveButton"
-        );
+   const watchLiveButton =
+    document.getElementById("watchLiveButton");
+
+if (watchLiveButton) {
+
+    watchLiveButton.addEventListener(
+        "click",
+        function () {
+
+            const broadcasters = [
+
+                {
+                    name: "FIFA+",
+                    type: "FREE",
+                    url: "https://www.plus.fifa.com/"
+                },
+
+                {
+                    name: "Official YouTube",
+                    type: "FREE",
+                    url: "https://www.youtube.com/"
+                },
+
+                {
+                    name: "KBC",
+                    type: "FREE",
+                    url: "https://www.kbc.co.ke/"
+                },
+
+                {
+                    name: "Official Club / League Stream",
+                    type: "FREE",
+                    url: "https://www.google.com/"
+                },
+
+                {
+                    name: "SuperSport",
+                    type: "PAID",
+                    url: "https://supersport.com/"
+                },
+
+                {
+                    name: "DStv",
+                    type: "PAID",
+                    url: "https://www.dstv.com/"
+                },
+
+                {
+                    name: "ESPN",
+                    type: "PAID",
+                    url: "https://www.espn.com/"
+                },
+
+                {
+                    name: "Azam TV",
+                    type: "PAID",
+                    url: "https://www.azamtv.com/"
+                }
+
+            ];
 
 
-    if (watchLiveButton) {
+            const popup =
+                document.createElement("div");
 
-        watchLiveButton.addEventListener(
-            "click",
-            function () {
 
-                alert(
-                    "KLYDE LIVE: Official football streams will appear here when available."
+            popup.style.position = "fixed";
+            popup.style.inset = "0";
+            popup.style.background =
+                "rgba(0,0,0,.75)";
+            popup.style.zIndex = "99999";
+            popup.style.display = "flex";
+            popup.style.alignItems = "center";
+            popup.style.justifyContent = "center";
+            popup.style.padding = "20px";
+
+
+            popup.innerHTML = `
+
+                <div
+                    style="
+                        width:100%;
+                        max-width:520px;
+                        max-height:85vh;
+                        overflow:auto;
+                        background:#ffffff;
+                        border-radius:20px;
+                        padding:25px;
+                        color:#111;
+                    "
+                >
+
+                    <div
+                        style="
+                            display:flex;
+                            justify-content:space-between;
+                            align-items:center;
+                            margin-bottom:20px;
+                        "
+                    >
+
+                        <div>
+
+                            <h2 style="margin:0;">
+                                📺 KLYDE WATCH LIVE
+                            </h2>
+
+                            <p style="
+                                margin:6px 0 0;
+                                opacity:.65;
+                            ">
+                                Choose an authorized broadcaster
+                            </p>
+
+                        </div>
+
+
+                        <button
+                            id="closeBroadcasters"
+                            style="
+                                border:0;
+                                background:#eee;
+                                border-radius:50%;
+                                width:35px;
+                                height:35px;
+                                cursor:pointer;
+                                font-size:18px;
+                            "
+                        >
+                            ×
+                        </button>
+
+                    </div>
+
+
+                    <h3>
+                        🆓 FREE OPTIONS
+                    </h3>
+
+
+                    <div>
+
+                        ${broadcasters
+                            .filter(
+                                b =>
+                                    b.type === "FREE"
+                            )
+                            .map(
+                                b => `
+
+                                    <button
+                                        class="klyde-broadcaster"
+                                        data-url="${b.url}"
+                                        style="
+                                            width:100%;
+                                            padding:15px;
+                                            margin:6px 0;
+                                            border:1px solid #ddd;
+                                            border-radius:12px;
+                                            background:#f7f7f7;
+                                            cursor:pointer;
+                                            text-align:left;
+                                            font-weight:bold;
+                                        "
+                                    >
+
+                                        🟢
+                                        ${b.name}
+
+                                        <span
+                                            style="
+                                                float:right;
+                                            "
+                                        >
+                                            WATCH →
+                                        </span>
+
+                                    </button>
+
+                                `
+                            )
+                            .join("")}
+
+                    </div>
+
+
+                    <h3 style="
+                        margin-top:25px;
+                    ">
+                        📡 OTHER AUTHORIZED OPTIONS
+                    </h3>
+
+
+                    <div>
+
+                        ${broadcasters
+                            .filter(
+                                b =>
+                                    b.type === "PAID"
+                            )
+                            .map(
+                                b => `
+
+                                    <button
+                                        class="klyde-broadcaster"
+                                        data-url="${b.url}"
+                                        style="
+                                            width:100%;
+                                            padding:15px;
+                                            margin:6px 0;
+                                            border:1px solid #ddd;
+                                            border-radius:12px;
+                                            background:#f7f7f7;
+                                            cursor:pointer;
+                                            text-align:left;
+                                            font-weight:bold;
+                                        "
+                                    >
+
+                                        📺
+                                        ${b.name}
+
+                                        <span
+                                            style="
+                                                float:right;
+                                            "
+                                        >
+                                            OPEN →
+                                        </span>
+
+                                    </button>
+
+                                `
+                            )
+                            .join("")}
+
+                    </div>
+
+
+                    <p style="
+                        font-size:12px;
+                        opacity:.55;
+                        margin-top:20px;
+                    ">
+                        KLYDE links users to official broadcaster
+                        destinations. Availability depends on
+                        competition, country and broadcasting rights.
+                    </p>
+
+                </div>
+
+            `;
+
+
+            document.body.appendChild(
+                popup
+            );
+
+
+            document
+                .getElementById(
+                    "closeBroadcasters"
+                )
+                .onclick = () => {
+
+                    popup.remove();
+
+                };
+
+
+            popup
+                .querySelectorAll(
+                    ".klyde-broadcaster"
+                )
+                .forEach(
+                    button => {
+
+                        button.onclick =
+                            () => {
+
+                                const url =
+                                    button.dataset.url;
+
+                                window.open(
+                                    url,
+                                    "_blank",
+                                    "noopener,noreferrer"
+                                );
+
+                            };
+
+                    }
                 );
 
-            }
-        );
+        }
+    );
 
-    }
+}
 
 })();
 

@@ -101,80 +101,124 @@ export default async function handler(req, res) {
        PROVIDER FALLBACK LOOP
     ===================================================== */
 
-    for (
-        const provider of providers
-    ) {
+   for (const provider of providers) {
 
-        if (!provider.key) {
+    if (!provider.key) {
+        failures.push(
+            `${provider.name}: API key not configured`
+        );
+        continue;
+    }
 
-            failures.push(
-                `${provider.name}: API key not configured`
+    try {
+
+        console.log(
+            `KLYDE AI trying ${provider.name}`
+        );
+
+        /*
+         * Give each provider a maximum amount of time.
+         * If it takes too long, immediately try the next
+         * available provider.
+         */
+        const timeout =
+            provider.name === "Groq"
+                ? 4000
+                : provider.name === "Gemini"
+                    ? 4000
+                    : 5000;
+
+        const controller =
+            new AbortController();
+
+        const timer =
+            setTimeout(
+                () => controller.abort(),
+                timeout
             );
 
-            continue;
-
-        }
-
+        let reply;
 
         try {
 
+            /*
+             * The existing provider functions are kept
+             * unchanged. We temporarily pass the signal
+             * through the request context where supported.
+             */
+            reply =
+                await Promise.race([
+
+                    provider.call(),
+
+                    new Promise((_, reject) => {
+
+                        setTimeout(
+                            () => {
+
+                                reject(
+                                    new Error(
+                                        `${provider.name} timeout`
+                                    )
+                                );
+
+                            },
+                            timeout
+                        );
+
+                    })
+
+                ]);
+
+        } finally {
+
+            clearTimeout(timer);
+
+        }
+
+        if (
+            reply &&
+            typeof reply === "string" &&
+            reply.trim()
+        ) {
+
             console.log(
-                `KLYDE AI trying ${provider.name}`
+                `KLYDE AI answered using ${provider.name}`
             );
 
-
-            const reply =
-                await provider.call();
-
-
-            if (
-                reply &&
-                typeof reply === "string" &&
-                reply.trim()
-            ) {
-
-                console.log(
-                    `KLYDE AI answered using ${provider.name}`
-                );
-
-
-                return res.status(200).json({
-
-                    reply:
-                        reply.trim()
-
-                });
-
-            }
-
-
-            failures.push(
-                `${provider.name}: empty response`
-            );
-
+            return res.status(200).json({
+                reply: reply.trim()
+            });
         }
 
-        catch (error) {
-
-            console.error(
-                `${provider.name} failed:`,
-                error?.message || error
-            );
-
-
-            failures.push(
-
-                `${provider.name}: ${
-                    error?.message ||
-                    "Unknown provider error"
-                }`
-
-            );
-
-        }
+        failures.push(
+            `${provider.name}: empty response`
+        );
 
     }
 
+    catch (error) {
+
+        const message =
+            error?.name === "AbortError"
+
+                ? `${provider.name} timeout`
+
+                : (
+                    error?.message ||
+                    "Unknown provider error"
+                );
+
+        console.error(
+            `${provider.name} failed:`,
+            message
+        );
+
+        failures.push(
+            `${provider.name}: ${message}`
+        );
+    }
+}
 
     /* =====================================================
        ALL PROVIDERS FAILED

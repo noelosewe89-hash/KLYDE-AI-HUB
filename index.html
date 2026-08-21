@@ -1257,7 +1257,291 @@
     }
 
 
-    function renderMatches(matches, type) {
+   function renderMatches(matches, type) {
+
+    if (!matches || !matches.length) {
+
+        sportsMatches.innerHTML = `
+            <div class="card">
+                <strong>
+                    ${type === "live"
+                        ? "🔴 NO LIVE MATCHES"
+                        : "⚽ NO MATCHES FOUND"}
+                </strong>
+
+                <p>
+                    KLYDE SPORTS is connected,
+                    but there are no matches available
+                    right now.
+                </p>
+            </div>
+        `;
+
+        return;
+    }
+
+
+    sportsMatches.innerHTML = matches.map(match => {
+
+        const fixture = match.fixture || {};
+        const league = match.league || {};
+        const teams = match.teams || {};
+        const goals = match.goals || {};
+        const status = fixture.status || {};
+
+        const home = teams.home || {};
+        const away = teams.away || {};
+
+        const homeScore = goals.home ?? 0;
+        const awayScore = goals.away ?? 0;
+
+        const elapsed =
+            status.elapsed
+                ? `${status.elapsed}'`
+                : "";
+
+        const isLive = type === "live";
+
+        return `
+
+            <div
+                class="card klyde-match-card"
+                style="
+                    margin-bottom:15px;
+                    position:relative;
+                "
+            >
+
+                ${
+                    isLive
+                    ? `
+                        <span class="live">
+                            ● LIVE ${escapeHTML(elapsed)}
+                        </span>
+                    `
+                    : `
+                        <span class="label">
+                            ${escapeHTML(
+                                status.long || "MATCH"
+                            )}
+                        </span>
+                    `
+                }
+
+
+                <small>
+                    ${escapeHTML(
+                        league.name || "Football"
+                    )}
+
+                    ·
+
+                    ${escapeHTML(
+                        league.country || ""
+                    )}
+                </small>
+
+
+                <div
+                    style="
+                        display:flex;
+                        align-items:center;
+                        justify-content:space-between;
+                        gap:15px;
+                        margin-top:15px;
+                    "
+                >
+
+                    <div
+                        style="
+                            flex:1;
+                            text-align:center;
+                        "
+                    >
+
+                        ${
+                            home.logo
+                            ? `
+                                <img
+                                    src="${escapeHTML(home.logo)}"
+                                    alt=""
+                                    style="
+                                        width:42px;
+                                        height:42px;
+                                        object-fit:contain;
+                                    "
+                                >
+                            `
+                            : ""
+                        }
+
+                        <strong>
+                            ${escapeHTML(
+                                home.name || "Home"
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div
+                        style="
+                            min-width:80px;
+                            text-align:center;
+                        "
+                    >
+
+                        <strong
+                            style="
+                                display:block;
+                                font-size:25px;
+                            "
+                        >
+                            ${homeScore}
+                            -
+                            ${awayScore}
+                        </strong>
+
+                        <small>
+                            ${
+                                isLive
+                                ? escapeHTML(
+                                    status.long || ""
+                                )
+                                : formatTime(
+                                    fixture.date
+                                )
+                            }
+                        </small>
+
+                    </div>
+
+
+                    <div
+                        style="
+                            flex:1;
+                            text-align:center;
+                        "
+                    >
+
+                        ${
+                            away.logo
+                            ? `
+                                <img
+                                    src="${escapeHTML(away.logo)}"
+                                    alt=""
+                                    style="
+                                        width:42px;
+                                        height:42px;
+                                        object-fit:contain;
+                                    "
+                                >
+                            `
+                            : ""
+                        }
+
+                        <strong>
+                            ${escapeHTML(
+                                away.name || "Away"
+                            )}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                ${
+                    match.events &&
+                    match.events.length
+                    ? `
+                        <div
+                            style="
+                                margin-top:15px;
+                                font-size:13px;
+                                opacity:.8;
+                            "
+                        >
+
+                            ${match.events
+                                .slice(-3)
+                                .map(event => `
+
+                                    <div>
+                                        ⚽
+                                        ${escapeHTML(
+                                            event.time?.elapsed || ""
+                                        )}'
+                                        —
+                                        ${escapeHTML(
+                                            event.player?.name ||
+                                            "Goal"
+                                        )}
+                                    </div>
+
+                                `)
+                                .join("")}
+
+                        </div>
+                    `
+                    : ""
+                }
+
+
+                ${
+                    isLive
+                    ? `
+                        <button
+                            type="button"
+                            class="button klyde-watch-match"
+                            data-fixture="${escapeHTML(
+                                fixture.id
+                            )}"
+                            style="
+                                width:100%;
+                                margin-top:18px;
+                            "
+                        >
+                            📺 WATCH LIVE
+                        </button>
+                    `
+                    : ""
+                }
+
+            </div>
+
+        `;
+
+    }).join("");
+
+
+    /*
+       CONNECT EVERY LIVE MATCH
+       TO THE BROADCASTER API
+    */
+
+    document
+        .querySelectorAll(".klyde-watch-match")
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                async function () {
+
+                    const fixture =
+                        this.dataset.fixture;
+
+                    await showBroadcasters(
+                        fixture,
+                        this
+                    );
+
+                }
+            );
+
+        });
+
+}
 
         if (!matches || !matches.length) {
 

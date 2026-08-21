@@ -187,6 +187,10 @@ Now answer the user's latest message naturally.
     data?.message ||
     data?.response ||
     "KLYDE could not generate a response.";
+    conversation.push({
+    role: "assistant",
+    message: answer
+});
 
 
             result.innerHTML = `

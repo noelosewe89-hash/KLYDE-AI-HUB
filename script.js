@@ -1,8 +1,13 @@
-document.addEventListener("DOMContentLoaded", function () {
+/* =====================================================
+   KLYDE AI HUB — MAIN SCRIPT
+   AI + SPORTS + BROADCASTERS + EDUCATION
+===================================================== */
 
-    /* =====================================================
-       KLYDE AI HUB — MAIN ELEMENTS
-    ===================================================== */
+document.addEventListener("DOMContentLoaded", () => {
+
+    /* =================================================
+       BASIC ELEMENTS
+    ================================================= */
 
     const searchForm =
         document.getElementById("searchForm");
@@ -13,746 +18,221 @@ document.addEventListener("DOMContentLoaded", function () {
     const result =
         document.getElementById("result");
 
-
-    /* =====================================================
-       MAIN CHAT
-    ===================================================== */
-
-    if (searchForm) {
-
-        searchForm.addEventListener(
-            "submit",
-            async function (event) {
-
-                event.preventDefault();
-
-                const query =
-                    searchInput
-                        ? searchInput.value.trim()
-                        : "";
-
-                if (!query) {
-                    return;
-                }
-
-                addMessage(
-                    "user",
-                    query
-                );
-
-                searchInput.value = "";
-
-                const thinking =
-                    addMessage(
-                        "assistant",
-                        "KLYDE AI is thinking..."
-                    );
-
-                try {
-
-                    const response =
-                        await fetch(
-                            "/api/chat",
-                            {
-                                method: "POST",
-
-                                headers: {
-                                    "Content-Type":
-                                        "application/json"
-                                },
-
-                                body:
-                                    JSON.stringify({
-                                        message: query
-                                    })
-                            }
-                        );
-
-                    const raw =
-                        await response.text();
-
-                    let data;
-
-                    try {
-
-                        data =
-                            JSON.parse(raw);
-
-                    } catch (error) {
-
-                        throw new Error(
-                            raw ||
-                            "Invalid server response."
-                        );
-                    }
-
-                    if (!response.ok) {
-
-                        throw new Error(
-                            data.error ||
-                            "KLYDE AI could not answer."
-                        );
-                    }
-
-                    if (thinking) {
-                        thinking.remove();
-                    }
-
-                    addMessage(
-                        "assistant",
-                        data.reply ||
-                        "KLYDE AI returned no response."
-                    );
-
-                } catch (error) {
-
-                    if (thinking) {
-                        thinking.remove();
-                    }
-
-                    console.error(
-                        "KLYDE AI ERROR:",
-                        error
-                    );
-
-                    addMessage(
-                        "assistant",
-                        "KLYDE AI error: " +
-                        (
-                            error.message ||
-                            "Unknown error"
-                        )
-                    );
-                }
-
-            }
-        );
-
-    }
-
-
-    /* =====================================================
-       MESSAGE DISPLAY
-    ===================================================== */
-
-    function addMessage(
-        type,
-        message
-    ) {
-
-        if (!result) {
-            return null;
-        }
-
-        const wrapper =
-            document.createElement("div");
-
-        wrapper.className =
-            type === "user"
-                ? "klyde-message user-message"
-                : "klyde-message ai-message";
-
-
-        const avatar =
-            document.createElement("div");
-
-        avatar.className =
-            "message-avatar";
-
-        avatar.textContent =
-            type === "user"
-                ? "U"
-                : "K";
-
-
-        const content =
-            document.createElement("div");
-
-        content.className =
-            "message-content";
-
-
-        const name =
-            document.createElement("strong");
-
-        name.textContent =
-            type === "user"
-                ? "YOU"
-                : "KLYDE AI";
-
-
-        const text =
-            document.createElement("p");
-
-        text.textContent =
-            message;
-
-
-        content.appendChild(name);
-        content.appendChild(text);
-
-        wrapper.appendChild(avatar);
-        wrapper.appendChild(content);
-
-        result.appendChild(wrapper);
-
-        result.scrollTop =
-            result.scrollHeight;
-
-        return wrapper;
-    }
-
-
-    /* =====================================================
-       SPORTS CENTER
-    ===================================================== */
-
-    const sportsButton =
-        document.querySelector(
-            '[data-tool="Sports Center"]'
-        );
-
-
-    if (sportsButton) {
-
-        sportsButton.addEventListener(
-            "click",
-            function (event) {
-
-                event.preventDefault();
-
-                if (
-                    !searchInput ||
-                    !searchForm
-                ) {
-                    return;
-                }
-
-                searchInput.value =
-                    `You are KLYDE Sports.
-
-Give me the latest sports information available.
-
-Cover:
-⚽ Football
-🏀 Basketball
-🎾 Tennis
-🏆 Results
-📅 Fixtures
-📊 League standings
-🔄 Major transfers
-📰 Important sports news
-
-Organize the answer clearly.
-
-If current/live information is not available, clearly say so rather than inventing results.`;
-
-                searchForm.dispatchEvent(
-                    new Event(
-                        "submit",
-                        {
-                            bubbles: true,
-                            cancelable: true
-                        }
-                    )
-                );
-
-            }
-        );
-
-    }
-
-
-    /* =====================================================
-       SPORTS QUICK ACTIONS
-    ===================================================== */
-
-    const sportsActions = {
-
-        "football":
-            "Give me the latest football information, including major results, fixtures, standings, transfers and important news.",
-
-        "basketball":
-            "Give me the latest basketball information, including results, fixtures, standings and major news.",
-
-        "tennis":
-            "Give me the latest tennis information, including major results, upcoming matches and important news.",
-
-        "results":
-            "Give me the latest available sports results.",
-
-        "fixtures":
-            "Show me the latest available football and major sports fixtures.",
-
-        "standings":
-            "Show me the latest available football league standings.",
-
-        "sports news":
-            "Give me the latest important sports news."
-    };
-
-
-    window.klydeSports =
-        function (category) {
-
-            if (
-                !sportsActions[category]
-            ) {
-                return;
-            }
-
-            if (
-                !searchInput ||
-                !searchForm
-            ) {
-                return;
-            }
-
-            searchInput.value =
-                sportsActions[category];
-
-            searchForm.dispatchEvent(
-                new Event(
-                    "submit",
-                    {
-                        bubbles: true,
-                        cancelable: true
-                    }
-                )
-            );
-
-        };
-
-
-    /* =====================================================
-       EDUCATION CENTER
-    ===================================================== */
-
-    const education =
-        document.getElementById(
-            "education"
-        );
-
-
-    if (education) {
-
-        const cards =
-            education.querySelectorAll(
-                ".card"
-            );
-
-
-        cards.forEach(
-            function (card) {
-
-                const title =
-                    card.querySelector(
-                        "h3"
-                    );
-
-                if (!title) {
-                    return;
-                }
-
-
-                const subject =
-                    title.textContent.trim();
-
-
-                /*
-                   Prevent duplicate buttons
-                */
-
-                if (
-                    card.querySelector(
-                        ".education-action"
-                    )
-                ) {
-                    return;
-                }
-
-
-                const button =
-                    document.createElement(
-                        "button"
-                    );
-
-                button.type =
-                    "button";
-
-                button.className =
-                    "education-action";
-
-                button.textContent =
-                    "Study with KLYDE →";
-
-
-                button.addEventListener(
-                    "click",
-                    function (event) {
-
-                        event.preventDefault();
-
-                        startEducationLesson(
-                            subject
-                        );
-
-                    }
-                );
-
-
-                card.appendChild(
-                    button
-                );
-
-            }
-        );
-
-    }
-
-
-    /* =====================================================
-       EDUCATION LESSON
-    ===================================================== */
-
-    function startEducationLesson(
-        subject
-    ) {
-
-        if (
-            !searchInput ||
-            !searchForm
-        ) {
-            return;
-        }
-
-
-        searchInput.value =
-            `You are my ${subject} tutor.
-
-Teach me ${subject} according to the Kenyan secondary-school and KCSE learning context.
-
-Start with a simple explanation.
-
-Then provide:
-
-1. Key notes
-2. Important definitions
-3. Worked examples
-4. Common KCSE-style questions
-5. Practice questions
-6. Answers
-7. A short quiz at the end
-
-Make the lesson clear and suitable for a Kenyan secondary-school student.
-
-Do not overwhelm me. Teach step by step.`;
-
-
-        searchForm.dispatchEvent(
-            new Event(
-                "submit",
-                {
-                    bubbles: true,
-                    cancelable: true
-                }
-            )
-        );
-
-    }
-
-
-    /* =====================================================
-       QUICK EDUCATION SUBJECTS
-    ===================================================== */
-
-    const educationSubjects = [
-
-        "Mathematics",
-        "English",
-        "Kiswahili",
-        "Chemistry",
-        "Physics",
-        "Biology",
-        "CRE",
-        "Computer Studies"
-
-    ];
-
-
-    window.klydeStudy =
-        function (subject) {
-
-            if (
-                !educationSubjects.includes(
-                    subject
-                )
-            ) {
-                return;
-            }
-
-            startEducationLesson(
-                subject
-            );
-
-        };
-
-
-    /* =====================================================
-       QUICK PROMPT BUTTONS
-    ===================================================== */
-
-    const quickButtons =
+    const quickPrompts =
         document.querySelectorAll(
             ".quick-prompts button"
         );
 
 
-    quickButtons.forEach(
-        function (button) {
+    /* =================================================
+       ESCAPE HTML
+    ================================================= */
 
-            button.addEventListener(
-                "click",
-                function (event) {
+    function escapeHTML(value) {
 
-                    event.preventDefault();
-
-                    const buttonText =
-                        button.textContent
-                            .trim()
-                            .toLowerCase();
-
-
-                    let prompt =
-                        "Help me.";
-
-
-                    if (
-                        buttonText.includes(
-                            "explain"
-                        )
-                    ) {
-
-                        prompt =
-                            "Explain a difficult topic to me simply, step by step, with examples.";
-
-                    }
-
-                    else if (
-                        buttonText.includes(
-                            "study"
-                        )
-                    ) {
-
-                        prompt =
-                            "Help me study for my KCSE exams. Give me clear notes and practice questions.";
-
-                    }
-
-                    else if (
-                        buttonText.includes(
-                            "ideas"
-                        )
-                    ) {
-
-                        prompt =
-                            "Give me creative ideas.";
-
-                    }
-
-                    else if (
-                        buttonText.includes(
-                            "tech"
-                        )
-                    ) {
-
-                        prompt =
-                            "Help me solve a technology problem.";
-
-                    }
-
-
-                    if (
-                        searchInput &&
-                        searchForm
-                    ) {
-
-                        searchInput.value =
-                            prompt;
-
-
-                        searchForm.dispatchEvent(
-                            new Event(
-                                "submit",
-                                {
-                                    bubbles: true,
-                                    cancelable: true
-                                }
-                            )
-                        );
-
-                    }
-
-                }
-            );
-
+        if (value === null || value === undefined) {
+            return "";
         }
-    );
+
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+
+    }
 
 
-    /* =====================================================
-       GENERAL DATA-TOOL BUTTONS
-    ===================================================== */
+    /* =================================================
+       TIME FORMAT
+    ================================================= */
 
-    const toolButtons =
-        document.querySelectorAll(
-            "[data-tool]"
+    function formatTime(dateString) {
+
+        if (!dateString) {
+            return "";
+        }
+
+        const date =
+            new Date(dateString);
+
+        if (Number.isNaN(date.getTime())) {
+            return "";
+        }
+
+        return date.toLocaleTimeString(
+            [],
+            {
+                hour: "2-digit",
+                minute: "2-digit"
+            }
         );
 
+    }
 
-    toolButtons.forEach(
-        function (button) {
 
-            const tool =
-                button.getAttribute(
-                    "data-tool"
+    /* =================================================
+       AI CHAT
+    ================================================= */
+
+    async function askKlyde(question) {
+
+        if (!question) {
+            return;
+        }
+
+        result.innerHTML = `
+
+            <div class="klyde-welcome">
+
+                <div class="welcome-icon">
+                    K
+                </div>
+
+                <div>
+
+                    <strong>
+                        KLYDE AI
+                    </strong>
+
+                    <p>
+                        KLYDE is thinking...
+                    </p>
+
+                </div>
+
+            </div>
+
+        `;
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/chat",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            message: question
+                        })
+                    }
                 );
 
 
-            /*
-               Sports already has its
-               own event listener.
-            */
+            const data =
+                await response.json();
 
-            if (
-                tool ===
-                "Sports Center"
-            ) {
-                return;
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data?.error ||
+                    "KLYDE AI request failed."
+                );
+
             }
 
 
-            button.addEventListener(
-                "click",
-                function (event) {
-
-                    event.preventDefault();
-
-
-                    let prompt =
-                        "";
+            const answer =
+                data?.answer ||
+                data?.message ||
+                data?.response ||
+                "KLYDE could not generate a response.";
 
 
-                    if (
-                        tool ===
-                        "Explain Something"
-                    ) {
+            result.innerHTML = `
 
-                        prompt =
-                            "Explain something difficult to me in a simple way.";
+                <div class="klyde-welcome">
 
-                    }
+                    <div class="welcome-icon">
+                        K
+                    </div>
 
-                    else if (
-                        tool ===
-                        "Study Help"
-                    ) {
+                    <div>
 
-                        prompt =
-                            "Help me study for my KCSE exams.";
+                        <strong>
+                            KLYDE AI
+                        </strong>
 
-                    }
+                        <p>
+                            ${escapeHTML(answer)}
+                        </p>
 
-                    else if (
-                        tool ===
-                        "Creative Ideas"
-                    ) {
+                    </div>
 
-                        prompt =
-                            "Give me creative ideas.";
+                </div>
 
-                    }
-
-                    else if (
-                        tool ===
-                        "Technology Help"
-                    ) {
-
-                        prompt =
-                            "Help me solve a technology problem.";
-
-                    }
-
-                    else {
-
-                        prompt =
-                            "Tell me more about " +
-                            tool +
-                            ".";
-
-                    }
-
-
-                    if (
-                        searchInput &&
-                        searchForm
-                    ) {
-
-                        searchInput.value =
-                            prompt;
-
-
-                        searchForm.dispatchEvent(
-                            new Event(
-                                "submit",
-                                {
-                                    bubbles: true,
-                                    cancelable: true
-                                }
-                            )
-                        );
-
-                    }
-
-                }
-            );
+            `;
 
         }
-    );
+
+        catch (error) {
+
+            console.error(
+                "KLYDE AI ERROR:",
+                error
+            );
 
 
-    /* =====================================================
-       ENTER KEY
-    ===================================================== */
+            result.innerHTML = `
 
-    if (searchInput) {
+                <div class="klyde-welcome">
 
-        searchInput.addEventListener(
-            "keydown",
-            function (event) {
+                    <div class="welcome-icon">
+                        !
+                    </div>
 
-                if (
-                    event.key === "Enter" &&
-                    !event.shiftKey
-                ) {
+                    <div>
 
-                    event.preventDefault();
+                        <strong>
+                            KLYDE AI
+                        </strong>
 
-                    if (searchForm) {
+                        <p>
+                            ${escapeHTML(
+                                error.message
+                            )}
+                        </p>
 
-                        searchForm.dispatchEvent(
-                            new Event(
-                                "submit",
-                                {
-                                    bubbles: true,
-                                    cancelable: true
-                                }
-                            )
-                        );
+                    </div>
 
-                    }
+                </div>
 
+            `;
+
+        }
+
+    }
+
+
+    /* =================================================
+       AI FORM
+    ================================================= */
+
+    if (searchForm) {
+
+        searchForm.addEventListener(
+            "submit",
+            event => {
+
+                event.preventDefault();
+
+                const question =
+                    searchInput.value.trim();
+
+                if (!question) {
+                    return;
                 }
+
+                askKlyde(question);
 
             }
         );
@@ -760,20 +240,1202 @@ Do not overwhelm me. Teach step by step.`;
     }
 
 
-    /* =====================================================
-       KLYDE READY MESSAGE
-    ===================================================== */
+    /* =================================================
+       QUICK PROMPTS
+    ================================================= */
 
-    console.log(
-        "KLYDE AI HUB loaded successfully."
-    );
+    quickPrompts.forEach(button => {
 
-    console.log(
-        "Sports Center: READY"
-    );
+        button.addEventListener(
+            "click",
+            () => {
 
-    console.log(
-        "Education Center: READY"
-    );
+                const prompt =
+                    button.dataset.tool ||
+                    button.textContent.trim();
+
+                if (searchInput) {
+
+                    searchInput.value =
+                        prompt;
+
+                    searchInput.focus();
+
+                }
+
+                askKlyde(prompt);
+
+            }
+        );
+
+    });
+
+
+    /* =================================================
+       SPORTS SECTION
+    ================================================= */
+
+    const sportsSection =
+        document.getElementById("sports");
+
+
+    if (sportsSection) {
+
+        createSportsInterface();
+
+    }
+
+
+    /* =================================================
+       SPORTS INTERFACE
+    ================================================= */
+
+    function createSportsInterface() {
+
+        const container =
+            sportsSection.querySelector(
+                ".sports-container"
+            );
+
+
+        if (!container) {
+            return;
+        }
+
+
+        const original =
+            container.innerHTML;
+
+
+        container.innerHTML = `
+
+            <div
+                class="klyde-sports-main"
+                style="width:100%;"
+            >
+
+                <div>
+
+                    <span class="live">
+                        ● LIVE SPORTS
+                    </span>
+
+                    <h3>
+                        The game never stops.
+                    </h3>
+
+                    <p>
+                        Live football scores,
+                        fixtures, results and
+                        verified broadcaster information.
+                    </p>
+
+                </div>
+
+
+                <div
+                    class="klyde-sports-controls"
+                    style="
+                        display:flex;
+                        gap:10px;
+                        flex-wrap:wrap;
+                        margin:20px 0;
+                    "
+                >
+
+                    <button
+                        type="button"
+                        class="button"
+                        data-sports-type="live"
+                    >
+                        🔴 LIVE
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="button outline"
+                        data-sports-type="fixtures"
+                    >
+                        📅 FIXTURES
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="button outline"
+                        data-sports-type="results"
+                    >
+                        🏆 RESULTS
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="klydeSportsStatus"
+                    style="margin:10px 0;"
+                >
+                    Loading live matches...
+                </div>
+
+
+                <div
+                    id="klydeSportsMatches"
+                    class="cards"
+                    style="margin-top:20px;"
+                ></div>
+
+            </div>
+
+        `;
+
+
+        const controls =
+            sportsSection.querySelectorAll(
+                "[data-sports-type]"
+            );
+
+
+        controls.forEach(button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    loadSports(
+                        button.dataset.sportsType
+                    );
+
+                }
+            );
+
+        });
+
+
+        loadSports("live");
+
+    }
+
+
+    /* =================================================
+       LOAD SPORTS
+    ================================================= */
+
+    async function loadSports(type) {
+
+        const matchesContainer =
+            document.getElementById(
+                "klydeSportsMatches"
+            );
+
+        const status =
+            document.getElementById(
+                "klydeSportsStatus"
+            );
+
+
+        if (!matchesContainer) {
+            return;
+        }
+
+
+        status.textContent =
+            type === "live"
+                ? "Loading live matches..."
+                : "Loading matches...";
+
+
+        matchesContainer.innerHTML = `
+
+            <div class="card">
+
+                <strong>
+                    KLYDE SPORTS
+                </strong>
+
+                <p>
+                    Getting the latest football data...
+                </p>
+
+            </div>
+
+        `;
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/sports?type=${encodeURIComponent(
+                        type
+                    )}`
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data?.error ||
+                    "Sports API request failed."
+                );
+
+            }
+
+
+            const matches =
+                data?.matches || [];
+
+
+            status.innerHTML = `
+
+                <strong>
+                    ${
+                        type === "live"
+                            ? "🔴 LIVE NOW"
+                            : type === "fixtures"
+                                ? "📅 UPCOMING FIXTURES"
+                                : "🏆 RECENT RESULTS"
+                    }
+                </strong>
+
+                <span style="opacity:.7;">
+                    — ${matches.length} matches
+                </span>
+
+            `;
+
+
+            renderSportsMatches(
+                matches,
+                type,
+                matchesContainer
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "KLYDE SPORTS ERROR:",
+                error
+            );
+
+
+            status.textContent =
+                "Sports error";
+
+
+            matchesContainer.innerHTML = `
+
+                <div class="card">
+
+                    <strong>
+                        ⚠️ SPORTS ERROR
+                    </strong>
+
+                    <p>
+                        ${escapeHTML(
+                            error.message
+                        )}
+                    </p>
+
+                </div>
+
+            `;
+
+        }
+
+    }
+
+
+    /* =================================================
+       RENDER SPORTS
+    ================================================= */
+
+    function renderSportsMatches(
+        matches,
+        type,
+        container
+    ) {
+
+        if (!matches.length) {
+
+            container.innerHTML = `
+
+                <div class="card">
+
+                    <strong>
+                        ${
+                            type === "live"
+                                ? "🔴 NO LIVE MATCHES"
+                                : "⚽ NO MATCHES FOUND"
+                        }
+                    </strong>
+
+                    <p>
+                        There are currently
+                        no matches available.
+                    </p>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        container.innerHTML =
+            matches.map(match => {
+
+                const fixture =
+                    match.fixture || {};
+
+                const league =
+                    match.league || {};
+
+                const teams =
+                    match.teams || {};
+
+                const goals =
+                    match.goals || {};
+
+                const status =
+                    fixture.status || {};
+
+
+                const home =
+                    teams.home || {};
+
+                const away =
+                    teams.away || {};
+
+
+                const homeScore =
+                    goals.home ?? 0;
+
+                const awayScore =
+                    goals.away ?? 0;
+
+
+                const isLive =
+                    type === "live";
+
+
+                return `
+
+                    <div
+                        class="card klyde-match-card"
+                        style="margin-bottom:15px;"
+                    >
+
+                        <span
+                            class="${
+                                isLive
+                                    ? "live"
+                                    : "label"
+                            }"
+                        >
+
+                            ${
+                                isLive
+                                    ? `● LIVE ${
+                                        status.elapsed
+                                            ? status.elapsed + "'"
+                                            : ""
+                                      }`
+                                    : escapeHTML(
+                                        status.long ||
+                                        "MATCH"
+                                      )
+                            }
+
+                        </span>
+
+
+                        <small>
+                            ${escapeHTML(
+                                league.name ||
+                                "Football"
+                            )}
+
+                            ${
+                                league.country
+                                    ? " · " +
+                                      escapeHTML(
+                                        league.country
+                                      )
+                                    : ""
+                            }
+
+                        </small>
+
+
+                        <div
+                            style="
+                                display:flex;
+                                align-items:center;
+                                justify-content:space-between;
+                                gap:15px;
+                                margin-top:15px;
+                            "
+                        >
+
+                            <div
+                                style="
+                                    flex:1;
+                                    text-align:center;
+                                "
+                            >
+
+                                ${
+                                    home.logo
+                                        ? `
+                                            <img
+                                                src="${escapeHTML(
+                                                    home.logo
+                                                )}"
+                                                alt=""
+                                                style="
+                                                    width:45px;
+                                                    height:45px;
+                                                    object-fit:contain;
+                                                "
+                                            >
+                                        `
+                                        : ""
+                                }
+
+
+                                <strong>
+                                    ${escapeHTML(
+                                        home.name ||
+                                        "Home"
+                                    )}
+                                </strong>
+
+                            </div>
+
+
+                            <div
+                                style="
+                                    min-width:80px;
+                                    text-align:center;
+                                "
+                            >
+
+                                <strong
+                                    style="
+                                        display:block;
+                                        font-size:25px;
+                                    "
+                                >
+                                    ${homeScore}
+                                    -
+                                    ${awayScore}
+                                </strong>
+
+
+                                <small>
+
+                                    ${
+                                        isLive
+                                            ? escapeHTML(
+                                                status.long ||
+                                                ""
+                                              )
+                                            : formatTime(
+                                                fixture.date
+                                              )
+                                    }
+
+                                </small>
+
+                            </div>
+
+
+                            <div
+                                style="
+                                    flex:1;
+                                    text-align:center;
+                                "
+                            >
+
+                                ${
+                                    away.logo
+                                        ? `
+                                            <img
+                                                src="${escapeHTML(
+                                                    away.logo
+                                                )}"
+                                                alt=""
+                                                style="
+                                                    width:45px;
+                                                    height:45px;
+                                                    object-fit:contain;
+                                                "
+                                            />
+                                        `
+                                        : ""
+                                }
+
+
+                                <strong>
+                                    ${escapeHTML(
+                                        away.name ||
+                                        "Away"
+                                    )}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        ${
+                            match.events &&
+                            match.events.length
+                                ? `
+
+                                    <div
+                                        style="
+                                            margin-top:15px;
+                                            font-size:13px;
+                                            opacity:.8;
+                                        "
+                                    >
+
+                                        ${
+                                            match.events
+                                                .slice(-3)
+                                                .map(
+                                                    event => `
+
+                                                        <div>
+
+                                                            ⚽
+
+                                                            ${
+                                                                event.time?.elapsed ||
+                                                                ""
+                                                            }'
+
+                                                            —
+
+                                                            ${
+                                                                escapeHTML(
+                                                                    event.player?.name ||
+                                                                    "Goal"
+                                                                )
+                                                            }
+
+                                                        </div>
+
+                                                    `
+                                                )
+                                                .join("")
+                                        }
+
+                                    </div>
+
+                                `
+                                : ""
+                        }
+
+
+                        ${
+                            isLive
+                                ? `
+
+                                    <button
+                                        type="button"
+                                        class="button klyde-watch-live"
+                                        data-fixture-id="${escapeHTML(
+                                            fixture.id
+                                        )}"
+                                        style="
+                                            width:100%;
+                                            margin-top:18px;
+                                        "
+                                    >
+                                        📺 WATCH LIVE
+                                    </button>
+
+                                `
+                                : ""
+                        }
+
+                    </div>
+
+                `;
+
+            }).join("");
+
+
+        /* =============================================
+           WATCH LIVE BUTTONS
+        ============================================= */
+
+        container
+            .querySelectorAll(
+                ".klyde-watch-live"
+            )
+            .forEach(button => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        loadBroadcasters(
+                            button.dataset.fixtureId,
+                            button
+                        );
+
+                    }
+                );
+
+            });
+
+    }
+
+
+    /* =================================================
+       BROADCASTERS
+    ================================================= */
+
+    async function loadBroadcasters(
+        fixtureId,
+        button
+    ) {
+
+        if (!fixtureId) {
+            return;
+        }
+
+
+        const originalText =
+            button.innerHTML;
+
+
+        button.disabled = true;
+
+        button.innerHTML =
+            "📡 CHECKING...";
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/broadcasts?fixture=${encodeURIComponent(
+                        fixtureId
+                    )}`
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data?.error ||
+                    "Broadcaster lookup failed."
+                );
+
+            }
+
+
+            const broadcasters =
+                data?.broadcasters || [];
+
+
+            if (!broadcasters.length) {
+
+                showBroadcastPopup(
+                    [],
+                    fixtureId
+                );
+
+                return;
+
+            }
+
+
+            showBroadcastPopup(
+                broadcasters,
+                fixtureId
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "KLYDE BROADCAST ERROR:",
+                error
+            );
+
+
+            showSimplePopup(
+                "⚠️ BROADCAST ERROR",
+                error.message
+            );
+
+        }
+
+        finally {
+
+            button.disabled = false;
+
+            button.innerHTML =
+                originalText;
+
+        }
+
+    }
+
+
+    /* =================================================
+       BROADCAST POPUP
+    ================================================= */
+
+    function showBroadcastPopup(
+        broadcasters,
+        fixtureId
+    ) {
+
+        const popup =
+            document.createElement("div");
+
+
+        popup.className =
+            "klyde-broadcast-popup";
+
+
+        popup.style.cssText = `
+
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,.82);
+            z-index:99999;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:20px;
+
+        `;
+
+
+        const list =
+            broadcasters.length
+
+                ? broadcasters.map(
+                    broadcaster => {
+
+                        const station =
+                            broadcaster.tvstation ||
+                            {};
+
+                        const name =
+                            station.name ||
+                            broadcaster.name ||
+                            broadcaster.station ||
+                            "Official Broadcaster";
+
+
+                        const url =
+                            station.url ||
+                            broadcaster.url ||
+                            broadcaster.link ||
+                            "";
+
+
+                        return `
+
+                            <div
+                                style="
+                                    padding:15px;
+                                    border:1px solid #ddd;
+                                    border-radius:12px;
+                                    margin-bottom:10px;
+                                "
+                            >
+
+                                <strong>
+                                    📺
+                                    ${escapeHTML(
+                                        name
+                                    )}
+                                </strong>
+
+
+                                ${
+                                    url
+                                        ? `
+
+                                            <button
+                                                type="button"
+                                                class="klyde-open-stream"
+                                                data-url="${escapeHTML(
+                                                    url
+                                                )}"
+                                                style="
+                                                    display:block;
+                                                    width:100%;
+                                                    margin-top:10px;
+                                                    padding:11px;
+                                                    border:0;
+                                                    border-radius:9px;
+                                                    cursor:pointer;
+                                                "
+                                            >
+                                                WATCH →
+                                            </button>
+
+                                        `
+                                        : `
+
+                                            <p
+                                                style="
+                                                    font-size:13px;
+                                                    opacity:.6;
+                                                "
+                                            >
+                                                Broadcaster found,
+                                                but no viewing
+                                                URL was supplied.
+                                            </p>
+
+                                        `
+                                }
+
+                            </div>
+
+                        `;
+
+                    }
+                ).join("")
+
+                : `
+
+                    <div
+                        style="
+                            padding:20px;
+                            border-radius:12px;
+                            background:#f4f4f4;
+                        "
+                    >
+
+                        <strong>
+                            📺 NO VERIFIED BROADCAST
+                        </strong>
+
+                        <p>
+                            Sportmonks currently has
+                            no broadcaster information
+                            for this fixture.
+                        </p>
+
+                    </div>
+
+                `;
+
+
+        popup.innerHTML = `
+
+            <div
+                style="
+                    width:100%;
+                    max-width:500px;
+                    max-height:85vh;
+                    overflow:auto;
+                    background:white;
+                    color:#111;
+                    border-radius:20px;
+                    padding:25px;
+                "
+            >
+
+                <div
+                    style="
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                    "
+                >
+
+                    <div>
+
+                        <h2 style="margin:0;">
+                            📺 WATCH LIVE
+                        </h2>
+
+                        <small>
+                            Fixture ${escapeHTML(
+                                fixtureId
+                            )}
+                        </small>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="klyde-close-popup"
+                        style="
+                            width:35px;
+                            height:35px;
+                            border:0;
+                            border-radius:50%;
+                            font-size:22px;
+                            cursor:pointer;
+                        "
+                    >
+                        ×
+                    </button>
+
+                </div>
+
+
+                <div style="margin-top:20px;">
+
+                    ${list}
+
+                </div>
+
+
+                <p
+                    style="
+                        font-size:12px;
+                        opacity:.55;
+                        margin-top:15px;
+                    "
+                >
+                    KLYDE only displays broadcaster
+                    information returned by its connected
+                    sports data provider.
+                </p>
+
+            </div>
+
+        `;
+
+
+        document.body.appendChild(
+            popup
+        );
+
+
+        popup
+            .querySelector(
+                ".klyde-close-popup"
+            )
+            .onclick = () => {
+
+                popup.remove();
+
+            };
+
+
+        popup
+            .querySelectorAll(
+                ".klyde-open-stream"
+            )
+            .forEach(button => {
+
+                button.onclick = () => {
+
+                    const url =
+                        button.dataset.url;
+
+
+                    if (
+                        url &&
+                        /^https?:\/\//i.test(
+                            url
+                        )
+                    ) {
+
+                        window.open(
+                            url,
+                            "_blank",
+                            "noopener,noreferrer"
+                        );
+
+                    }
+
+                };
+
+            });
+
+    }
+
+
+    /* =================================================
+       SIMPLE POPUP
+    ================================================= */
+
+    function showSimplePopup(
+        title,
+        message
+    ) {
+
+        const popup =
+            document.createElement("div");
+
+
+        popup.style.cssText = `
+
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,.82);
+            z-index:99999;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:20px;
+
+        `;
+
+
+        popup.innerHTML = `
+
+            <div
+                style="
+                    width:100%;
+                    max-width:430px;
+                    background:white;
+                    color:#111;
+                    border-radius:20px;
+                    padding:30px;
+                    text-align:center;
+                "
+            >
+
+                <h2>
+                    ${escapeHTML(title)}
+                </h2>
+
+                <p>
+                    ${escapeHTML(message)}
+                </p>
+
+                <button
+                    type="button"
+                    class="button klyde-close-popup"
+                    style="margin-top:15px;"
+                >
+                    CLOSE
+                </button>
+
+            </div>
+
+        `;
+
+
+        document.body.appendChild(
+            popup
+        );
+
+
+        popup
+            .querySelector(
+                ".klyde-close-popup"
+            )
+            .onclick = () => {
+
+                popup.remove();
+
+            };
+
+    }
+
+
+    /* =================================================
+       GENERAL DATA-TOOL BUTTONS
+    ================================================= */
+
+    document
+        .querySelectorAll(
+            "[data-tool]"
+        )
+        .forEach(button => {
+
+            if (
+                button.closest(
+                    ".quick-prompts"
+                )
+            ) {
+                return;
+            }
+
+
+            if (
+                button.classList.contains(
+                    "klyde-watch-live"
+                )
+            ) {
+                return;
+            }
+
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    const tool =
+                        button.dataset.tool;
+
+
+                    if (
+                        tool ===
+                        "Sports Center"
+                    ) {
+
+                        if (sportsSection) {
+
+                            sportsSection
+                                .scrollIntoView({
+                                    behavior:
+                                        "smooth"
+                                });
+
+                            loadSports(
+                                "live"
+                            );
+
+                        }
+
+                        return;
+
+                    }
+
+
+                    if (
+                        searchInput &&
+                        searchForm
+                    ) {
+
+                        searchInput.value =
+                            tool;
+
+                        searchInput.focus();
+
+                        askKlyde(tool);
+
+                    }
+
+                }
+            );
+
+        });
 
 });

@@ -821,6 +821,43 @@ export default async function handler(req, res) {
                 "OneFootball offers selected Free-to-Air live matches. Availability varies by match and territory."
 
         });
+               /* =================================================
+           KORALIVE
+           
+           KoraLive is treated as a broadcast GUIDE/source,
+           not as a verified broadcaster.
+
+           IMPORTANT:
+           We do NOT claim KoraLive hosts the stream.
+        ================================================= */
+
+        addSource({
+
+            name:
+                "KoraLive",
+
+            station:
+                "KoraLive",
+
+            url:
+                "https://koralive.video/en/broadcasters/",
+
+            source:
+                "KoraLive",
+
+            verified:
+                false,
+
+            free:
+                true,
+
+            type:
+                "broadcast-guide",
+
+            note:
+                "KoraLive is a football broadcast guide. Availability and broadcaster information may vary by match and territory."
+
+        });
 
 
         /* =================================================

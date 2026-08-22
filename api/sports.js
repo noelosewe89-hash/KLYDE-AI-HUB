@@ -381,6 +381,15 @@ if (
 
        const sofaData =
     await sofaResponse.json();
+       console.log(
+    "KLYDE SOFASCORE STATUS:",
+    sofaResponse.status
+);
+
+console.log(
+    "KLYDE SOFASCORE RESPONSE:",
+    JSON.stringify(sofaData).slice(0, 3000)
+);
 
 console.log(
     "KLYDE SOFASCORE STATUS:",

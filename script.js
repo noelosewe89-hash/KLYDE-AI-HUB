@@ -1194,20 +1194,50 @@ Answer the user's latest message naturally.
                                     ? `
 
                                         <button
-                                            type="button"
-                                            class="button klyde-watch-live"
-                                            data-fixture-id="${escapeHTML(
-                                                fixture.id
-                                            )}"
-                                            style="
-                                                width:100%;
-                                                margin-top:18px;
-                                            "
-                                        >
+    type="button"
+    class="button klyde-watch-live"
 
-                                            📺 WATCH LIVE
+    data-fixture-id="${escapeHTML(
+        fixture.id
+    )}"
 
-                                        </button>
+    data-provider="${escapeHTML(
+        match.espn
+            ? "espn"
+            : match.sofaScore
+                ? "sofascore"
+                : match.sportmonks
+                    ? "sportmonks"
+                    : match.apiFootball
+                        ? "api-football"
+                        : ""
+    )}"
+
+    data-home="${escapeHTML(
+        home.name || ""
+    )}"
+
+    data-away="${escapeHTML(
+        away.name || ""
+    )}"
+
+    data-date="${escapeHTML(
+        fixture.date || ""
+    )}"
+
+    data-league="${escapeHTML(
+        league.name || ""
+    )}"
+
+    style="
+        width:100%;
+        margin-top:18px;
+    "
+>
+
+    📺 WATCH LIVE
+
+</button>
 
                                       `
 

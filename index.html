@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -239,6 +239,17 @@
 
 <!-- =====================================================
      AI CHAT
+     
+     CORE PRESERVED
+     
+     Added:
+     - Chat library
+     - New chat
+     - Scrollable conversation container
+     - Microphone
+     - Image upload
+     - Image preview
+     - Memory hooks
 ===================================================== -->
 
 <section
@@ -282,11 +293,128 @@
     </div>
 
 
-    <!-- CHAT RESULT -->
+    <!-- =================================================
+         CHAT CONTROLS
+    ================================================= -->
+
+    <div
+        class="klyde-chat-toolbar"
+        id="klydeChatToolbar"
+    >
+
+        <button
+            type="button"
+            id="newChatButton"
+            class="chat-tool-button"
+        >
+            ＋ New Chat
+        </button>
+
+
+        <button
+            type="button"
+            id="chatLibraryButton"
+            class="chat-tool-button"
+        >
+            🗂️ Chat Library
+        </button>
+
+
+        <!--
+            This button is intentionally present as a
+            memory interface hook.
+
+            The actual memory engine remains handled
+            by script.js/backend.
+        -->
+
+        <button
+            type="button"
+            id="memoryButton"
+            class="chat-tool-button"
+        >
+            🧠 AI Memory
+        </button>
+
+    </div>
+
+
+    <!-- =================================================
+         CHAT LIBRARY
+         
+         Hidden until script.js opens it.
+    ================================================= -->
+
+    <aside
+        id="chatLibrary"
+        class="chat-library"
+        aria-hidden="true"
+    >
+
+        <div class="chat-library-header">
+
+            <strong>
+                🗂️ KLYDE CHAT LIBRARY
+            </strong>
+
+
+            <button
+                type="button"
+                id="closeChatLibrary"
+                aria-label="Close chat library"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div
+            id="chatLibraryList"
+            class="chat-library-list"
+        >
+
+            <p class="chat-library-empty">
+                Your saved conversations will appear here.
+            </p>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =================================================
+         AI MEMORY STATUS
+    ================================================= -->
+
+    <div
+        id="klydeMemoryStatus"
+        class="klyde-memory-status"
+        aria-live="polite"
+    >
+
+        <span>
+            🧠
+        </span>
+
+        KLYDE AI memory ready
+
+    </div>
+
+
+    <!-- =================================================
+         CHAT RESULT / CONVERSATION
+         
+         IMPORTANT:
+         Existing id="result" is preserved so the
+         current script.js continues to recognize it.
+         
+         The wrapper is scrollable.
+    ================================================= -->
 
     <div
         id="result"
-        class="ai-result"
+        class="ai-result klyde-chat-scroll"
     >
 
         <div class="klyde-welcome">
@@ -317,17 +445,45 @@
     </div>
 
 
-    <!-- AI INPUT -->
+    <!-- =================================================
+         IMAGE PREVIEW
+         
+         Script.js can populate this before sending
+         an image to the AI.
+    ================================================= -->
+
+    <div
+        id="imagePreviewArea"
+        class="klyde-image-preview-area"
+        aria-live="polite"
+    >
+
+        <!-- Image previews are inserted here -->
+
+    </div>
+
+
+    <!-- =================================================
+         AI INPUT
+    ================================================= -->
 
     <form
         class="search-box"
         id="searchForm"
     >
 
+        <!-- Existing input icon preserved -->
+
         <div class="input-icon">
             ✦
         </div>
 
+
+        <!--
+            Main text input.
+
+            Existing id preserved.
+        -->
 
         <input
             type="text"
@@ -336,6 +492,56 @@
             autocomplete="off"
         >
 
+
+        <!-- =================================================
+             MICROPHONE
+        ================================================= -->
+
+        <button
+            type="button"
+            id="microphoneButton"
+            class="chat-input-action"
+            aria-label="Use microphone"
+            title="Speak to KLYDE"
+        >
+            🎤
+        </button>
+
+
+        <!-- =================================================
+             IMAGE UPLOAD
+        ================================================= -->
+
+        <button
+            type="button"
+            id="imageUploadButton"
+            class="chat-input-action"
+            aria-label="Upload image"
+            title="Upload an image"
+        >
+            🖼️
+        </button>
+
+
+        <!--
+            Hidden image input.
+
+            Script.js handles the actual upload.
+        -->
+
+        <input
+            type="file"
+            id="imageInput"
+            accept="image/*"
+            hidden
+        >
+
+
+        <!-- =================================================
+             SEND / ASK
+             
+             Existing submit button preserved.
+        ================================================= -->
 
         <button
             type="submit"
@@ -352,7 +558,20 @@
     </form>
 
 
-    <!-- QUICK PROMPTS -->
+    <!-- =================================================
+         ATTACHMENT / MICROPHONE STATUS
+    ================================================= -->
+
+    <div
+        id="chatInputStatus"
+        class="chat-input-status"
+        aria-live="polite"
+    ></div>
+
+
+    <!-- =================================================
+         QUICK PROMPTS
+    ================================================= -->
 
     <div class="quick-prompts">
 
@@ -511,10 +730,6 @@
 
 <!-- =====================================================
      SPORTS CENTER
-     
-     IMPORTANT:
-     The actual sports controls and live data are
-     created by script.js.
 ===================================================== -->
 
 <section
@@ -985,7 +1200,12 @@
 <!-- =====================================================
      MAIN JAVASCRIPT
      
-     ALL FUNCTIONALITY IS HANDLED BY script.js.
+     IMPORTANT:
+     Existing script.js remains the main engine.
+     
+     The new chat features are intentionally exposed
+     through stable IDs so we can extend script.js
+     without destroying the existing KLYDE AI engine.
 ===================================================== -->
 
 <script src="script.js?v=5"></script>

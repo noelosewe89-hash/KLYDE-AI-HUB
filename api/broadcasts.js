@@ -1,4 +1,3 @@
-```javascript
 /* =========================================================
    KLYDE AI HUB — BROADCAST SOURCE ENGINE
 
@@ -14,10 +13,11 @@
    - KoraLive broadcast guide
 
    IMPORTANT:
-   - ESPN/SofaScore IDs are NEVER treated as SportMonks IDs.
-   - SportMonks TV stations are only shown when actually returned.
-   - Guide sources are clearly marked as guides.
-   - No broadcaster is falsely guaranteed to carry a match.
+   - We NEVER assume an ESPN/SofaScore event ID
+     is a SportMonks fixture ID.
+   - SportMonks IDs are only sent to SportMonks when
+     provider is SportMonks or provider is unknown.
+   - KoraLive is displayed only as a broadcast GUIDE.
 ========================================================= */
 
 export default async function handler(req, res) {
@@ -36,6 +36,10 @@ export default async function handler(req, res) {
     }
 
 
+    /* =====================================================
+       ENVIRONMENT
+    ===================================================== */
+
     const token =
         process.env.SPORTMONKS_API_KEY;
 
@@ -49,31 +53,36 @@ export default async function handler(req, res) {
             req.query?.fixture || ""
         ).trim();
 
+
     const provider =
         String(
             req.query?.provider || ""
-        ).toLowerCase()
-        .trim();
+        ).trim().toLowerCase();
+
 
     const home =
         String(
             req.query?.home || ""
         ).trim();
 
+
     const away =
         String(
             req.query?.away || ""
         ).trim();
+
 
     const matchDate =
         String(
             req.query?.date || ""
         ).trim();
 
+
     const league =
         String(
             req.query?.league || ""
         ).trim();
+
 
     const country =
         String(
@@ -104,9 +113,6 @@ export default async function handler(req, res) {
 
         /* =================================================
            AFRICAN COUNTRIES
-
-           Defined locally so the function can never crash
-           because of an undefined africanCountries variable.
         ================================================= */
 
         const africanCountries = [
@@ -123,8 +129,7 @@ export default async function handler(req, res) {
             "chad",
             "comoros",
             "congo",
-            "democratic republic of the congo",
-            "dr congo",
+            "democratic republic of congo",
             "drc",
             "djibouti",
             "egypt",
@@ -136,7 +141,7 @@ export default async function handler(req, res) {
             "gambia",
             "ghana",
             "guinea",
-            "guinea-bissau",
+            "guinea bissau",
             "ivory coast",
             "cote d'ivoire",
             "kenya",
@@ -173,6 +178,43 @@ export default async function handler(req, res) {
 
 
         /* =================================================
+           SAFE JSON READER
+        ================================================= */
+
+        async function safeJSON(response) {
+
+            const text =
+                await response.text();
+
+
+            if (!text) {
+
+                return {};
+
+            }
+
+
+            try {
+
+                return JSON.parse(text);
+
+            }
+
+            catch {
+
+                return {
+
+                    message:
+                        text.slice(0, 500)
+
+                };
+
+            }
+
+        }
+
+
+        /* =================================================
            NORMALIZE TEAM NAMES
         ================================================= */
 
@@ -197,6 +239,10 @@ export default async function handler(req, res) {
         }
 
 
+        /* =================================================
+           TEAM NAME MATCH
+        ================================================= */
+
         function namesMatch(
             first,
             second
@@ -204,6 +250,7 @@ export default async function handler(req, res) {
 
             const a =
                 normalizeName(first);
+
 
             const b =
                 normalizeName(second);
@@ -227,41 +274,6 @@ export default async function handler(req, res) {
                 a.includes(b) ||
                 b.includes(a)
             );
-
-        }
-
-
-        /* =================================================
-           SAFE JSON READER
-        ================================================= */
-
-        async function safeJSON(response) {
-
-            const text =
-                await response.text();
-
-            if (!text) {
-
-                return {};
-
-            }
-
-            try {
-
-                return JSON.parse(text);
-
-            }
-
-            catch {
-
-                return {
-
-                    message:
-                        text.slice(0, 500)
-
-                };
-
-            }
 
         }
 
@@ -308,6 +320,7 @@ export default async function handler(req, res) {
                             String(
                                 existing?.url ||
                                 existing?.link ||
+                                existing?.tvstation?.url ||
                                 ""
                             )
                                 .toLowerCase()
@@ -361,12 +374,15 @@ export default async function handler(req, res) {
         /* =================================================
            SPORTMONKS DIRECT FIXTURE LOOKUP
 
-           ONLY:
-           - provider = SportMonks
+           IMPORTANT:
+
+           Only perform direct ID lookup when:
+
+           - provider is SportMonks
            - OR provider is unknown
 
-           This prevents ESPN/SofaScore IDs from being
-           incorrectly sent to SportMonks.
+           ESPN and SofaScore IDs are NOT sent directly
+           to SportMonks.
         ================================================= */
 
         if (
@@ -384,21 +400,46 @@ export default async function handler(req, res) {
 
             try {
 
-              const url =
-    "https://api.sportmonks.com/v3/football/fixtures/" +
-    encodeURIComponent(fixtureId) +
-    "?api_token=" +
-    encodeURIComponent(token) +
-    "&include=tvStations;league;participants";
+                console.log(
+                    "KLYDE BROADCAST: SportMonks direct fixture lookup..."
+                );
+
+
+                const url =
+                    "https://api.sportmonks.com/v3/football/fixtures/" +
+                    encodeURIComponent(fixtureId) +
+                    "?api_token=" +
+                    encodeURIComponent(token) +
+                    "&include=tvStations;league;participants";
+
 
                 const response =
-                    await fetch(url);
+                    await fetch(
+                        url,
+                        {
+                            method: "GET",
+
+                            headers: {
+
+                                "Accept":
+                                    "application/json"
+
+                            }
+
+                        }
+                    );
 
 
                 const data =
                     await safeJSON(
                         response
                     );
+
+
+                console.log(
+                    "KLYDE BROADCAST SPORTMONKS STATUS:",
+                    response.status
+                );
 
 
                 if (response.ok) {
@@ -412,15 +453,9 @@ export default async function handler(req, res) {
                 else {
 
                     console.error(
-
-                        "KLYDE SPORTMONKS DIRECT LOOKUP STATUS:",
-
-                        response.status,
-
+                        "KLYDE SPORTMONKS DIRECT LOOKUP ERROR:",
                         data?.message ||
-                        data?.errors ||
-                        ""
-
+                        `HTTP ${response.status}`
                     );
 
                 }
@@ -430,12 +465,9 @@ export default async function handler(req, res) {
             catch (error) {
 
                 console.error(
-
                     "KLYDE SPORTMONKS DIRECT LOOKUP ERROR:",
-
                     error?.message ||
                     error
-
                 );
 
             }
@@ -446,7 +478,14 @@ export default async function handler(req, res) {
         /* =================================================
            SPORTMONKS DATE + TEAM MATCHING
 
-           Used when the fixture came from ESPN/SofaScore.
+           Used when the match came from:
+
+           - ESPN
+           - SofaScore
+           - another provider
+
+           We match the teams and date instead of assuming
+           the external fixture ID belongs to SportMonks.
         ================================================= */
 
         if (
@@ -470,11 +509,9 @@ export default async function handler(req, res) {
 
 
                 if (
-
                     !Number.isNaN(
                         date.getTime()
                     )
-
                 ) {
 
                     const yyyy =
@@ -505,25 +542,50 @@ export default async function handler(req, res) {
                         `${yyyy}-${mm}-${dd}`;
 
 
+                    console.log(
+                        "KLYDE BROADCAST: SportMonks team/date matching:",
+                        home,
+                        "vs",
+                        away,
+                        dateString
+                    );
+
+
                     const url =
-
-                        `https://api.sportmonks.com/v3/football/fixtures/date/${dateString}` +
-
-                        `?api_token=${encodeURIComponent(
-                            token
-                        )}` +
-
-                        `&include=tvStations;league;participants`;
+                        "https://api.sportmonks.com/v3/football/fixtures/date/" +
+                        dateString +
+                        "?api_token=" +
+                        encodeURIComponent(token) +
+                        "&include=tvStations;league;participants";
 
 
                     const response =
-                        await fetch(url);
+                        await fetch(
+                            url,
+                            {
+                                method: "GET",
+
+                                headers: {
+
+                                    "Accept":
+                                        "application/json"
+
+                                }
+
+                            }
+                        );
 
 
                     const data =
                         await safeJSON(
                             response
                         );
+
+
+                    console.log(
+                        "KLYDE SPORTMONKS TEAM MATCH STATUS:",
+                        response.status
+                    );
 
 
                     if (response.ok) {
@@ -553,8 +615,14 @@ export default async function handler(req, res) {
                                             team =>
                                                 team?.meta?.location ===
                                                 "home"
-                                        ) ||
-                                        participants[0] ||
+                                        )
+
+                                        ||
+
+                                        participants[0]
+
+                                        ||
+
                                         {};
 
 
@@ -563,8 +631,14 @@ export default async function handler(req, res) {
                                             team =>
                                                 team?.meta?.location ===
                                                 "away"
-                                        ) ||
-                                        participants[1] ||
+                                        )
+
+                                        ||
+
+                                        participants[1]
+
+                                        ||
+
                                         {};
 
 
@@ -585,7 +659,21 @@ export default async function handler(req, res) {
                                     );
 
                                 }
-                            ) || null;
+                            )
+
+                            ||
+
+                            null;
+
+                    }
+
+                    else {
+
+                        console.error(
+                            "KLYDE SPORTMONKS TEAM MATCH ERROR:",
+                            data?.message ||
+                            `HTTP ${response.status}`
+                        );
 
                     }
 
@@ -596,12 +684,9 @@ export default async function handler(req, res) {
             catch (error) {
 
                 console.error(
-
                     "KLYDE SPORTMONKS TEAM MATCH ERROR:",
-
                     error?.message ||
                     error
-
                 );
 
             }
@@ -616,7 +701,6 @@ export default async function handler(req, res) {
         if (sportmonksFixture) {
 
             const stations =
-
                 sportmonksFixture?.tvStations ||
 
                 sportmonksFixture?.tv_stations ||
@@ -654,7 +738,10 @@ export default async function handler(req, res) {
                                 "SportMonks",
 
                             verified:
-                                true
+                                true,
+
+                            type:
+                                "broadcast-station"
 
                         });
 
@@ -684,7 +771,7 @@ export default async function handler(req, res) {
 
                 ""
 
-            );
+            ).trim();
 
 
         const fixtureCountry =
@@ -698,7 +785,25 @@ export default async function handler(req, res) {
 
                 ""
 
-            );
+            ).trim();
+
+
+        /* =================================================
+           SEARCHABLE MATCH TEXT
+        ================================================= */
+
+        const matchText = (
+
+            leagueName +
+            " " +
+            fixtureCountry +
+            " " +
+            home +
+            " " +
+            away
+
+        )
+            .toLowerCase();
 
 
         const leagueLower =
@@ -707,21 +812,6 @@ export default async function handler(req, res) {
 
         const countryLower =
             fixtureCountry.toLowerCase();
-
-
-        const matchText =
-
-            (
-
-                leagueLower +
-                " " +
-                countryLower +
-                " " +
-                home.toLowerCase() +
-                " " +
-                away.toLowerCase()
-
-            );
 
 
         /* =================================================
@@ -856,7 +946,7 @@ export default async function handler(req, res) {
                     "official-free-platform",
 
                 note:
-                    "CAF TV provides selected official CAF live coverage. Availability depends on competition and territory."
+                    "CAF TV provides selected official CAF live coverage. Availability depends on the competition and territory."
 
             });
 
@@ -865,8 +955,6 @@ export default async function handler(req, res) {
 
         /* =================================================
            ONEFOOTBALL
-
-           Added once only.
         ================================================= */
 
         addSource({
@@ -893,15 +981,17 @@ export default async function handler(req, res) {
                 "official-free-platform",
 
             note:
-                "OneFootball provides selected live football coverage. Availability varies by match and territory."
+                "OneFootball offers selected live football coverage. Availability varies by match and territory."
 
         });
 
 
         /* =================================================
-           KORALIVE BROADCAST GUIDE
+           KORALIVE
 
-           NOT a verified broadcaster.
+           KoraLive is a broadcast GUIDE.
+
+           We do NOT claim that KoraLive hosts the stream.
         ================================================= */
 
         addSource({
@@ -928,13 +1018,13 @@ export default async function handler(req, res) {
                 "broadcast-guide",
 
             note:
-                "KoraLive is a football broadcast guide. It does not mean KoraLive itself hosts the stream."
+                "KoraLive is a football broadcast guide. Availability and broadcaster information may vary by match and territory."
 
         });
 
 
         /* =================================================
-           FINAL CLEANUP
+           FINAL BROADCAST SOURCE CLEANUP
         ================================================= */
 
         broadcasters =
@@ -954,8 +1044,7 @@ export default async function handler(req, res) {
                             source?.station ||
                             source?.tvstation?.name ||
                             ""
-                        )
-                            .trim();
+                        ).trim();
 
 
                     const url =
@@ -964,15 +1053,12 @@ export default async function handler(req, res) {
                             source?.link ||
                             source?.tvstation?.url ||
                             ""
-                        )
-                            .trim();
+                        ).trim();
 
 
                     return (
-
                         Boolean(name) ||
                         Boolean(url)
-
                     );
 
                 }
@@ -982,65 +1068,45 @@ export default async function handler(req, res) {
         /* =================================================
            SORT SOURCES
 
+           Priority:
+
            1. SportMonks verified stations
            2. Other verified official sources
-           3. Broadcast guides
-           4. Other sources
+           3. Broadcast guides / other sources
         ================================================= */
 
         broadcasters.sort(
             (a, b) => {
 
-                function score(source) {
+                const aScore =
 
-                    if (
-                        source?.source ===
-                        "SportMonks"
-                    ) {
+                    a?.source === "SportMonks"
 
-                        return 4;
+                        ? 3
 
-                    }
+                        : a?.verified
 
+                            ? 2
 
-                    if (
-                        source?.verified &&
-                        source?.type ===
-                        "official-free-platform"
-                    ) {
-
-                        return 3;
-
-                    }
+                            : 1;
 
 
-                    if (
-                        source?.type ===
-                        "broadcast-guide"
-                    ) {
+                const bScore =
 
-                        return 1;
+                    b?.source === "SportMonks"
 
-                    }
+                        ? 3
 
+                        : b?.verified
 
-                    if (
-                        source?.verified
-                    ) {
+                            ? 2
 
-                        return 2;
-
-                    }
-
-
-                    return 0;
-
-                }
+                            : 1;
 
 
                 return (
-                    score(b) -
-                    score(a)
+                    bScore -
+                    aScore
                 );
 
             }
@@ -1048,7 +1114,7 @@ export default async function handler(req, res) {
 
 
         /* =================================================
-           RETURN SUCCESS
+           RETURN RESULTS
         ================================================= */
 
         return res.status(200).json({
@@ -1060,8 +1126,7 @@ export default async function handler(req, res) {
                 fixtureId || null,
 
             provider:
-                provider ||
-                "unknown",
+                provider || "unknown",
 
             match: {
 
@@ -1104,22 +1169,10 @@ export default async function handler(req, res) {
     catch (error) {
 
         console.error(
-
             "KLYDE BROADCAST ERROR:",
-
-            error?.message ||
             error
-
         );
 
-
-        /*
-         * IMPORTANT:
-         * Return JSON even when something unexpected
-         * happens. This prevents the frontend from
-         * receiving an HTML FUNCTION_INVOCATION_FAILED
-         * response.
-         */
 
         return res.status(200).json({
 
@@ -1130,13 +1183,13 @@ export default async function handler(req, res) {
                 fixtureId || null,
 
             provider:
-                provider ||
-                "unknown",
+                provider || "unknown",
 
             results:
                 0,
 
-            broadcasters: [],
+            broadcasters:
+                [],
 
             error:
                 error?.message ||
@@ -1147,4 +1200,3 @@ export default async function handler(req, res) {
     }
 
 }
-```

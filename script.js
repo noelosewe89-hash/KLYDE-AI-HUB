@@ -275,209 +275,125 @@ Answer the user's latest message naturally.
        MAIN KLYDE AI
     ================================================= */
 
-    async function askKlyde(question) {
+   async function askKlyde(question) {
 
-        if (!question) {
-            return;
-        }
+    if (!question || !result) {
+        return;
+    }
 
-        if (!result) {
-            return;
-        }
+    result.innerHTML = thinkingHTML();
 
+    conversation.push({
+        role: "user",
+        message: question
+    });
 
-        result.innerHTML =
-            thinkingHTML();
+    try {
 
-
-        conversation.push({
-
-            role: "user",
-
-            message: question
-
+        const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                message: buildConversationPrompt()
+            })
         });
 
+        const contentType =
+            response.headers.get("content-type") || "";
 
-        try {
+        let data = {};
 
-            const response =
-                await fetch(
-                    "/api/chat",
-                    {
+        if (contentType.includes("application/json")) {
 
-                        method: "POST",
+            data = await response.json();
 
-                        headers: {
+        } else {
 
-                            "Content-Type":
-                                "application/json"
+            const text = await response.text();
 
-                        },
-
-                        body: JSON.stringify({
-
-                            message:
-                                buildConversationPrompt()
-
-                        })
-
-                    }
-                );
-
-
-            let data = {};
-
-            const contentType =
-                response.headers.get(
-                    "content-type"
-                ) || "";
-
-
-            if (
-                contentType.includes(
-                    "application/json"
-                )
-            ) {
-
-                data =
-                    await response.json();
-
-            }
-
-            else {
-
-                const text =
-                    await response.text();
-
-                throw new Error(
-                    text ||
-                    "KLYDE received an invalid response from the AI server."
-                );
-
-            }
-
-
-            if (!response.ok) {
-
-                throw new Error(
-
-                    data?.error ||
-
-                    data?.message ||
-
-                    "KLYDE AI request failed."
-
-                );
-
-            }
-
-
-            const answer =
-
-                data?.reply ||
-
-                data?.answer ||
-
-                data?.message ||
-
-                data?.response ||
-
-                "KLYDE could not generate a response.";
-
-
-            conversation.push({
-
-                role: "assistant",
-
-                message: answer
-
-            });
-
-
-            displayAIResponse(
-                answer
+            throw new Error(
+                text ||
+                "KLYDE received an invalid response from the AI server."
             );
-
-
-            if (searchInput) {
-
-                searchInput.value = "";
-
-            }
 
         }
 
-        catch (error) {
+        if (!response.ok) {
 
-            console.error(
-                "KLYDE AI ERROR:",
-                error
+            throw new Error(
+                data?.error ||
+                data?.message ||
+                `KLYDE AI request failed (${response.status}).`
             );
 
+        }
 
-            conversation.pop();
+        const answer =
+            data?.reply ||
+            data?.answer ||
+            data?.message ||
+            data?.response ||
+            "KLYDE could not generate a response.";
 
+        conversation.push({
+            role: "assistant",
+            message: answer
+        });
 
-            result.innerHTML = `
+        displayAIResponse(answer);
 
-                <div class="klyde-welcome">
+        if (searchInput) {
+            searchInput.value = "";
+        }
 
-                    <div class="welcome-icon">
-                        !
-                    </div>
+    }
 
-                    <div>
+    catch (error) {
 
-                        <strong>
-                            KLYDE AI
-                        </strong>
+        console.error(
+            "KLYDE AI ERROR:",
+            error
+        );
 
-                        <p>
-                            ${escapeHTML(
-                                error.message
-                            )}
-                        </p>
+        /*
+           Remove only the user's failed message.
+           Keep previous conversation memory intact.
+        */
 
-                    </div>
+        conversation.pop();
+
+        result.innerHTML = `
+
+            <div class="klyde-welcome">
+
+                <div class="welcome-icon">
+                    !
+                </div>
+
+                <div>
+
+                    <strong>
+                        KLYDE AI
+                    </strong>
+
+                    <p>
+                        ${escapeHTML(
+                            error.message ||
+                            "Something went wrong."
+                        )}
+                    </p>
 
                 </div>
 
-            `;
+            </div>
 
-        }
-
-    }
-
-
-    /* =================================================
-       AI FORM
-    ================================================= */
-
-    if (searchForm) {
-
-        searchForm.addEventListener(
-            "submit",
-            event => {
-
-                event.preventDefault();
-
-                const question =
-                    searchInput
-                        ? searchInput.value.trim()
-                        : "";
-
-                if (!question) {
-                    return;
-                }
-
-                askKlyde(question);
-
-            }
-        );
+        `;
 
     }
 
+}
 
     /* =================================================
        QUICK PROMPTS

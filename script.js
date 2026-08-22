@@ -1285,115 +1285,136 @@ Answer the user's latest message naturally.
        BROADCASTER LOOKUP
     ================================================= */
 
-    async function loadBroadcasters(
-        fixtureId,
-        button
-    ) {
+   async function loadBroadcasters(
+    fixtureId,
+    button
+) {
 
-        if (!fixtureId) {
-            return;
-        }
+    if (!fixtureId) {
+        return;
+    }
 
+    const originalText =
+        button.innerHTML;
 
-        const originalText =
-            button.innerHTML;
+    button.disabled = true;
 
+    button.innerHTML =
+        "📡 CHECKING SOURCES...";
 
-        button.disabled = true;
+    try {
 
-        button.innerHTML =
-            "📡 CHECKING...";
+        const provider =
+            button.dataset.provider || "";
 
+        const home =
+            button.dataset.home || "";
 
-        try {
+        const away =
+            button.dataset.away || "";
 
-            const response =
-                await fetch(
-                    `/api/broadcasts?fixture=${encodeURIComponent(
-                        fixtureId
-                    )}`
-                );
+        const date =
+            button.dataset.date || "";
 
+        const league =
+            button.dataset.league || "";
 
-            let data = {};
+        const params =
+            new URLSearchParams({
+                fixture: fixtureId,
+                provider: provider,
+                home: home,
+                away: away,
+                date: date,
+                league: league
+            });
 
-            const contentType =
-                response.headers.get(
-                    "content-type"
-                ) || "";
+        const response =
+            await fetch(
+                `/api/broadcasts?${params.toString()}`,
+                {
+                    cache: "no-store"
+                }
+            );
 
+        let data = {};
 
-            if (
-                contentType.includes(
-                    "application/json"
-                )
-            ) {
+        const contentType =
+            response.headers.get(
+                "content-type"
+            ) || "";
 
-                data =
-                    await response.json();
+        if (
+            contentType.includes(
+                "application/json"
+            )
+        ) {
 
-            }
+            data =
+                await response.json();
 
-            else {
+        } else {
 
-                const text =
-                    await response.text();
+            const text =
+                await response.text();
 
-                throw new Error(
-                    text ||
-                    "Broadcaster server returned an invalid response."
-                );
-
-            }
-
-
-            if (!response.ok) {
-
-                throw new Error(
-
-                    data?.error ||
-
-                    "Broadcaster lookup failed."
-
-                );
-
-            }
-
-
-            showBroadcastPopup(
-                data?.broadcasters || [],
-                fixtureId
+            throw new Error(
+                text ||
+                "Broadcaster server returned an invalid response."
             );
 
         }
 
-        catch (error) {
+        if (!response.ok) {
 
-            console.error(
-                "KLYDE BROADCAST ERROR:",
-                error
-            );
-
-
-            showSimplePopup(
-                "⚠️ BROADCAST ERROR",
-                error.message
+            throw new Error(
+                data?.error ||
+                "Broadcaster lookup failed."
             );
 
         }
 
-        finally {
+        console.log(
+            "KLYDE BROADCAST MATCH:",
+            data?.match
+        );
 
-            button.disabled = false;
+        console.log(
+            "KLYDE BROADCAST SOURCES:",
+            data?.broadcasters
+        );
 
-            button.innerHTML =
-                originalText;
-
-        }
+        showBroadcastPopup(
+            data?.broadcasters || [],
+            fixtureId
+        );
 
     }
 
+    catch (error) {
 
+        console.error(
+            "KLYDE BROADCAST ERROR:",
+            error
+        );
+
+        showSimplePopup(
+            "⚠️ BROADCAST ERROR",
+            error.message
+        );
+
+    }
+
+    finally {
+
+        button.disabled = false;
+
+        button.innerHTML =
+            originalText;
+
+    }
+
+}
     /* =================================================
        BROADCAST POPUP
     ================================================= */

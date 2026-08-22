@@ -384,18 +384,12 @@ export default async function handler(req, res) {
 
             try {
 
-                const url =
-
-                    `https://api.sportmonks.com/v3/football/fixtures/${encodeURIComponent(
-                        fixtureId
-                    )}` +
-
-                    `?api_token=${encodeURIComponent(
-                        token
-                    )}` +
-
-                    `&include=tvStations;league;participants`;
-
+               const url =
+    "https://api.sportmonks.com/v3/football/fixtures/" +
+    encodeURIComponent(fixtureId) +
+    "?api_token=" +
+    encodeURIComponent(token) +
+    "&include=tvStations;league;participants";
 
                 const response =
                     await fetch(url);

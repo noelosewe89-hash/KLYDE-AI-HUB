@@ -321,14 +321,104 @@ export default async function handler(req, res) {
         ================================================= */
 
         const matches =
-            normalizeApiFootballMatches(
-                sourceMatches
+    normalizeApiFootballMatches(
+        sourceMatches
+    );
+
+console.log(
+    `KLYDE SPORTS: API-Football returned ${matches.length} ${type} matches.`
+);
+
+
+/* =================================================
+   LIVE THIRD FALLBACK — SOFASCORE
+   ================================================= */
+
+if (
+    type === "live" &&
+    matches.length === 0
+) {
+
+    console.log(
+        "KLYDE SPORTS: API-Football returned zero live matches. Trying SofaScore..."
+    );
+
+    try {
+
+        const sofaResponse =
+            await fetch(
+                "https://www.sofascore.com/api/v1/sport/football/events/live",
+                {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                }
             );
 
 
-        console.log(
-            `KLYDE SPORTS: API-Football returned ${matches.length} ${type} matches.`
+        const sofaData =
+            await sofaResponse.json();
+
+
+        if (sofaResponse.ok) {
+
+            const sofaEvents =
+                Array.isArray(sofaData?.events)
+                    ? sofaData.events
+                    : [];
+
+
+            const sofaMatches =
+                normalizeSofaScoreMatches(
+                    sofaEvents
+                );
+
+
+            console.log(
+                `KLYDE SPORTS: SofaScore returned ${sofaMatches.length} live matches.`
+            );
+
+
+            if (
+                sofaMatches.length > 0
+            ) {
+
+                return res.status(200).json({
+
+                    success: true,
+
+                    type: "live",
+
+                    provider: "SofaScore",
+
+                    results:
+                        sofaMatches.length,
+
+                    matches:
+                        sofaMatches,
+
+                    fallback: true
+
+                });
+
+            }
+
+        }
+
+    }
+
+    catch (sofaError) {
+
+        console.error(
+            "KLYDE SOFASCORE ERROR:",
+            sofaError?.message ||
+            sofaError
         );
+
+    }
+
+}
 
 
         /* =================================================

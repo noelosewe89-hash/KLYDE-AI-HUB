@@ -1419,78 +1419,252 @@ Answer the user's latest message naturally.
        BROADCAST POPUP
     ================================================= */
 
-    function showBroadcastPopup(
-        broadcasters,
-        fixtureId
-    ) {
+   function showBroadcastPopup(
+    broadcasters,
+    fixtureId
+) {
 
-        const popup =
-            document.createElement("div");
-
-
-        popup.className =
-            "klyde-broadcast-popup";
+    const popup =
+        document.createElement("div");
 
 
-        popup.style.cssText = `
-
-            position:fixed;
-            inset:0;
-            background:rgba(0,0,0,.82);
-            z-index:99999;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            padding:20px;
-
-        `;
+    popup.className =
+        "klyde-broadcast-popup";
 
 
-        const list =
+    popup.style.cssText = `
 
-            broadcasters.length
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,.82);
+        z-index:99999;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:20px;
 
-                ? broadcasters
-                    .map(
-                        broadcaster => {
-
-                            const station =
-                                broadcaster.tvstation ||
-                                {};
-
-
-                            const name =
-
-                                station.name ||
-
-                                broadcaster.name ||
-
-                                broadcaster.station ||
-
-                                "Official Broadcaster";
+    `;
 
 
-                            const url =
+    /* =================================================
+       BUILD BROADCASTER LIST
+    ================================================= */
 
-                                station.url ||
+    const list =
 
-                                broadcaster.url ||
+        broadcasters.length
 
-                                broadcaster.link ||
+            ? broadcasters
+                .map(
+                    broadcaster => {
 
-                                "";
+                        const station =
+                            broadcaster.tvstation ||
+                            {};
 
 
-                            return `
+                        const name =
 
-                                <div
+                            station.name ||
+
+                            broadcaster.name ||
+
+                            broadcaster.station ||
+
+                            "Official Broadcaster";
+
+
+                        const url =
+
+                            station.url ||
+
+                            broadcaster.url ||
+
+                            broadcaster.link ||
+
+                            "";
+
+
+                        const source =
+                            broadcaster.source ||
+                            "";
+
+
+                        const verified =
+                            broadcaster.verified === true;
+
+
+                        const type =
+                            broadcaster.type ||
+                            "";
+
+
+                        /* =====================================
+                           SOURCE LABEL
+                        ===================================== */
+
+                        let sourceLabel = "";
+
+                        if (source) {
+
+                            if (
+                                type ===
+                                "broadcast-guide"
+                            ) {
+
+                                sourceLabel = `
+                                    <span
+                                        style="
+                                            display:inline-block;
+                                            margin-left:7px;
+                                            padding:4px 8px;
+                                            border-radius:20px;
+                                            background:#fff3cd;
+                                            color:#856404;
+                                            font-size:11px;
+                                            font-weight:700;
+                                        "
+                                    >
+                                        📖 GUIDE
+                                    </span>
+                                `;
+
+                            }
+
+                            else if (verified) {
+
+                                sourceLabel = `
+                                    <span
+                                        style="
+                                            display:inline-block;
+                                            margin-left:7px;
+                                            padding:4px 8px;
+                                            border-radius:20px;
+                                            background:#d4edda;
+                                            color:#155724;
+                                            font-size:11px;
+                                            font-weight:700;
+                                        "
+                                    >
+                                        ✓ VERIFIED
+                                    </span>
+                                `;
+
+                            }
+
+                            else {
+
+                                sourceLabel = `
+                                    <span
+                                        style="
+                                            display:inline-block;
+                                            margin-left:7px;
+                                            padding:4px 8px;
+                                            border-radius:20px;
+                                            background:#e2e3e5;
+                                            color:#383d41;
+                                            font-size:11px;
+                                            font-weight:700;
+                                        "
+                                    >
+                                        SOURCE
+                                    </span>
+                                `;
+
+                            }
+
+                        }
+
+
+                        /* =====================================
+                           NOTE
+                        ===================================== */
+
+                        const note =
+                            broadcaster.note ||
+                            "";
+
+
+                        /* =====================================
+                           WATCH / OPEN BUTTON
+                        ===================================== */
+
+                        let action = "";
+
+                        if (url) {
+
+                            action = `
+
+                                <button
+                                    type="button"
+                                    class="klyde-open-stream"
+                                    data-url="${escapeHTML(
+                                        url
+                                    )}"
                                     style="
-                                        padding:15px;
-                                        border:1px solid #ddd;
-                                        border-radius:12px;
-                                        margin-bottom:10px;
+                                        display:block;
+                                        width:100%;
+                                        margin-top:12px;
+                                        padding:11px;
+                                        border:0;
+                                        border-radius:9px;
+                                        cursor:pointer;
+                                        font-weight:700;
                                     "
                                 >
+
+                                    ${
+                                        type ===
+                                        "broadcast-guide"
+
+                                            ? "📖 OPEN GUIDE →"
+
+                                            : "▶️ WATCH / OPEN →"
+
+                                    }
+
+                                </button>
+
+                            `;
+
+                        }
+
+                        else {
+
+                            action = `
+
+                                <p
+                                    style="
+                                        font-size:13px;
+                                        opacity:.6;
+                                        margin-top:10px;
+                                    "
+                                >
+
+                                    Broadcaster found,
+                                    but no viewing URL
+                                    was supplied.
+
+                                </p>
+
+                            `;
+
+                        }
+
+
+                        return `
+
+                            <div
+                                style="
+                                    padding:15px;
+                                    border:1px solid #ddd;
+                                    border-radius:12px;
+                                    margin-bottom:10px;
+                                    background:#fff;
+                                "
+                            >
+
+                                <div>
 
                                     <strong>
 
@@ -1501,227 +1675,273 @@ Answer the user's latest message naturally.
 
                                     </strong>
 
-
-                                    ${
-                                        url
-
-                                            ? `
-
-                                                <button
-                                                    type="button"
-                                                    class="klyde-open-stream"
-                                                    data-url="${escapeHTML(
-                                                        url
-                                                    )}"
-                                                    style="
-                                                        display:block;
-                                                        width:100%;
-                                                        margin-top:10px;
-                                                        padding:11px;
-                                                        border:0;
-                                                        border-radius:9px;
-                                                        cursor:pointer;
-                                                    "
-                                                >
-
-                                                    WATCH →
-
-                                                </button>
-
-                                              `
-
-                                            : `
-
-                                                <p
-                                                    style="
-                                                        font-size:13px;
-                                                        opacity:.6;
-                                                    "
-                                                >
-
-                                                    Broadcaster found,
-                                                    but no viewing
-                                                    URL was supplied.
-
-                                                </p>
-
-                                              `
-                                    }
+                                    ${sourceLabel}
 
                                 </div>
 
-                            `;
 
-                        }
-                    )
-                    .join("")
+                                ${
+                                    source
 
-                : `
+                                        ? `
 
-                    <div
+                                            <div
+                                                style="
+                                                    margin-top:6px;
+                                                    font-size:12px;
+                                                    opacity:.6;
+                                                "
+                                            >
+
+                                                Source:
+                                                ${escapeHTML(
+                                                    source
+                                                )}
+
+                                            </div>
+
+                                          `
+
+                                        : ""
+
+                                }
+
+
+                                ${
+                                    note
+
+                                        ? `
+
+                                            <div
+                                                style="
+                                                    margin-top:9px;
+                                                    font-size:13px;
+                                                    line-height:1.45;
+                                                    opacity:.75;
+                                                "
+                                            >
+
+                                                ${escapeHTML(
+                                                    note
+                                                )}
+
+                                            </div>
+
+                                          `
+
+                                        : ""
+
+                                }
+
+
+                                ${action}
+
+                            </div>
+
+                        `;
+
+                    }
+                )
+                .join("")
+
+            : `
+
+                <div
+                    style="
+                        padding:20px;
+                        border-radius:12px;
+                        background:#f4f4f4;
+                    "
+                >
+
+                    <strong>
+
+                        📺 NO BROADCAST SOURCE FOUND
+
+                    </strong>
+
+                    <p>
+
+                        No broadcaster information
+                        was returned for this fixture.
+
+                    </p>
+
+                    <p
                         style="
-                            padding:20px;
-                            border-radius:12px;
-                            background:#f4f4f4;
+                            font-size:12px;
+                            opacity:.6;
                         "
                     >
 
-                        <strong>
+                        KLYDE checks connected
+                        broadcaster sources and
+                        broadcast guides.
 
-                            📺 NO VERIFIED BROADCAST
+                    </p>
 
-                        </strong>
+                </div>
 
-                        <p>
-
-                            No broadcaster information
-                            was returned for this fixture.
-
-                        </p>
-
-                    </div>
-
-                  `;
+              `;
 
 
-        popup.innerHTML = `
+    /* =================================================
+       POPUP HTML
+    ================================================= */
+
+    popup.innerHTML = `
+
+        <div
+            style="
+                width:100%;
+                max-width:500px;
+                max-height:85vh;
+                overflow:auto;
+                background:white;
+                color:#111;
+                border-radius:20px;
+                padding:25px;
+                box-shadow:0 20px 60px rgba(0,0,0,.45);
+            "
+        >
 
             <div
                 style="
-                    width:100%;
-                    max-width:500px;
-                    max-height:85vh;
-                    overflow:auto;
-                    background:white;
-                    color:#111;
-                    border-radius:20px;
-                    padding:25px;
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center;
                 "
             >
 
-                <div
-                    style="
-                        display:flex;
-                        justify-content:space-between;
-                        align-items:center;
-                    "
-                >
+                <div>
 
-                    <div>
+                    <h2 style="margin:0;">
 
-                        <h2 style="margin:0;">
-                            📺 WATCH LIVE
-                        </h2>
+                        📺 WATCH LIVE
 
-                        <small>
-                            Fixture
-                            ${escapeHTML(
-                                fixtureId
-                            )}
-                        </small>
+                    </h2>
 
-                    </div>
+                    <small>
 
+                        Fixture
+                        ${escapeHTML(
+                            fixtureId
+                        )}
 
-                    <button
-                        type="button"
-                        class="klyde-close-popup"
-                        style="
-                            width:35px;
-                            height:35px;
-                            border:0;
-                            border-radius:50%;
-                            font-size:22px;
-                            cursor:pointer;
-                        "
-                    >
-
-                        ×
-
-                    </button>
+                    </small>
 
                 </div>
 
 
-                <div
-                    style="margin-top:20px;"
-                >
-
-                    ${list}
-
-                </div>
-
-
-                <p
+                <button
+                    type="button"
+                    class="klyde-close-popup"
                     style="
-                        font-size:12px;
-                        opacity:.55;
-                        margin-top:15px;
+                        width:35px;
+                        height:35px;
+                        border:0;
+                        border-radius:50%;
+                        font-size:22px;
+                        cursor:pointer;
                     "
                 >
 
-                    KLYDE only displays broadcaster
-                    information returned by its connected
-                    sports data provider.
+                    ×
 
-                </p>
+                </button>
 
             </div>
 
-        `;
+
+            <div
+                style="
+                    margin-top:20px;
+                "
+            >
+
+                ${list}
+
+            </div>
 
 
-        document.body.appendChild(
-            popup
+            <p
+                style="
+                    font-size:12px;
+                    opacity:.55;
+                    margin-top:15px;
+                    line-height:1.5;
+                "
+            >
+
+                KLYDE displays broadcaster and
+                broadcast-guide information returned
+                by its connected sources.
+
+            </p>
+
+        </div>
+
+    `;
+
+
+    document.body.appendChild(
+        popup
+    );
+
+
+    /* =================================================
+       CLOSE POPUP
+    ================================================= */
+
+    popup
+        .querySelector(
+            ".klyde-close-popup"
+        )
+        .onclick = () => {
+
+            popup.remove();
+
+        };
+
+
+    /* =================================================
+       OPEN SOURCE
+    ================================================= */
+
+    popup
+        .querySelectorAll(
+            ".klyde-open-stream"
+        )
+        .forEach(
+            button => {
+
+                button.onclick = () => {
+
+                    const url =
+                        button.dataset.url;
+
+
+                    if (
+                        url &&
+                        /^https?:\/\//i.test(
+                            url
+                        )
+                    ) {
+
+                        window.open(
+                            url,
+                            "_blank",
+                            "noopener,noreferrer"
+                        );
+
+                    }
+
+                };
+
+            }
         );
 
-
-        popup
-            .querySelector(
-                ".klyde-close-popup"
-            )
-            .onclick = () => {
-
-                popup.remove();
-
-            };
-
-
-        popup
-            .querySelectorAll(
-                ".klyde-open-stream"
-            )
-            .forEach(
-                button => {
-
-                    button.onclick = () => {
-
-                        const url =
-                            button.dataset.url;
-
-
-                        if (
-                            url &&
-                            /^https?:\/\//i.test(
-                                url
-                            )
-                        ) {
-
-                            window.open(
-                                url,
-                                "_blank",
-                                "noopener,noreferrer"
-                            );
-
-                        }
-
-                    };
-
-                }
-            );
-
-    }
-
+}
 
     /* =================================================
        SIMPLE POPUP

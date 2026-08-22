@@ -44,6 +44,28 @@ export default async function handler(req, res) {
 
     const type =
         req.query?.type || "live";
+   /* =================================================
+   LIVE DATA MUST NEVER BE CACHED
+================================================= */
+
+if (type === "live") {
+
+    res.setHeader(
+        "Cache-Control",
+        "no-store, no-cache, must-revalidate, proxy-revalidate"
+    );
+
+    res.setHeader(
+        "Pragma",
+        "no-cache"
+    );
+
+    res.setHeader(
+        "Expires",
+        "0"
+    );
+
+}
 
 
     try {

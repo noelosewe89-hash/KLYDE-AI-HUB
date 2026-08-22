@@ -1,3 +1,4 @@
+```javascript
 /* =========================================================
    KLYDE AI HUB — BROADCAST SOURCE ENGINE
 
@@ -10,13 +11,34 @@
    - FIFA+
    - CAF TV
    - OneFootball
+   - KoraLive broadcast guide
 
    IMPORTANT:
-   We NEVER assume an ESPN/SofaScore event ID
-   is a SportMonks fixture ID.
+   - ESPN/SofaScore IDs are NEVER treated as SportMonks IDs.
+   - SportMonks TV stations are preferred when available.
+   - KoraLive is displayed as a GUIDE, NOT as a verified broadcaster.
+   - API keys remain server-side.
 ========================================================= */
 
 export default async function handler(req, res) {
+
+    /* =====================================================
+       METHOD CHECK
+    ===================================================== */
+
+    if (req.method !== "GET") {
+
+        return res.status(405).json({
+            success: false,
+            error: "Method not allowed"
+        });
+
+    }
+
+
+    /* =====================================================
+       SERVER-SIDE API KEY
+    ===================================================== */
 
     const token =
         process.env.SPORTMONKS_API_KEY;
@@ -27,37 +49,27 @@ export default async function handler(req, res) {
     ===================================================== */
 
     const fixtureId =
-        req.query?.fixture || "";
+        String(req.query?.fixture || "").trim();
 
     const provider =
-        String(
-            req.query?.provider || ""
-        ).toLowerCase();
+        String(req.query?.provider || "")
+            .trim()
+            .toLowerCase();
 
     const home =
-        String(
-            req.query?.home || ""
-        ).trim();
+        String(req.query?.home || "").trim();
 
     const away =
-        String(
-            req.query?.away || ""
-        ).trim();
+        String(req.query?.away || "").trim();
 
     const matchDate =
-        String(
-            req.query?.date || ""
-        ).trim();
+        String(req.query?.date || "").trim();
 
     const league =
-        String(
-            req.query?.league || ""
-        ).trim();
+        String(req.query?.league || "").trim();
 
     const country =
-        String(
-            req.query?.country || ""
-        ).trim();
+        String(req.query?.country || "").trim();
 
 
     if (!fixtureId && !home && !away) {
@@ -82,6 +94,75 @@ export default async function handler(req, res) {
 
 
         /* =================================================
+           AFRICAN COUNTRIES
+
+           Kept locally so the broadcast engine never
+           depends on an undefined variable.
+        ================================================= */
+
+        const africanCountries = [
+
+            "angola",
+            "benin",
+            "botswana",
+            "burkinafaso",
+            "burundi",
+            "cameroon",
+            "capeverde",
+            "centralafricanrepublic",
+            "chad",
+            "comoros",
+            "congo",
+            "congobrazzaville",
+            "costadivoire",
+            "cotedivoire",
+            "democraticrepublicofthecongo",
+            "drc",
+            "djibouti",
+            "egypt",
+            "equatorialguinea",
+            "eritrea",
+            "eswatini",
+            "ethiopia",
+            "gabon",
+            "gambia",
+            "ghana",
+            "guinea",
+            "guineabissau",
+            "kenya",
+            "lesotho",
+            "liberia",
+            "libya",
+            "madagascar",
+            "malawi",
+            "mali",
+            "mauritania",
+            "mauritius",
+            "morocco",
+            "mozambique",
+            "namibia",
+            "niger",
+            "nigeria",
+            "rwanda",
+            "sao tome",
+            "senegal",
+            "seychelles",
+            "sierra leone",
+            "somalia",
+            "southafrica",
+            "southsudan",
+            "sudan",
+            "tanzania",
+            "togo",
+            "tunisia",
+            "uganda",
+            "zambia",
+            "zimbabwe"
+
+        ];
+
+
+        /* =================================================
            NORMALIZE TEAM NAMES
         ================================================= */
 
@@ -100,16 +181,16 @@ export default async function handler(req, res) {
 
                 .replace(
                     /[^a-z0-9]/g,
-                    ""
-                );
+                    "");
 
         }
 
 
-        function namesMatch(
-            first,
-            second
-        ) {
+        /* =================================================
+           TEAM NAME MATCH
+        ================================================= */
+
+        function namesMatch(first, second) {
 
             const a =
                 normalizeName(first);
@@ -149,7 +230,9 @@ export default async function handler(req, res) {
 
             const newUrl =
                 String(
-                    source?.url || ""
+                    source?.url ||
+                    source?.link ||
+                    ""
                 )
                     .toLowerCase()
                     .trim();
@@ -159,60 +242,67 @@ export default async function handler(req, res) {
                 String(
                     source?.name ||
                     source?.station ||
+                    source?.tvstation?.name ||
                     ""
                 )
                     .toLowerCase()
                     .trim();
 
 
+            if (!newUrl && !newName) {
+                return;
+            }
+
+
             const exists =
-                broadcasters.some(
-                    existing => {
+                broadcasters.some(existing => {
 
-                        const oldUrl =
-                            String(
-                                existing?.url ||
-                                existing?.link ||
-                                ""
-                            )
-                                .toLowerCase()
-                                .trim();
-
-
-                        const oldName =
-                            String(
-                                existing?.name ||
-                                existing?.station ||
-                                existing?.tvstation?.name ||
-                                ""
-                            )
-                                .toLowerCase()
-                                .trim();
+                    const oldUrl =
+                        String(
+                            existing?.url ||
+                            existing?.link ||
+                            existing?.tvstation?.url ||
+                            ""
+                        )
+                            .toLowerCase()
+                            .trim();
 
 
-                        return (
-                            (
-                                newUrl &&
-                                oldUrl &&
-                                newUrl === oldUrl
-                            ) ||
+                    const oldName =
+                        String(
+                            existing?.name ||
+                            existing?.station ||
+                            existing?.tvstation?.name ||
+                            ""
+                        )
+                            .toLowerCase()
+                            .trim();
 
-                            (
-                                newName &&
-                                oldName &&
-                                newName === oldName
-                            )
-                        );
 
-                    }
-                );
+                    return (
+
+                        (
+                            newUrl &&
+                            oldUrl &&
+                            newUrl === oldUrl
+                        )
+
+                        ||
+
+                        (
+                            newName &&
+                            oldName &&
+                            newName === oldName
+                        )
+
+                    );
+
+                });
 
 
             if (!exists) {
 
-                broadcasters.push(
-                    source
-                );
+                broadcasters.push(source);
 
             }
 
@@ -221,25 +311,34 @@ export default async function handler(req, res) {
 
         /* =================================================
            SPORTMONKS DIRECT FIXTURE LOOKUP
-           
-           Only do this when:
-           - provider is SportMonks
-           - OR provider is unknown
-           
-           This prevents ESPN IDs being treated
-           as SportMonks IDs.
+
+           Only:
+           - SportMonks provider
+           - unknown provider
+
+           Never use ESPN/SofaScore IDs directly.
         ================================================= */
 
         if (
+
             token &&
+
             (
                 !provider ||
                 provider === "sportmonks"
             ) &&
+
             fixtureId
+
         ) {
 
             try {
+
+                console.log(
+                    "KLYDE BROADCAST: SportMonks fixture lookup:",
+                    fixtureId
+                );
+
 
                 const url =
 
@@ -254,9 +353,17 @@ export default async function handler(req, res) {
                     `&include=tvStations;league;participants`;
 
 
-
                 const response =
-                    await fetch(url);
+                    await fetch(url, {
+
+                        method: "GET",
+
+                        headers: {
+                            Accept:
+                                "application/json"
+                        }
+
+                    });
 
 
                 const data =
@@ -288,16 +395,21 @@ export default async function handler(req, res) {
 
         /* =================================================
            SPORTMONKS DATE + TEAM MATCHING
-           
-           Used for ESPN / SofaScore matches.
+
+           Used when the frontend supplied an ESPN,
+           SofaScore or unknown fixture ID.
         ================================================= */
 
         if (
+
             token &&
+
             !sportmonksFixture &&
+
             home &&
             away &&
             matchDate
+
         ) {
 
             try {
@@ -319,19 +431,15 @@ export default async function handler(req, res) {
                     const mm =
                         String(
                             date.getUTCMonth() + 1
-                        ).padStart(
-                            2,
-                            "0"
-                        );
+                        )
+                            .padStart(2, "0");
 
 
                     const dd =
                         String(
                             date.getUTCDate()
-                        ).padStart(
-                            2,
-                            "0"
-                        );
+                        )
+                            .padStart(2, "0");
 
 
                     const dateString =
@@ -404,7 +512,9 @@ export default async function handler(req, res) {
                                         namesMatch(
                                             fixtureHome?.name,
                                             home
-                                        ) &&
+                                        )
+
+                                        &&
 
                                         namesMatch(
                                             fixtureAway?.name,
@@ -436,7 +546,7 @@ export default async function handler(req, res) {
 
 
         /* =================================================
-           READ SPORTMONKS TV STATIONS
+           SPORTMONKS TV STATIONS
         ================================================= */
 
         if (sportmonksFixture) {
@@ -450,40 +560,47 @@ export default async function handler(req, res) {
                 [];
 
 
-            stations.forEach(
-                station => {
+            if (Array.isArray(stations)) {
 
-                    const tvstation =
-                        station?.tvstation ||
-                        {};
+                stations.forEach(
+                    station => {
+
+                        const tvstation =
+                            station?.tvstation ||
+                            {};
 
 
-                    addSource({
+                        addSource({
 
-                        ...station,
+                            ...station,
 
-                        name:
-                            tvstation.name ||
-                            station?.name ||
-                            station?.station ||
-                            "Official Broadcaster",
+                            name:
+                                tvstation.name ||
+                                station?.name ||
+                                station?.station ||
+                                "Official Broadcaster",
 
-                        url:
-                            tvstation.url ||
-                            station?.url ||
-                            station?.link ||
-                            "",
+                            url:
+                                tvstation.url ||
+                                station?.url ||
+                                station?.link ||
+                                "",
 
-                        source:
-                            "SportMonks",
+                            source:
+                                "SportMonks",
 
-                        verified:
-                            true
+                            verified:
+                                true,
 
-                    });
+                            type:
+                                "official-broadcaster"
 
-                }
-            );
+                        });
+
+                    }
+                );
+
+            }
 
         }
 
@@ -523,9 +640,10 @@ export default async function handler(req, res) {
             );
 
 
-        const searchableText =
+        const matchText =
 
             (
+
                 leagueName +
                 " " +
                 fixtureCountry +
@@ -538,51 +656,31 @@ export default async function handler(req, res) {
                 .toLowerCase();
 
 
-               /* =================================================
-           ADDITIONAL BROADCAST SOURCES
-
-           IMPORTANT:
-           These are legitimate broadcaster/platform
-           sources that KLYDE can display as possible
-           viewing options.
-
-           SportMonks TV stations are still added above.
-           Duplicates are automatically removed by addSource().
-        ================================================= */
-
-        const leagueLower =
-            leagueName.toLowerCase();
-
-        const countryLower =
-            fixtureCountry.toLowerCase();
-
-        const matchText =
-            (
-                leagueLower +
-                " " +
-                countryLower +
-                " " +
-                home.toLowerCase() +
-                " " +
-                away.toLowerCase()
-            );
-
-
         /* =================================================
            FIFA+
         ================================================= */
 
+        const normalizedCountry =
+            normalizeName(
+                fixtureCountry
+            );
+
+
         const fifaRelevant =
+
             africanCountries.some(
                 name =>
-                    matchText.includes(
-                        name
+                    normalizedCountry.includes(
+                        normalizeName(name)
                     )
-            ) ||
+            )
 
-            matchText.includes(
-                "fifa"
-            );
+            ||
+
+            matchText.includes("fifa+")
+            ||
+
+            matchText.includes("fifaplus");
 
 
         if (fifaRelevant) {
@@ -626,31 +724,45 @@ export default async function handler(req, res) {
 
             matchText.includes(
                 "caf"
-            ) ||
+            )
+
+            ||
 
             matchText.includes(
                 "africa cup"
-            ) ||
+            )
+
+            ||
 
             matchText.includes(
                 "african cup"
-            ) ||
+            )
+
+            ||
 
             matchText.includes(
                 "caf champions"
-            ) ||
+            )
+
+            ||
 
             matchText.includes(
                 "caf confederation"
-            ) ||
+            )
+
+            ||
 
             matchText.includes(
                 "caf super cup"
-            ) ||
+            )
+
+            ||
 
             matchText.includes(
                 "caf u17"
-            ) ||
+            )
+
+            ||
 
             matchText.includes(
                 "caf u20"
@@ -718,117 +830,19 @@ export default async function handler(req, res) {
                 "official-free-platform",
 
             note:
-                "OneFootball provides selected live football coverage. Availability varies by match and territory."
+                "OneFootball offers selected live football coverage. Availability varies by match and territory."
 
         });
 
 
         /* =================================================
-           FINAL BROADCAST SOURCE CLEANUP
-        ================================================= */
-
-        broadcasters =
-            broadcasters.filter(
-                source => {
-
-                    if (!source) {
-                        return false;
-                    }
-
-                    const name =
-                        String(
-                            source?.name ||
-                            source?.station ||
-                            source?.tvstation?.name ||
-                            ""
-                        ).trim();
-
-                    const url =
-                        String(
-                            source?.url ||
-                            source?.link ||
-                            source?.tvstation?.url ||
-                            ""
-                        ).trim();
-
-                    return (
-                        Boolean(name) ||
-                        Boolean(url)
-                    );
-
-                }
-            );
-
-
-        /* =================================================
-           SORT SOURCES
-
-           1. SportMonks verified stations
-           2. Official free platforms
-           3. Other sources
-        ================================================= */
-
-        broadcasters.sort(
-            (a, b) => {
-
-                const aScore =
-                    a?.source === "SportMonks"
-                        ? 3
-                        : a?.verified
-                            ? 2
-                            : 1;
-
-                const bScore =
-                    b?.source === "SportMonks"
-                        ? 3
-                        : b?.verified
-                            ? 2
-                            : 1;
-
-                return bScore - aScore;
-
-            }
-        );
-
-        /* =================================================
-           ONEFOOTBALL
-        ================================================= */
-
-        addSource({
-
-            name:
-                "OneFootball",
-
-            station:
-                "OneFootball",
-
-            url:
-                "https://tv.onefootball.com/",
-
-            source:
-                "OneFootball",
-
-            verified:
-                true,
-
-            free:
-                true,
-
-            type:
-                "official-free-platform",
-
-            note:
-                "OneFootball offers selected Free-to-Air live matches. Availability varies by match and territory."
-
-        });
-               /* =================================================
            KORALIVE
-           
-           KoraLive is treated as a broadcast GUIDE/source,
-           not as a verified broadcaster.
 
            IMPORTANT:
-           We do NOT claim KoraLive hosts the stream.
+           KoraLive is ONLY presented as a broadcast guide.
+
+           KLYDE does NOT claim that KoraLive itself
+           owns or hosts the stream.
         ================================================= */
 
         addSource({
@@ -855,9 +869,139 @@ export default async function handler(req, res) {
                 "broadcast-guide",
 
             note:
-                "KoraLive is a football broadcast guide. Availability and broadcaster information may vary by match and territory."
+                "KoraLive is a football broadcast guide. Open the guide to check available broadcasters for this match. Availability varies by match and territory."
 
         });
+
+
+        /* =================================================
+           CLEAN SOURCES
+        ================================================= */
+
+        broadcasters =
+            broadcasters.filter(source => {
+
+                if (!source) {
+                    return false;
+                }
+
+
+                const name =
+                    String(
+                        source?.name ||
+                        source?.station ||
+                        source?.tvstation?.name ||
+                        ""
+                    ).trim();
+
+
+                const url =
+                    String(
+                        source?.url ||
+                        source?.link ||
+                        source?.tvstation?.url ||
+                        ""
+                    ).trim();
+
+
+                return (
+                    Boolean(name) ||
+                    Boolean(url)
+                );
+
+            });
+
+
+        /* =================================================
+           SORT
+
+           1. Verified SportMonks broadcasters
+           2. Other verified official sources
+           3. Broadcast guides
+           4. Other sources
+        ================================================= */
+
+        broadcasters.sort(
+            (a, b) => {
+
+                function score(source) {
+
+                    if (
+                        source?.source ===
+                        "SportMonks" &&
+                        source?.verified === true
+                    ) {
+
+                        return 4;
+
+                    }
+
+
+                    if (
+                        source?.verified === true &&
+                        source?.type ===
+                        "official-free-platform"
+                    ) {
+
+                        return 3;
+
+                    }
+
+
+                    if (
+                        source?.type ===
+                        "broadcast-guide"
+                    ) {
+
+                        return 2;
+
+                    }
+
+
+                    if (
+                        source?.verified === true
+                    ) {
+
+                        return 1;
+
+                    }
+
+
+                    return 0;
+
+                }
+
+
+                return (
+                    score(b) -
+                    score(a)
+                );
+
+            }
+        );
+
+
+        /* =================================================
+           LOG RESULT
+        ================================================= */
+
+        console.log(
+            "KLYDE BROADCAST RESULT:",
+            {
+                fixtureId,
+                provider,
+                home,
+                away,
+                league: leagueName,
+                country: fixtureCountry,
+                sportmonksMatched:
+                    Boolean(
+                        sportmonksFixture
+                    ),
+                broadcasterCount:
+                    broadcasters.length
+            }
+        );
 
 
         /* =================================================
@@ -939,3 +1083,4 @@ export default async function handler(req, res) {
     }
 
 }
+```

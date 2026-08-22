@@ -1,3 +1,4 @@
+```javascript
 /* =========================================================
    KLYDE AI HUB — SPORTS ENGINE
 
@@ -6,6 +7,13 @@
    2. API-Football
    3. SofaScore
    4. ESPN fallback
+
+   LIVE MODE:
+   - Collects matches from ALL available providers
+   - Does NOT stop after the first provider
+   - Removes duplicate matches
+   - Keeps provider information
+   - Keeps broadcaster / TV station information
 
    FIXTURES:
    - API-Football
@@ -27,11 +35,9 @@ export default async function handler(req, res) {
     ===================================================== */
 
     if (req.method !== "GET") {
-
         return res.status(405).json({
             error: "Method not allowed"
         });
-
     }
 
 
@@ -63,144 +69,23 @@ export default async function handler(req, res) {
             "Expires",
             "0"
         );
-
     }
 
 
     try {
 
         /* =================================================
-           LIVE — 1. SPORTMONKS
+           FIXTURES / RESULTS
         ================================================= */
-
-        if (
-            type === "live" &&
-            process.env.SPORTMONKS_API_KEY
-        ) {
-
-            try {
-
-                console.log(
-                    "KLYDE SPORTS: Trying SportMonks live..."
-                );
-
-
-                const sportMonksURL =
-                    "https://api.sportmonks.com/v3/football/livescores/inplay" +
-                    "?api_token=" +
-                    encodeURIComponent(
-                        process.env.SPORTMONKS_API_KEY
-                    ) +
-                    "&include=tvStations;league;participants;state;scores";
-
-
-                const response =
-                    await fetch(
-                        sportMonksURL,
-                        {
-                            method: "GET",
-                            headers: {
-                                "Accept":
-                                    "application/json"
-                            }
-                        }
-                    );
-
-
-                const data =
-                    await safeJSON(response);
-
-
-                console.log(
-                    "KLYDE SPORTMONKS STATUS:",
-                    response.status
-                );
-
-
-                if (response.ok) {
-
-                    const sourceMatches =
-                        Array.isArray(data?.data)
-                            ? data.data
-                            : [];
-
-
-                    const matches =
-                        normalizeSportMonksMatches(
-                            sourceMatches
-                        );
-
-
-                    console.log(
-                        `KLYDE SPORTS: SportMonks returned ${matches.length} live matches.`
-                    );
-
-
-                    if (matches.length > 0) {
-
-                        return res.status(200).json({
-
-                            success: true,
-
-                            type: "live",
-
-                            provider:
-                                "SportMonks",
-
-                            results:
-                                matches.length,
-
-                            matches,
-
-                            fallback: false
-
-                        });
-
-                    }
-
-                }
-
-                else {
-
-                    console.error(
-                        "KLYDE SPORTMONKS ERROR:",
-                        data?.message ||
-                        `HTTP ${response.status}`
-                    );
-
-                }
-
-            }
-
-            catch (error) {
-
-                console.error(
-                    "KLYDE SPORTMONKS ERROR:",
-                    error?.message ||
-                    error
-                );
-
-            }
-
-        }
-
-
-        /* =================================================
-           API-FOOTBALL
-        ================================================= */
-
-        const apiFootballKey =
-            process.env.API_FOOTBALL_KEY;
-
-
-        /*
-         * FIXTURES AND RESULTS STILL USE API-FOOTBALL.
-         */
 
         if (
             type === "fixtures" ||
             type === "results"
         ) {
+
+            const apiFootballKey =
+                process.env.API_FOOTBALL_KEY;
+
 
             if (!apiFootballKey) {
 
@@ -255,6 +140,7 @@ export default async function handler(req, res) {
                     url,
                     {
                         method: "GET",
+
                         headers: {
 
                             "Accept":
@@ -322,10 +208,124 @@ export default async function handler(req, res) {
 
 
         /* =================================================
-           LIVE — 2. API-FOOTBALL
+           LIVE MULTI-PROVIDER AGGREGATION
         ================================================= */
 
-        let apiFootballMatches = [];
+        const allLiveMatches = [];
+
+
+        /* =================================================
+           1. SPORTMONKS
+        ================================================= */
+
+        if (
+            process.env.SPORTMONKS_API_KEY
+        ) {
+
+            try {
+
+                console.log(
+                    "KLYDE SPORTS: Trying SportMonks live..."
+                );
+
+
+                const sportMonksURL =
+                    "https://api.sportmonks.com/v3/football/livescores/inplay" +
+                    "?api_token=" +
+                    encodeURIComponent(
+                        process.env.SPORTMONKS_API_KEY
+                    ) +
+                    "&include=tvStations;league;participants;state;scores";
+
+
+                const response =
+                    await fetch(
+                        sportMonksURL,
+                        {
+                            method: "GET",
+
+                            headers: {
+                                "Accept":
+                                    "application/json"
+                            }
+                        }
+                    );
+
+
+                const data =
+                    await safeJSON(response);
+
+
+                console.log(
+                    "KLYDE SPORTMONKS STATUS:",
+                    response.status
+                );
+
+
+                if (response.ok) {
+
+                    const sourceMatches =
+                        Array.isArray(data?.data)
+                            ? data.data
+                            : [];
+
+
+                    const matches =
+                        normalizeSportMonksMatches(
+                            sourceMatches
+                        );
+
+
+                    console.log(
+                        `KLYDE SPORTS: SportMonks returned ${matches.length} live matches.`
+                    );
+
+
+                    allLiveMatches.push(
+                        ...matches
+                    );
+
+                }
+
+                else {
+
+                    console.error(
+                        "KLYDE SPORTMONKS ERROR:",
+                        data?.message ||
+                        `HTTP ${response.status}`
+                    );
+
+                }
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "KLYDE SPORTMONKS ERROR:",
+                    error?.message ||
+                    error
+                );
+
+            }
+
+        }
+
+        else {
+
+            console.log(
+                "KLYDE SPORTS: SPORTMONKS_API_KEY is not configured."
+            );
+
+        }
+
+
+        /* =================================================
+           2. API-FOOTBALL
+        ================================================= */
+
+        const apiFootballKey =
+            process.env.API_FOOTBALL_KEY;
 
 
         if (apiFootballKey) {
@@ -342,6 +342,7 @@ export default async function handler(req, res) {
                         "https://v3.football.api-sports.io/fixtures?live=all",
                         {
                             method: "GET",
+
                             headers: {
 
                                 "Accept":
@@ -373,41 +374,20 @@ export default async function handler(req, res) {
                             : [];
 
 
-                    apiFootballMatches =
+                    const matches =
                         normalizeApiFootballMatches(
                             sourceMatches
                         );
 
 
                     console.log(
-                        `KLYDE SPORTS: API-Football returned ${apiFootballMatches.length} live matches.`
+                        `KLYDE SPORTS: API-Football returned ${matches.length} live matches.`
                     );
 
 
-                    if (
-                        apiFootballMatches.length > 0
-                    ) {
-
-                        return res.status(200).json({
-
-                            success: true,
-
-                            type: "live",
-
-                            provider:
-                                "API-Football",
-
-                            results:
-                                apiFootballMatches.length,
-
-                            matches:
-                                apiFootballMatches,
-
-                            fallback: true
-
-                        });
-
-                    }
+                    allLiveMatches.push(
+                        ...matches
+                    );
 
                 }
 
@@ -446,15 +426,15 @@ export default async function handler(req, res) {
 
 
         /* =================================================
-           LIVE — 3. SOFASCORE
+           3. SOFASCORE
         ================================================= */
 
-        console.log(
-            "KLYDE SPORTS: Trying SofaScore live..."
-        );
-
-
         try {
+
+            console.log(
+                "KLYDE SPORTS: Trying SofaScore live..."
+            );
+
 
             const sofaResponse =
                 await fetch(
@@ -513,35 +493,13 @@ export default async function handler(req, res) {
 
 
                 console.log(
-                    "KLYDE SOFASCORE NORMALIZED COUNT:",
-                    sofaMatches.length
+                    `KLYDE SPORTS: SofaScore returned ${sofaMatches.length} live matches.`
                 );
 
 
-                if (
-                    sofaMatches.length > 0
-                ) {
-
-                    return res.status(200).json({
-
-                        success: true,
-
-                        type: "live",
-
-                        provider:
-                            "SofaScore",
-
-                        results:
-                            sofaMatches.length,
-
-                        matches:
-                            sofaMatches,
-
-                        fallback: true
-
-                    });
-
-                }
+                allLiveMatches.push(
+                    ...sofaMatches
+                );
 
             }
 
@@ -569,15 +527,15 @@ export default async function handler(req, res) {
 
 
         /* =================================================
-           LIVE — 4. ESPN FALLBACK
+           4. ESPN
         ================================================= */
 
-        console.log(
-            "KLYDE SPORTS: SofaScore returned zero live matches. Trying ESPN..."
-        );
-
-
         try {
+
+            console.log(
+                "KLYDE SPORTS: Trying ESPN live..."
+            );
+
 
             const espnResponse =
                 await fetch(
@@ -631,30 +589,9 @@ export default async function handler(req, res) {
                 );
 
 
-                if (
-                    espnMatches.length > 0
-                ) {
-
-                    return res.status(200).json({
-
-                        success: true,
-
-                        type: "live",
-
-                        provider:
-                            "ESPN",
-
-                        results:
-                            espnMatches.length,
-
-                        matches:
-                            espnMatches,
-
-                        fallback: true
-
-                    });
-
-                }
+                allLiveMatches.push(
+                    ...espnMatches
+                );
 
             }
 
@@ -672,7 +609,70 @@ export default async function handler(req, res) {
 
 
         /* =================================================
-           NO LIVE MATCHES FROM ANY SOURCE
+           REMOVE DUPLICATES
+        ================================================= */
+
+        const uniqueMatches =
+            deduplicateLiveMatches(
+                allLiveMatches
+            );
+
+
+        console.log(
+            "================================================="
+        );
+
+        console.log(
+            "KLYDE SPORTS MULTI-PROVIDER SUMMARY"
+        );
+
+        console.log(
+            "Raw matches:",
+            allLiveMatches.length
+        );
+
+        console.log(
+            "Unique matches:",
+            uniqueMatches.length
+        );
+
+        console.log(
+            "================================================="
+        );
+
+
+        /* =================================================
+           RETURN ALL LIVE MATCHES
+        ================================================= */
+
+        if (
+            uniqueMatches.length > 0
+        ) {
+
+            return res.status(200).json({
+
+                success: true,
+
+                type: "live",
+
+                provider:
+                    "Multi-provider",
+
+                results:
+                    uniqueMatches.length,
+
+                matches:
+                    uniqueMatches,
+
+                fallback: false
+
+            });
+
+        }
+
+
+        /* =================================================
+           NO LIVE MATCHES
         ================================================= */
 
         return res.status(200).json({
@@ -767,6 +767,463 @@ async function safeJSON(response) {
         };
 
     }
+
+}
+
+
+/* =========================================================
+   LIVE MATCH DEDUPLICATION
+========================================================= */
+
+function deduplicateLiveMatches(
+    matches
+) {
+
+    if (!Array.isArray(matches)) {
+
+        return [];
+
+    }
+
+
+    const unique = [];
+
+
+    const seen = new Set();
+
+
+    for (const match of matches) {
+
+        if (!match) {
+            continue;
+        }
+
+
+        const home =
+            match?.teams?.home?.name ||
+            "";
+
+
+        const away =
+            match?.teams?.away?.name ||
+            "";
+
+
+        const league =
+            match?.league?.name ||
+            "";
+
+
+        const date =
+            match?.fixture?.date ||
+            "";
+
+
+        const fixtureId =
+            match?.fixture?.id ||
+            "";
+
+
+        /*
+         * Prefer provider-specific IDs.
+         */
+
+        let key = "";
+
+
+        if (
+            match.sportmonks?.fixture_id
+        ) {
+
+            key =
+                `sportmonks:${match.sportmonks.fixture_id}`;
+
+        }
+
+        else if (
+            match.apiFootball?.fixture_id
+        ) {
+
+            key =
+                `api-football:${match.apiFootball.fixture_id}`;
+
+        }
+
+        else if (
+            match.sofaScore?.event_id
+        ) {
+
+            key =
+                `sofascore:${match.sofaScore.event_id}`;
+
+        }
+
+        else if (
+            match.espn?.event_id
+        ) {
+
+            key =
+                `espn:${match.espn.event_id}`;
+
+        }
+
+        else {
+
+            /*
+             * Fallback identity when a provider
+             * does not expose an ID.
+             */
+
+            key =
+                [
+                    normalizeTeamName(home),
+                    normalizeTeamName(away),
+                    normalizeTeamName(league),
+                    date
+                        ? new Date(date)
+                            .toISOString()
+                            .slice(0, 13)
+                        : ""
+                ].join("|");
+
+        }
+
+
+        /*
+         * Cross-provider duplicate detection.
+         */
+
+        const crossProviderKey =
+            [
+                normalizeTeamName(home),
+                normalizeTeamName(away),
+                normalizeTeamName(league)
+            ].join("|");
+
+
+        const existingIndex =
+            unique.findIndex(
+                existing => {
+
+                    const existingHome =
+                        normalizeTeamName(
+                            existing?.teams?.home?.name || ""
+                        );
+
+
+                    const existingAway =
+                        normalizeTeamName(
+                            existing?.teams?.away?.name || ""
+                        );
+
+
+                    const existingLeague =
+                        normalizeTeamName(
+                            existing?.league?.name || ""
+                        );
+
+
+                    const existingCrossKey =
+                        [
+                            existingHome,
+                            existingAway,
+                            existingLeague
+                        ].join("|");
+
+
+                    return (
+                        existingCrossKey ===
+                        crossProviderKey
+                    );
+
+                }
+            );
+
+
+        if (
+            seen.has(key)
+        ) {
+
+            continue;
+
+        }
+
+
+        if (
+            existingIndex !== -1
+        ) {
+
+            /*
+             * Merge useful information from
+             * the newer provider into the
+             * existing match.
+             */
+
+            unique[
+                existingIndex
+            ] =
+                mergeMatchData(
+                    unique[
+                        existingIndex
+                    ],
+                    match
+                );
+
+
+            seen.add(key);
+
+            continue;
+
+        }
+
+
+        seen.add(key);
+
+
+        unique.push(
+            match
+        );
+
+    }
+
+
+    return unique;
+
+}
+
+
+/* =========================================================
+   MERGE MATCH DATA
+========================================================= */
+
+function mergeMatchData(
+    existing,
+    incoming
+) {
+
+    if (!existing) {
+        return incoming;
+    }
+
+
+    if (!incoming) {
+        return existing;
+    }
+
+
+    return {
+
+        ...existing,
+
+
+        fixture: {
+
+            ...existing.fixture,
+
+            ...(incoming.fixture || {}),
+
+            id:
+                existing.fixture?.id ||
+                incoming.fixture?.id ||
+                null,
+
+            date:
+                existing.fixture?.date ||
+                incoming.fixture?.date ||
+                null,
+
+            status: {
+
+                ...existing.fixture?.status,
+
+                ...(incoming.fixture?.status || {})
+
+            }
+
+        },
+
+
+        league: {
+
+            ...existing.league,
+
+            ...(incoming.league || {})
+
+        },
+
+
+        teams: {
+
+            ...existing.teams,
+
+            home: {
+
+                ...existing.teams?.home,
+
+                ...(incoming.teams?.home || {})
+
+            },
+
+            away: {
+
+                ...existing.teams?.away,
+
+                ...(incoming.teams?.away || {})
+
+            }
+
+        },
+
+
+        goals: {
+
+            ...existing.goals,
+
+            ...(incoming.goals || {})
+
+        },
+
+
+        events:
+
+            (
+                incoming.events &&
+                incoming.events.length
+            )
+                ? incoming.events
+                : existing.events || [],
+
+
+        tvStations:
+
+            mergeTVStations(
+                existing.tvStations || [],
+                incoming.tvStations || []
+            ),
+
+
+        sportmonks:
+            existing.sportmonks ||
+            incoming.sportmonks ||
+            null,
+
+
+        apiFootball:
+            existing.apiFootball ||
+            incoming.apiFootball ||
+            null,
+
+
+        sofaScore:
+            existing.sofaScore ||
+            incoming.sofaScore ||
+            null,
+
+
+        espn:
+            existing.espn ||
+            incoming.espn ||
+            null
+
+    };
+
+}
+
+
+/* =========================================================
+   TV STATION MERGER
+========================================================= */
+
+function mergeTVStations(
+    first,
+    second
+) {
+
+    const stations = [];
+
+
+    const source =
+        [
+            ...(Array.isArray(first)
+                ? first
+                : []),
+
+            ...(Array.isArray(second)
+                ? second
+                : [])
+        ];
+
+
+    const seen = new Set();
+
+
+    source.forEach(
+        station => {
+
+            if (!station) {
+                return;
+            }
+
+
+            const name =
+                station?.name ||
+                station?.tvstation?.name ||
+                station?.station ||
+                "";
+
+
+            const url =
+                station?.url ||
+                station?.tvstation?.url ||
+                station?.link ||
+                "";
+
+
+            const key =
+                `${name}|${url}`;
+
+
+            if (
+                seen.has(key)
+            ) {
+
+                return;
+
+            }
+
+
+            seen.add(key);
+
+
+            stations.push(
+                station
+            );
+
+        }
+    );
+
+
+    return stations;
+
+}
+
+
+/* =========================================================
+   TEAM NAME NORMALIZATION
+========================================================= */
+
+function normalizeTeamName(
+    name
+) {
+
+    return String(
+        name || ""
+    )
+        .toLowerCase()
+        .replace(
+            /[^a-z0-9]/g,
+            ""
+        );
 
 }
 
@@ -1574,11 +2031,6 @@ function normalizeESPNMatches(
             }
 
 
-            /*
-             * Only keep events that actually
-             * have two teams.
-             */
-
             return (
                 match.teams.home.name !== "Home" &&
                 match.teams.away.name !== "Away"
@@ -1587,3 +2039,4 @@ function normalizeESPNMatches(
         });
 
 }
+```

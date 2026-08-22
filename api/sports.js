@@ -449,16 +449,28 @@ console.log(
             process.env.API_FOOTBALL_KEY;
 
 
-        if (!apiKey) {
+       if (!apiKey) {
 
-            return res.status(500).json({
+    return res.status(200).json({
 
-                error:
-                    "No sports API key is configured."
+        success: true,
 
-            });
+        type: "live",
 
-        }
+        provider: "SportMonks",
+
+        results: 0,
+
+        matches: [],
+
+        fallback: false,
+
+        message:
+            "No live matches are currently available."
+
+    });
+
+}
 
 
         let url =

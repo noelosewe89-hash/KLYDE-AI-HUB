@@ -986,43 +986,73 @@ export default async function handler(req, res) {
         });
 
 
-        /* =================================================
-           KORALIVE
+      /* =================================================
+   KORALIVE + SPOREXTRA
 
-           KoraLive is a broadcast GUIDE.
+   IMPORTANT:
+   These are treated only as unverified
+   broadcast-guide sources.
 
-           We do NOT claim that KoraLive hosts the stream.
-        ================================================= */
+   KLYDE does NOT claim that they own
+   broadcasting rights or host an official stream.
+================================================= */
 
-        addSource({
+addSource({
 
-            name:
-                "KoraLive",
+    name:
+        "KoraLive",
 
-            station:
-                "KoraLive",
+    station:
+        "KoraLive",
 
-            url:
-                "https://koralive.video/en/broadcasters/",
+    url:
+        "https://koralive.video/",
 
-            source:
-                "KoraLive",
+    source:
+        "KoraLive",
 
-            verified:
-                false,
+    verified:
+        false,
 
-            free:
-                true,
+    free:
+        true,
 
-            type:
-                "broadcast-guide",
+    type:
+        "broadcast-guide",
 
-            note:
-                "KoraLive is a football broadcast guide. Availability and broadcaster information may vary by match and territory."
+    note:
+        "KoraLive is an unverified football broadcast guide. Availability and broadcaster information may vary by match and territory."
 
-        });
+});
 
 
+addSource({
+
+    name:
+        "Sporextra",
+
+    station:
+        "Sporextra",
+
+    url:
+        "https://sporextra.net",
+
+    source:
+        "Sporextra",
+
+    verified:
+        false,
+
+    free:
+        true,
+
+    type:
+        "broadcast-guide",
+
+    note:
+        "Sporextra is an unverified football broadcast source. KLYDE does not claim that it is an official rights holder. Availability may vary by match and territory."
+
+});
         /* =================================================
            FINAL BROADCAST SOURCE CLEANUP
         ================================================= */

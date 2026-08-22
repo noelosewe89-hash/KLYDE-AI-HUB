@@ -379,22 +379,42 @@ if (
             );
 
 
-        const sofaData =
-            await sofaResponse.json();
+       const sofaData =
+    await sofaResponse.json();
 
+console.log(
+    "KLYDE SOFASCORE STATUS:",
+    sofaResponse.status
+);
 
-        if (sofaResponse.ok) {
+console.log(
+    "KLYDE SOFASCORE RESPONSE KEYS:",
+    Object.keys(sofaData || {})
+);
 
-            const sofaEvents =
-                Array.isArray(sofaData?.events)
-                    ? sofaData.events
-                    : [];
+console.log(
+    "KLYDE SOFASCORE RAW EVENT COUNT:",
+    Array.isArray(sofaData?.events)
+        ? sofaData.events.length
+        : 0
+);
 
+if (sofaResponse.ok) {
 
-            const sofaMatches =
-                normalizeSofaScoreMatches(
-                    sofaEvents
-                );
+    const sofaEvents =
+        Array.isArray(sofaData?.events)
+            ? sofaData.events
+            : [];
+
+    const sofaMatches =
+        normalizeSofaScoreMatches(
+            sofaEvents
+        );
+
+    console.log(
+        "KLYDE SOFASCORE NORMALIZED COUNT:",
+        sofaMatches.length
+    );
 
 
             console.log(

@@ -408,25 +408,28 @@ export default async function handler(req, res) {
 
                 );
 
+if (matches.length > 0) {
 
-            return res.status(200).json({
+    return res.status(200).json({
+        success: true,
+        type: "live",
+        provider: "SportMonks",
+        results: matches.length,
+        matches: matches
+    });
 
-                success:
-                    true,
+}
 
-                type:
-                    "live",
+/*
+ * SPORTMONKS RETURNED ZERO LIVE MATCHES.
+ * DO NOT RETURN YET.
+ *
+ * Continue below to API-Football fallback.
+ */
 
-                provider:
-                    "SportMonks",
-
-                results:
-                    matches.length,
-
-                matches:
-                    matches
-
-            });
+console.log(
+    "SportMonks returned zero live matches. Trying API-Football fallback..."
+);
 
         }
 

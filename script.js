@@ -2790,5 +2790,895 @@ Include examples and practice material where useful.
 
             }
         );
+    /* =================================================
+       KLYDE CHAT FEATURES
+       MICROPHONE + IMAGE + CHAT HISTORY + NEW CHAT
+    ================================================= */
 
+
+    /* =================================================
+       MICROPHONE / VOICE INPUT
+    ================================================= */
+
+    const microphoneButton =
+        document.getElementById(
+            "microphoneButton"
+        );
+
+
+    if (
+        microphoneButton &&
+        searchInput
+    ) {
+
+        microphoneButton.addEventListener(
+            "click",
+            () => {
+
+                const SpeechRecognition =
+                    window.SpeechRecognition ||
+                    window.webkitSpeechRecognition;
+
+
+                if (!SpeechRecognition) {
+
+                    showSimplePopup(
+                        "🎤 MICROPHONE",
+                        "Voice input is not supported by this browser. Try Google Chrome."
+                    );
+
+                    return;
+
+                }
+
+
+                const recognition =
+                    new SpeechRecognition();
+
+
+                recognition.lang =
+                    "en-US";
+
+
+                recognition.continuous =
+                    false;
+
+
+                recognition.interimResults =
+                    false;
+
+
+                microphoneButton.disabled =
+                    true;
+
+
+                microphoneButton.textContent =
+                    "🎙️";
+
+
+                const inputStatus =
+                    document.getElementById(
+                        "chatInputStatus"
+                    );
+
+
+                if (inputStatus) {
+
+                    inputStatus.textContent =
+                        "🎙️ Listening... Speak now.";
+
+                }
+
+
+                recognition.start();
+
+
+                recognition.onresult =
+                    event => {
+
+                        const transcript =
+                            event
+                                .results[0][0]
+                                .transcript;
+
+
+                        searchInput.value =
+                            transcript;
+
+
+                        searchInput.focus();
+
+
+                        if (inputStatus) {
+
+                            inputStatus.textContent =
+                                "✓ Voice captured";
+
+                        }
+
+                    };
+
+
+                recognition.onerror =
+                    event => {
+
+                        console.error(
+                            "KLYDE MICROPHONE ERROR:",
+                            event.error
+                        );
+
+
+                        if (inputStatus) {
+
+                            inputStatus.textContent =
+                                "⚠️ Microphone error: " +
+                                event.error;
+
+                        }
+
+                    };
+
+
+                recognition.onend =
+                    () => {
+
+                        microphoneButton.disabled =
+                            false;
+
+
+                        microphoneButton.textContent =
+                            "🎤";
+
+                    };
+
+            }
+        );
+
+    }
+
+
+    /* =================================================
+       IMAGE UPLOAD
+    ================================================= */
+
+    const imageUploadButton =
+        document.getElementById(
+            "imageUploadButton"
+        );
+
+
+    const imageInput =
+        document.getElementById(
+            "imageInput"
+        );
+
+
+    const imagePreviewArea =
+        document.getElementById(
+            "imagePreviewArea"
+        );
+
+
+    let selectedImage = null;
+
+
+    if (
+        imageUploadButton &&
+        imageInput
+    ) {
+
+        imageUploadButton.addEventListener(
+            "click",
+            event => {
+
+                event.preventDefault();
+
+                imageInput.click();
+
+            }
+        );
+
+
+        imageInput.addEventListener(
+            "change",
+            event => {
+
+                const file =
+                    event.target.files?.[0];
+
+
+                if (!file) {
+                    return;
+                }
+
+
+                if (
+                    !file.type.startsWith(
+                        "image/"
+                    )
+                ) {
+
+                    showSimplePopup(
+                        "🖼️ IMAGE",
+                        "Please select an image file."
+                    );
+
+                    imageInput.value =
+                        "";
+
+                    return;
+
+                }
+
+
+                selectedImage =
+                    file;
+
+
+                if (!imagePreviewArea) {
+                    return;
+                }
+
+
+                const reader =
+                    new FileReader();
+
+
+                reader.onload =
+                    () => {
+
+                        imagePreviewArea.innerHTML = `
+
+                            <div
+                                style="
+                                    position:relative;
+                                    display:inline-block;
+                                    max-width:100%;
+                                    margin-top:10px;
+                                    padding:8px;
+                                    border-radius:14px;
+                                    background:rgba(0,0,0,.06);
+                                "
+                            >
+
+                                <img
+                                    src="${reader.result}"
+                                    alt="Selected image"
+                                    style="
+                                        display:block;
+                                        max-width:280px;
+                                        max-height:220px;
+                                        border-radius:10px;
+                                        object-fit:contain;
+                                    "
+                                >
+
+                                <button
+                                    type="button"
+                                    id="removeKlydeImage"
+                                    style="
+                                        position:absolute;
+                                        top:2px;
+                                        right:2px;
+                                        width:30px;
+                                        height:30px;
+                                        border:0;
+                                        border-radius:50%;
+                                        background:#111;
+                                        color:#fff;
+                                        cursor:pointer;
+                                        font-size:18px;
+                                    "
+                                >
+                                    ×
+                                </button>
+
+                                <div
+                                    style="
+                                        margin-top:7px;
+                                        font-size:12px;
+                                        opacity:.7;
+                                    "
+                                >
+                                    📷 ${escapeHTML(
+                                        file.name
+                                    )}
+                                </div>
+
+                            </div>
+
+                        `;
+
+
+                        const removeButton =
+                            document.getElementById(
+                                "removeKlydeImage"
+                            );
+
+
+                        if (removeButton) {
+
+                            removeButton.onclick =
+                                () => {
+
+                                    selectedImage =
+                                        null;
+
+                                    imageInput.value =
+                                        "";
+
+                                    imagePreviewArea.innerHTML =
+                                        "";
+
+                                };
+
+                        }
+
+
+                        const inputStatus =
+                            document.getElementById(
+                                "chatInputStatus"
+                            );
+
+
+                        if (inputStatus) {
+
+                            inputStatus.textContent =
+                                "📷 Image attached and ready.";
+
+                        }
+
+                    };
+
+
+                reader.readAsDataURL(
+                    file
+                );
+
+            }
+        );
+
+    }
+
+
+    /* =================================================
+       CHAT STORAGE
+    ================================================= */
+
+    const KLYDE_CHAT_STORAGE =
+        "klyde_ai_chat_history";
+
+
+    function getSavedChats() {
+
+        try {
+
+            return JSON.parse(
+                localStorage.getItem(
+                    KLYDE_CHAT_STORAGE
+                ) || "[]"
+            );
+
+        }
+
+        catch {
+
+            return [];
+
+        }
+
+    }
+
+
+    function saveCurrentChat() {
+
+        if (!conversation.length) {
+            return;
+        }
+
+
+        const chats =
+            getSavedChats();
+
+
+        const firstUserMessage =
+            conversation.find(
+                item =>
+                    item.role === "user"
+            );
+
+
+        const title =
+            firstUserMessage
+                ?.message
+                ?.replace(/\s+/g, " ")
+                ?.trim()
+                ?.slice(0, 45) ||
+            "KLYDE Conversation";
+
+
+        const chat = {
+
+            id:
+                Date.now().toString(),
+
+            title,
+
+            date:
+                new Date().toISOString(),
+
+            messages:
+                conversation.map(
+                    item => ({
+
+                        role:
+                            item.role,
+
+                        message:
+                            item.message
+
+                    })
+                )
+
+        };
+
+
+        chats.unshift(chat);
+
+
+        /*
+         * Keep the latest 30 conversations.
+         */
+
+        localStorage.setItem(
+
+            KLYDE_CHAT_STORAGE,
+
+            JSON.stringify(
+                chats.slice(0, 30)
+            )
+
+        );
+
+    }
+
+
+    /* =================================================
+       CHAT LIBRARY
+    ================================================= */
+
+    const chatLibraryButton =
+        document.getElementById(
+            "chatLibraryButton"
+        );
+
+
+    const chatLibrary =
+        document.getElementById(
+            "chatLibrary"
+        );
+
+
+    const chatLibraryList =
+        document.getElementById(
+            "chatLibraryList"
+        );
+
+
+    const closeChatLibrary =
+        document.getElementById(
+            "closeChatLibrary"
+        );
+
+
+    function renderChatLibrary() {
+
+        if (!chatLibraryList) {
+            return;
+        }
+
+
+        const chats =
+            getSavedChats();
+
+
+        if (!chats.length) {
+
+            chatLibraryList.innerHTML = `
+
+                <p class="chat-library-empty">
+
+                    No saved conversations yet.
+
+                </p>
+
+            `;
+
+            return;
+
+        }
+
+
+        chatLibraryList.innerHTML =
+
+            chats
+                .map(
+                    chat => `
+
+                        <button
+                            type="button"
+                            class="klyde-history-item"
+                            data-chat-id="${escapeHTML(
+                                chat.id
+                            )}"
+                            style="
+                                display:block;
+                                width:100%;
+                                text-align:left;
+                                padding:13px;
+                                margin-bottom:8px;
+                                border:1px solid rgba(0,0,0,.1);
+                                border-radius:10px;
+                                background:transparent;
+                                cursor:pointer;
+                            "
+                        >
+
+                            <strong>
+                                ${escapeHTML(
+                                    chat.title
+                                )}
+                            </strong>
+
+                            <small
+                                style="
+                                    display:block;
+                                    margin-top:5px;
+                                    opacity:.6;
+                                "
+                            >
+                                ${formatTime(
+                                    chat.date
+                                )}
+                            </small>
+
+                        </button>
+
+                    `
+                )
+                .join("");
+
+
+        chatLibraryList
+            .querySelectorAll(
+                ".klyde-history-item"
+            )
+            .forEach(
+                button => {
+
+                    button.addEventListener(
+                        "click",
+                        () => {
+
+                            const chats =
+                                getSavedChats();
+
+
+                            const selected =
+                                chats.find(
+                                    chat =>
+                                        chat.id ===
+                                        button.dataset
+                                            .chatId
+                                );
+
+
+                            if (!selected) {
+                                return;
+                            }
+
+
+                            conversation =
+                                selected.messages
+                                    .map(
+                                        item => ({
+
+                                            role:
+                                                item.role,
+
+                                            message:
+                                                item.message
+
+                                        })
+                                    );
+
+
+                            displayRestoredConversation();
+
+
+                            if (chatLibrary) {
+
+                                chatLibrary
+                                    .setAttribute(
+                                        "aria-hidden",
+                                        "true"
+                                    );
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+    }
+
+
+    function displayRestoredConversation() {
+
+        if (!result) {
+            return;
+        }
+
+
+        result.innerHTML =
+
+            conversation
+                .map(
+                    item => `
+
+                        <div
+                            style="
+                                padding:12px;
+                                margin-bottom:12px;
+                                border-radius:12px;
+                                background:${
+                                    item.role === "user"
+                                        ? "rgba(0,100,255,.08)"
+                                        : "rgba(0,0,0,.05)"
+                                };
+                            "
+                        >
+
+                            <strong>
+
+                                ${
+                                    item.role === "user"
+                                        ? "YOU"
+                                        : "KLYDE AI"
+                                }
+
+                            </strong>
+
+                            <p
+                                style="
+                                    white-space:pre-wrap;
+                                    margin:7px 0 0;
+                                "
+                            >
+                                ${escapeHTML(
+                                    item.message
+                                )}
+                            </p>
+
+                        </div>
+
+                    `
+                )
+                .join("");
+
+    }
+
+
+    if (chatLibraryButton) {
+
+        chatLibraryButton.addEventListener(
+            "click",
+            () => {
+
+                renderChatLibrary();
+
+
+                if (chatLibrary) {
+
+                    chatLibrary.setAttribute(
+                        "aria-hidden",
+                        "false"
+                    );
+
+                }
+
+            }
+        );
+
+    }
+
+
+    if (closeChatLibrary) {
+
+        closeChatLibrary.addEventListener(
+            "click",
+            () => {
+
+                if (chatLibrary) {
+
+                    chatLibrary.setAttribute(
+                        "aria-hidden",
+                        "true"
+                    );
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =================================================
+       NEW CHAT
+    ================================================= */
+
+    const newChatButton =
+        document.getElementById(
+            "newChatButton"
+        );
+
+
+    if (newChatButton) {
+
+        newChatButton.addEventListener(
+            "click",
+            () => {
+
+                if (conversation.length) {
+
+                    saveCurrentChat();
+
+                }
+
+
+                conversation = [];
+
+
+                if (result) {
+
+                    result.innerHTML = `
+
+                        <div class="klyde-welcome">
+
+                            <div class="welcome-icon">
+                                K
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    KLYDE AI
+                                </strong>
+
+                                <p>
+                                    New conversation started.
+                                    Ask KLYDE anything.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    `;
+
+                }
+
+
+                if (searchInput) {
+
+                    searchInput.value =
+                        "";
+
+                    searchInput.focus();
+
+                }
+
+
+                if (imageInput) {
+
+                    imageInput.value =
+                        "";
+
+                }
+
+
+                selectedImage =
+                    null;
+
+
+                if (imagePreviewArea) {
+
+                    imagePreviewArea.innerHTML =
+                        "";
+
+                }
+
+
+                const inputStatus =
+                    document.getElementById(
+                        "chatInputStatus"
+                    );
+
+
+                if (inputStatus) {
+
+                    inputStatus.textContent =
+                        "";
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =================================================
+       AI MEMORY BUTTON
+    ================================================= */
+
+    const memoryButton =
+        document.getElementById(
+            "memoryButton"
+        );
+
+
+    if (memoryButton) {
+
+        memoryButton.addEventListener(
+            "click",
+            () => {
+
+                const memoryStatus =
+                    document.getElementById(
+                        "klydeMemoryStatus"
+                    );
+
+
+                if (memoryStatus) {
+
+                    memoryStatus.innerHTML = `
+
+                        <span>
+                            🧠
+                        </span>
+
+                        KLYDE AI memory is active —
+                        this conversation is being remembered.
+
+                    `;
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =================================================
+       SAVE CHAT BEFORE PAGE CLOSE
+    ================================================= */
+
+    window.addEventListener(
+        "beforeunload",
+        () => {
+
+            if (conversation.length) {
+
+                saveCurrentChat();
+
+            }
+
+        }
+    );
+   
 });

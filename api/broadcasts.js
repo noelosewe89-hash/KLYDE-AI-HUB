@@ -538,76 +538,54 @@ export default async function handler(req, res) {
                 .toLowerCase();
 
 
-        /* =================================================
-           AFRICAN COMPETITIONS
+               /* =================================================
+           ADDITIONAL BROADCAST SOURCES
+
+           IMPORTANT:
+           These are legitimate broadcaster/platform
+           sources that KLYDE can display as possible
+           viewing options.
+
+           SportMonks TV stations are still added above.
+           Duplicates are automatically removed by addSource().
         ================================================= */
 
-        const africanCountries = [
+        const leagueLower =
+            leagueName.toLowerCase();
 
-            "algeria",
-            "angola",
-            "benin",
-            "botswana",
-            "burkina",
-            "burundi",
-            "cameroon",
-            "central african",
-            "comoros",
-            "congo",
-            "cote d'ivoire",
-            "côte d'ivoire",
-            "djibouti",
-            "egypt",
-            "equatorial guinea",
-            "eswatini",
-            "ethiopia",
-            "gabon",
-            "gambia",
-            "ghana",
-            "guinea",
-            "guinea-bissau",
-            "kenya",
-            "lesotho",
-            "liberia",
-            "libya",
-            "madagascar",
-            "malawi",
-            "mali",
-            "mauritania",
-            "mauritius",
-            "morocco",
-            "mozambique",
-            "namibia",
-            "niger",
-            "nigeria",
-            "rwanda",
-            "senegal",
-            "seychelles",
-            "sierra leone",
-            "somalia",
-            "south africa",
-            "south sudan",
-            "sudan",
-            "tanzania",
-            "togo",
-            "tunisia",
-            "uganda",
-            "zambia",
-            "zimbabwe"
+        const countryLower =
+            fixtureCountry.toLowerCase();
 
-        ];
-
-
-        const isAfrican =
-            africanCountries.some(
-                name =>
-                    searchableText.includes(
-                        name
-                    )
+        const matchText =
+            (
+                leagueLower +
+                " " +
+                countryLower +
+                " " +
+                home.toLowerCase() +
+                " " +
+                away.toLowerCase()
             );
 
 
-        if (isAfrican) {
+        /* =================================================
+           FIFA+
+        ================================================= */
+
+        const fifaRelevant =
+            africanCountries.some(
+                name =>
+                    matchText.includes(
+                        name
+                    )
+            ) ||
+
+            matchText.includes(
+                "fifa"
+            );
+
+
+        if (fifaRelevant) {
 
             addSource({
 
@@ -644,34 +622,42 @@ export default async function handler(req, res) {
            CAF TV
         ================================================= */
 
-        const isCAF =
+        const cafRelevant =
 
-            searchableText.includes(
+            matchText.includes(
                 "caf"
             ) ||
 
-            searchableText.includes(
+            matchText.includes(
                 "africa cup"
             ) ||
 
-            searchableText.includes(
-                "champions league"
+            matchText.includes(
+                "african cup"
             ) ||
 
-            searchableText.includes(
-                "confederation cup"
+            matchText.includes(
+                "caf champions"
             ) ||
 
-            searchableText.includes(
-                "u17"
+            matchText.includes(
+                "caf confederation"
             ) ||
 
-            searchableText.includes(
-                "u20"
+            matchText.includes(
+                "caf super cup"
+            ) ||
+
+            matchText.includes(
+                "caf u17"
+            ) ||
+
+            matchText.includes(
+                "caf u20"
             );
 
 
-        if (isCAF) {
+        if (cafRelevant) {
 
             addSource({
 
@@ -697,12 +683,112 @@ export default async function handler(req, res) {
                     "official-free-platform",
 
                 note:
-                    "CAF TV streams selected CAF matches live. Availability depends on the competition."
+                    "CAF TV provides selected official CAF live coverage. Availability depends on the competition and territory."
 
             });
 
         }
 
+
+        /* =================================================
+           ONEFOOTBALL
+        ================================================= */
+
+        addSource({
+
+            name:
+                "OneFootball",
+
+            station:
+                "OneFootball",
+
+            url:
+                "https://tv.onefootball.com/",
+
+            source:
+                "OneFootball",
+
+            verified:
+                true,
+
+            free:
+                true,
+
+            type:
+                "official-free-platform",
+
+            note:
+                "OneFootball provides selected live football coverage. Availability varies by match and territory."
+
+        });
+
+
+        /* =================================================
+           FINAL BROADCAST SOURCE CLEANUP
+        ================================================= */
+
+        broadcasters =
+            broadcasters.filter(
+                source => {
+
+                    if (!source) {
+                        return false;
+                    }
+
+                    const name =
+                        String(
+                            source?.name ||
+                            source?.station ||
+                            source?.tvstation?.name ||
+                            ""
+                        ).trim();
+
+                    const url =
+                        String(
+                            source?.url ||
+                            source?.link ||
+                            source?.tvstation?.url ||
+                            ""
+                        ).trim();
+
+                    return (
+                        Boolean(name) ||
+                        Boolean(url)
+                    );
+
+                }
+            );
+
+
+        /* =================================================
+           SORT SOURCES
+
+           1. SportMonks verified stations
+           2. Official free platforms
+           3. Other sources
+        ================================================= */
+
+        broadcasters.sort(
+            (a, b) => {
+
+                const aScore =
+                    a?.source === "SportMonks"
+                        ? 3
+                        : a?.verified
+                            ? 2
+                            : 1;
+
+                const bScore =
+                    b?.source === "SportMonks"
+                        ? 3
+                        : b?.verified
+                            ? 2
+                            : 1;
+
+                return bScore - aScore;
+
+            }
+        );
 
         /* =================================================
            ONEFOOTBALL

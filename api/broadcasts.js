@@ -1,26 +1,74 @@
+/* =========================================================
+   KLYDE AI HUB — BROADCAST SOURCE ENGINE
+
+   Supports:
+   - SportMonks fixture IDs
+   - ESPN fixture IDs
+   - SofaScore fixture IDs
+   - Team-name/date matching
+   - SportMonks TV stations
+   - FIFA+
+   - CAF TV
+   - OneFootball
+
+   IMPORTANT:
+   We NEVER assume an ESPN/SofaScore event ID
+   is a SportMonks fixture ID.
+========================================================= */
+
 export default async function handler(req, res) {
 
     const token =
         process.env.SPORTMONKS_API_KEY;
 
+
+    /* =====================================================
+       READ MATCH INFORMATION
+    ===================================================== */
+
     const fixtureId =
-        req.query.fixture;
+        req.query?.fixture || "";
+
+    const provider =
+        String(
+            req.query?.provider || ""
+        ).toLowerCase();
+
+    const home =
+        String(
+            req.query?.home || ""
+        ).trim();
+
+    const away =
+        String(
+            req.query?.away || ""
+        ).trim();
+
+    const matchDate =
+        String(
+            req.query?.date || ""
+        ).trim();
+
+    const league =
+        String(
+            req.query?.league || ""
+        ).trim();
+
+    const country =
+        String(
+            req.query?.country || ""
+        ).trim();
 
 
-    if (!fixtureId) {
+    if (!fixtureId && !home && !away) {
 
         return res.status(400).json({
-            error: "Fixture ID is required."
-        });
 
-    }
-
-
-    if (!token) {
-
-        return res.status(500).json({
             success: false,
-            error: "SPORTMONKS_API_KEY is not configured."
+
+            error:
+                "Match information is required."
+
         });
 
     }
@@ -28,148 +76,132 @@ export default async function handler(req, res) {
 
     try {
 
+        let broadcasters = [];
+
+        let sportmonksFixture = null;
+
+
         /* =================================================
-           GET FIXTURE + TV STATIONS
+           NORMALIZE TEAM NAMES
         ================================================= */
 
-        const url =
-            `https://api.sportmonks.com/v3/football/fixtures/${fixtureId}` +
-            `?api_token=${encodeURIComponent(token)}` +
-            `&include=tvStations;league;participants`;
+        function normalizeName(value) {
 
+            return String(value || "")
 
-        const response =
-            await fetch(url);
+                .toLowerCase()
 
+                .normalize("NFD")
 
-        const data =
-            await response.json();
+                .replace(
+                    /[\u0300-\u036f]/g,
+                    ""
+                )
 
-
-        if (!response.ok) {
-
-            return res.status(response.status).json({
-
-                success: false,
-
-                error:
-                    data?.message ||
-                    "Sportmonks request failed.",
-
-                details: data
-
-            });
+                .replace(
+                    /[^a-z0-9]/g,
+                    ""
+                );
 
         }
 
 
-        const fixture =
-            data?.data || {};
+        function namesMatch(
+            first,
+            second
+        ) {
+
+            const a =
+                normalizeName(first);
+
+            const b =
+                normalizeName(second);
+
+
+            if (!a || !b) {
+                return false;
+            }
+
+
+            if (a === b) {
+                return true;
+            }
+
+
+            return (
+                a.includes(b) ||
+                b.includes(a)
+            );
+
+        }
 
 
         /* =================================================
-           SPORTMONKS BROADCASTERS
-        ================================================= */
-
-        const stations =
-            fixture?.tvStations ||
-            fixture?.tv_stations ||
-            [];
-
-
-        const broadcasters =
-            stations.map(
-                station => {
-
-                    const tvstation =
-                        station?.tvstation ||
-                        {};
-
-
-                    return {
-
-                        ...station,
-
-                        name:
-                            tvstation.name ||
-                            station.name ||
-                            station.station ||
-                            "Official Broadcaster",
-
-                        url:
-                            tvstation.url ||
-                            station.url ||
-                            station.link ||
-                            "",
-
-                        source:
-                            "Sportmonks",
-
-                        verified:
-                            true
-
-                    };
-
-                }
-            );
-
-
-        /* =================================================
-           FIXTURE INFORMATION
-        ================================================= */
-
-        const league =
-            fixture?.league || {};
-
-
-        const leagueName =
-            String(
-                league?.name || ""
-            );
-
-
-        const country =
-            String(
-                league?.country?.name ||
-                league?.country ||
-                ""
-            );
-
-
-        const searchableText =
-            (
-                leagueName +
-                " " +
-                country
-            ).toLowerCase();
-
-
-        /* =================================================
-           DUPLICATE PROTECTION
+           ADD SOURCE WITHOUT DUPLICATES
         ================================================= */
 
         function addSource(source) {
 
+            if (!source) {
+                return;
+            }
+
+
+            const newUrl =
+                String(
+                    source?.url || ""
+                )
+                    .toLowerCase()
+                    .trim();
+
+
+            const newName =
+                String(
+                    source?.name ||
+                    source?.station ||
+                    ""
+                )
+                    .toLowerCase()
+                    .trim();
+
+
             const exists =
                 broadcasters.some(
-                    item => {
+                    existing => {
 
-                        const existingUrl =
+                        const oldUrl =
                             String(
-                                item?.url || ""
+                                existing?.url ||
+                                existing?.link ||
+                                ""
                             )
-                                .toLowerCase();
+                                .toLowerCase()
+                                .trim();
 
-                        const newUrl =
+
+                        const oldName =
                             String(
-                                source?.url || ""
+                                existing?.name ||
+                                existing?.station ||
+                                existing?.tvstation?.name ||
+                                ""
                             )
-                                .toLowerCase();
+                                .toLowerCase()
+                                .trim();
+
 
                         return (
-                            existingUrl &&
-                            newUrl &&
-                            existingUrl === newUrl
+                            (
+                                newUrl &&
+                                oldUrl &&
+                                newUrl === oldUrl
+                            ) ||
+
+                            (
+                                newName &&
+                                oldName &&
+                                newName === oldName
+                            )
                         );
 
                     }
@@ -188,10 +220,326 @@ export default async function handler(req, res) {
 
 
         /* =================================================
-           FIFA+
-           -------------------------------------------------
-           FIFA+ officially streams thousands of matches
-           from member associations and federations.
+           SPORTMONKS DIRECT FIXTURE LOOKUP
+           
+           Only do this when:
+           - provider is SportMonks
+           - OR provider is unknown
+           
+           This prevents ESPN IDs being treated
+           as SportMonks IDs.
+        ================================================= */
+
+        if (
+            token &&
+            (
+                !provider ||
+                provider === "sportmonks"
+            ) &&
+            fixtureId
+        ) {
+
+            try {
+
+                const url =
+
+                    `https://api.sportmonks.com/v3/football/fixtures/${encodeURIComponent(
+                        fixtureId
+                    )}` +
+
+                    `?api_token=${encodeURIComponent(
+                        token
+                    )}` +
+
+                    `&include=tvStations;league;participants`;
+
+
+
+                const response =
+                    await fetch(url);
+
+
+                const data =
+                    await response.json();
+
+
+                if (response.ok) {
+
+                    sportmonksFixture =
+                        data?.data ||
+                        null;
+
+                }
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "KLYDE SPORTMONKS DIRECT LOOKUP ERROR:",
+                    error?.message ||
+                    error
+                );
+
+            }
+
+        }
+
+
+        /* =================================================
+           SPORTMONKS DATE + TEAM MATCHING
+           
+           Used for ESPN / SofaScore matches.
+        ================================================= */
+
+        if (
+            token &&
+            !sportmonksFixture &&
+            home &&
+            away &&
+            matchDate
+        ) {
+
+            try {
+
+                const date =
+                    new Date(matchDate);
+
+
+                if (
+                    !Number.isNaN(
+                        date.getTime()
+                    )
+                ) {
+
+                    const yyyy =
+                        date.getUTCFullYear();
+
+
+                    const mm =
+                        String(
+                            date.getUTCMonth() + 1
+                        ).padStart(
+                            2,
+                            "0"
+                        );
+
+
+                    const dd =
+                        String(
+                            date.getUTCDate()
+                        ).padStart(
+                            2,
+                            "0"
+                        );
+
+
+                    const dateString =
+                        `${yyyy}-${mm}-${dd}`;
+
+
+                    const url =
+
+                        `https://api.sportmonks.com/v3/football/fixtures/date/${dateString}` +
+
+                        `?api_token=${encodeURIComponent(
+                            token
+                        )}` +
+
+                        `&include=tvStations;league;participants`;
+
+
+                    const response =
+                        await fetch(url);
+
+
+                    const data =
+                        await response.json();
+
+
+                    if (response.ok) {
+
+                        const fixtures =
+                            Array.isArray(
+                                data?.data
+                            )
+                                ? data.data
+                                : [];
+
+
+                        sportmonksFixture =
+                            fixtures.find(
+                                fixture => {
+
+                                    const participants =
+                                        Array.isArray(
+                                            fixture?.participants
+                                        )
+                                            ? fixture.participants
+                                            : [];
+
+
+                                    const fixtureHome =
+                                        participants.find(
+                                            team =>
+                                                team?.meta?.location ===
+                                                "home"
+                                        ) ||
+                                        participants[0] ||
+                                        {};
+
+
+                                    const fixtureAway =
+                                        participants.find(
+                                            team =>
+                                                team?.meta?.location ===
+                                                "away"
+                                        ) ||
+                                        participants[1] ||
+                                        {};
+
+
+                                    return (
+
+                                        namesMatch(
+                                            fixtureHome?.name,
+                                            home
+                                        ) &&
+
+                                        namesMatch(
+                                            fixtureAway?.name,
+                                            away
+                                        )
+
+                                    );
+
+                                }
+                            ) || null;
+
+                    }
+
+                }
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "KLYDE SPORTMONKS TEAM MATCH ERROR:",
+                    error?.message ||
+                    error
+                );
+
+            }
+
+        }
+
+
+        /* =================================================
+           READ SPORTMONKS TV STATIONS
+        ================================================= */
+
+        if (sportmonksFixture) {
+
+            const stations =
+
+                sportmonksFixture?.tvStations ||
+
+                sportmonksFixture?.tv_stations ||
+
+                [];
+
+
+            stations.forEach(
+                station => {
+
+                    const tvstation =
+                        station?.tvstation ||
+                        {};
+
+
+                    addSource({
+
+                        ...station,
+
+                        name:
+                            tvstation.name ||
+                            station?.name ||
+                            station?.station ||
+                            "Official Broadcaster",
+
+                        url:
+                            tvstation.url ||
+                            station?.url ||
+                            station?.link ||
+                            "",
+
+                        source:
+                            "SportMonks",
+
+                        verified:
+                            true
+
+                    });
+
+                }
+            );
+
+        }
+
+
+        /* =================================================
+           DETERMINE LEAGUE / COUNTRY
+        ================================================= */
+
+        const fixtureLeague =
+            sportmonksFixture?.league ||
+            {};
+
+
+        const leagueName =
+            String(
+
+                fixtureLeague?.name ||
+
+                league ||
+
+                ""
+
+            );
+
+
+        const fixtureCountry =
+            String(
+
+                fixtureLeague?.country?.name ||
+
+                fixtureLeague?.country ||
+
+                country ||
+
+                ""
+
+            );
+
+
+        const searchableText =
+
+            (
+                leagueName +
+                " " +
+                fixtureCountry +
+                " " +
+                home +
+                " " +
+                away
+
+            )
+                .toLowerCase();
+
+
+        /* =================================================
+           AFRICAN COMPETITIONS
         ================================================= */
 
         const africanCountries = [
@@ -294,13 +642,13 @@ export default async function handler(req, res) {
 
         /* =================================================
            CAF TV
-           -------------------------------------------------
-           CAF confirms CAF TV on YouTube carries selected
-           CAF competitions live.
         ================================================= */
 
         const isCAF =
-            searchableText.includes("caf") ||
+
+            searchableText.includes(
+                "caf"
+            ) ||
 
             searchableText.includes(
                 "africa cup"
@@ -358,9 +706,6 @@ export default async function handler(req, res) {
 
         /* =================================================
            ONEFOOTBALL
-           -------------------------------------------------
-           OneFootball officially provides Free-to-Air
-           matches in supported territories.
         ================================================= */
 
         addSource({
@@ -393,7 +738,7 @@ export default async function handler(req, res) {
 
 
         /* =================================================
-           RETURN RESULT
+           RETURN
         ================================================= */
 
         return res.status(200).json({
@@ -402,34 +747,39 @@ export default async function handler(req, res) {
                 true,
 
             fixture:
-                fixtureId,
+                fixtureId || null,
+
+            provider:
+                provider || "unknown",
+
+            match: {
+
+                home:
+                    home || null,
+
+                away:
+                    away || null,
+
+                date:
+                    matchDate || null,
+
+                league:
+                    leagueName || null,
+
+                country:
+                    fixtureCountry || null
+
+            },
+
+            sportmonks_matched:
+                Boolean(
+                    sportmonksFixture
+                ),
 
             results:
                 broadcasters.length,
 
-            sportmonks_results:
-                stations.length,
-
-            fallback_results:
-                Math.max(
-                    0,
-                    broadcasters.length -
-                    stations.length
-                ),
-
-            fixture_info: {
-
-                league:
-                    leagueName,
-
-                country:
-                    country
-
-            },
-
-            broadcasters:
-
-                broadcasters
+            broadcasters
 
         });
 
@@ -444,10 +794,18 @@ export default async function handler(req, res) {
         );
 
 
-        return res.status(500).json({
+        return res.status(200).json({
 
             success:
                 false,
+
+            fixture:
+                fixtureId || null,
+
+            results:
+                0,
+
+            broadcasters: [],
 
             error:
                 error?.message ||

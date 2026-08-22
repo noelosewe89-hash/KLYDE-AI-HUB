@@ -384,7 +384,7 @@ export default async function handler(req, res) {
 
             try {
 
-               const url =
+              const url =
     "https://api.sportmonks.com/v3/football/fixtures/" +
     encodeURIComponent(fixtureId) +
     "?api_token=" +

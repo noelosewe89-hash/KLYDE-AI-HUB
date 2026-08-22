@@ -97,16 +97,18 @@ export default async function handler(req, res) {
     const failures = [];
 
 
-    /* =====================================================
-       PROVIDER FALLBACK LOOP
-    ===================================================== */
+ /* =====================================================
+   PROVIDER FALLBACK LOOP
+===================================================== */
 
-   for (const provider of providers) {
+for (const provider of providers) {
 
     if (!provider.key) {
+
         failures.push(
             `${provider.name}: API key not configured`
         );
+
         continue;
     }
 
@@ -117,64 +119,43 @@ export default async function handler(req, res) {
         );
 
         /*
-         * Give each provider a maximum amount of time.
-         * If it takes too long, immediately try the next
-         * available provider.
+         * Give every provider a maximum amount
+         * of time before moving to the next one.
          */
+
         const timeout =
             provider.name === "Groq"
-                ? 4000
+                ? 8000
                 : provider.name === "Gemini"
-                    ? 4000
-                    : 5000;
+                    ? 8000
+                    : 10000;
 
-        const controller =
-            new AbortController();
 
-        const timer =
-            setTimeout(
-                () => controller.abort(),
-                timeout
-            );
+        const timeoutPromise =
+            new Promise((_, reject) => {
 
-        let reply;
+                setTimeout(() => {
 
-        try {
+                    reject(
+                        new Error(
+                            `${provider.name} timeout`
+                        )
+                    );
 
-            /*
-             * The existing provider functions are kept
-             * unchanged. We temporarily pass the signal
-             * through the request context where supported.
-             */
-            reply =
-                await Promise.race([
+                }, timeout);
 
-                    provider.call(),
+            });
 
-                    new Promise((_, reject) => {
 
-                        setTimeout(
-                            () => {
+        const reply =
+            await Promise.race([
 
-                                reject(
-                                    new Error(
-                                        `${provider.name} timeout`
-                                    )
-                                );
+                provider.call(),
 
-                            },
-                            timeout
-                        );
+                timeoutPromise
 
-                    })
+            ]);
 
-                ]);
-
-        } finally {
-
-            clearTimeout(timer);
-
-        }
 
         if (
             reply &&
@@ -187,9 +168,14 @@ export default async function handler(req, res) {
             );
 
             return res.status(200).json({
-                reply: reply.trim()
+
+                reply:
+                    reply.trim()
+
             });
+
         }
+
 
         failures.push(
             `${provider.name}: empty response`
@@ -199,27 +185,24 @@ export default async function handler(req, res) {
 
     catch (error) {
 
-        const message =
-            error?.name === "AbortError"
+        const providerError =
+            error?.message ||
+            "Unknown provider error";
 
-                ? `${provider.name} timeout`
-
-                : (
-                    error?.message ||
-                    "Unknown provider error"
-                );
 
         console.error(
-            `${provider.name} failed:`,
-            message
+            `KLYDE ${provider.name} failed:`,
+            providerError
         );
+
 
         failures.push(
-            `${provider.name}: ${message}`
+            `${provider.name}: ${providerError}`
         );
-    }
-}
 
+    }
+
+}
     /* =====================================================
        ALL PROVIDERS FAILED
     ===================================================== */

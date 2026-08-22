@@ -394,6 +394,35 @@ Answer the user's latest message naturally.
     }
 
 }
+       /* =================================================
+       AI FORM
+       IMPORTANT — RESTORES KLYDE AI SUBMISSION
+    ================================================= */
+
+    if (searchForm) {
+
+        searchForm.addEventListener(
+            "submit",
+            event => {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                const question =
+                    searchInput
+                        ? searchInput.value.trim()
+                        : "";
+
+                if (!question) {
+                    return;
+                }
+
+                askKlyde(question);
+
+            }
+        );
+
+    }
 
     /* =================================================
        QUICK PROMPTS

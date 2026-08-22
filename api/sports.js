@@ -998,3 +998,167 @@ function normalizeApiFootballMatches(
         .filter(Boolean);
 
 }
+/* =========================================================
+   SOFASCORE NORMALIZER
+   Converts SofaScore live events into KLYDE format
+========================================================= */
+
+function normalizeSofaScoreMatches(sourceMatches) {
+
+    if (!Array.isArray(sourceMatches)) {
+        return [];
+    }
+
+    return sourceMatches
+        .map(event => {
+
+            if (!event) {
+                return null;
+            }
+
+            const homeTeam =
+                event.homeTeam || {};
+
+            const awayTeam =
+                event.awayTeam || {};
+
+            const tournament =
+                event.tournament || {};
+
+            const status =
+                event.status || {};
+
+            const homeScore =
+                event.homeScore || {};
+
+            const awayScore =
+                event.awayScore || {};
+
+            return {
+
+                fixture: {
+
+                    id:
+                        event.id || null,
+
+                    date:
+                        event.startTimestamp
+                            ? new Date(
+                                event.startTimestamp * 1000
+                            ).toISOString()
+                            : null,
+
+                    status: {
+
+                        long:
+                            status.description ||
+                            status.type ||
+                            "LIVE",
+
+                        short:
+                            "LIVE",
+
+                        elapsed:
+                            event.clock?.current ||
+                            null
+
+                    }
+
+                },
+
+                league: {
+
+                    id:
+                        tournament.id ||
+                        null,
+
+                    name:
+                        tournament.name ||
+                        "Football",
+
+                    country:
+                        tournament.category?.name ||
+                        ""
+
+                },
+
+                teams: {
+
+                    home: {
+
+                        id:
+                            homeTeam.id ||
+                            null,
+
+                        name:
+                            homeTeam.name ||
+                            "Home",
+
+                        logo:
+                            homeTeam.id
+                                ? `https://api.sofascore.com/api/v1/team/${homeTeam.id}/image`
+                                : null
+
+                    },
+
+                    away: {
+
+                        id:
+                            awayTeam.id ||
+                            null,
+
+                        name:
+                            awayTeam.name ||
+                            "Away",
+
+                        logo:
+                            awayTeam.id
+                                ? `https://api.sofascore.com/api/v1/team/${awayTeam.id}/image`
+                                : null
+
+                    }
+
+                },
+
+                goals: {
+
+                    home:
+                        homeScore.current ??
+                        0,
+
+                    away:
+                        awayScore.current ??
+                        0
+
+                },
+
+                events:
+                    Array.isArray(event.incidents)
+                        ? event.incidents
+                        : [],
+
+                tvStations: [],
+
+                sofaScore: {
+
+                    event_id:
+                        event.id ||
+                        null,
+
+                    tournament_id:
+                        tournament.id ||
+                        null,
+
+                    start_timestamp:
+                        event.startTimestamp ||
+                        null
+
+                }
+
+            };
+
+        })
+
+        .filter(Boolean);
+
+}

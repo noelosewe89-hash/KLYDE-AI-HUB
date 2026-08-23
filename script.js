@@ -3183,12 +3183,12 @@ Include examples and practice material where useful.
         try {
 
             return JSON.parse(
-                localStorage.getItem(
-                    KLYDE_CHAT_STORAGE
-                ) || "[]"
-            );
-
-        }
+               localStorage.setItem(
+    KLYDE_CHAT_STORAGE,
+    JSON.stringify(
+        remainingChats
+    )
+);
 
         catch {
 

@@ -44,6 +44,116 @@ export default async function handler(req, res) {
     ===================================================== */
 
     const type = req.query?.type || "live";
+   /* =====================================================
+   KLYDE EXTRA SPORTS ROUTING
+   - Football remains handled by this engine.
+   - Other sports are handled by /api/sports-extra.js.
+===================================================== */
+
+const sport =
+    String(
+        req.query?.sport || "football"
+    )
+        .trim()
+        .toLowerCase();
+
+
+const extraSports = [
+    "wwe",
+    "wrestling",
+    "rally",
+    "safari-rally",
+    "wrc",
+    "f1",
+    "formula-1",
+    "motogp",
+    "tennis",
+    "basketball",
+    "athletics",
+    "rugby",
+    "boxing",
+    "mma",
+    "cricket",
+    "golf",
+    "volleyball",
+    "baseball",
+    "snooker",
+    "swimming"
+];
+
+
+if (
+    extraSports.includes(
+        sport
+    )
+) {
+
+    const baseUrl =
+        `${req.headers["x-forwarded-proto"] || "https"}://${req.headers.host}`;
+
+    const extraUrl =
+        `${baseUrl}/api/sports-extra.js?type=${encodeURIComponent(type)}&sport=${encodeURIComponent(sport)}`;
+
+    try {
+
+        const extraResponse =
+            await fetch(
+                extraUrl,
+                {
+                    method: "GET",
+                    headers: {
+                        "Accept":
+                            "application/json"
+                    }
+                }
+            );
+
+
+        const extraData =
+            await extraResponse.json();
+
+
+        return res
+            .status(extraResponse.status)
+            .json(extraData);
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "KLYDE SPORTS EXTRA ROUTING ERROR:",
+            error
+        );
+
+
+        return res.status(200).json({
+
+            success: false,
+
+            type,
+
+            sport,
+
+            provider:
+                "KLYDE SPORTS",
+
+            results: 0,
+
+            matches: [],
+
+            events: [],
+
+            dataAvailable: false,
+
+            error:
+                "KLYDE Sports extra engine could not be reached."
+
+        });
+
+    }
+
+}
 
 
     /* =====================================================

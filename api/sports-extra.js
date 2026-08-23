@@ -460,14 +460,350 @@ async function getWWEData(
    SAFARI RALLY / WRC
 ========================================================= */
 
+/* =========================================================
+   SAFARI RALLY / WRC
+========================================================= */
+
 async function getRallyData(
     type
 ) {
 
-    return unavailableResult(
-        "rally",
-        "Safari Rally/WRC live-data provider is not connected yet."
-    );
+    const apiKey =
+        process.env.BLACKTOP_API_KEY;
+
+
+    if (!apiKey) {
+
+        return unavailableResult(
+            "rally",
+            "WRC API is not configured."
+        );
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "https://api.ocblacktop.com/v1/wrc/events",
+                {
+                    method: "GET",
+
+                    headers: {
+
+                        "Accept":
+                            "application/json",
+
+                        "Content-Type":
+                            "application/json",
+
+                        "x-api-key":
+                            apiKey
+
+                    }
+                }
+            );
+
+
+        const data =
+            await safeJSON(response);
+
+
+        console.log(
+            "KLYDE WRC STATUS:",
+            response.status
+        );
+
+
+        if (!response.ok) {
+
+            console.error(
+                "KLYDE WRC ERROR:",
+                data?.message ||
+                data?.error ||
+                `HTTP ${response.status}`
+            );
+
+
+            return unavailableResult(
+                "rally",
+                "WRC data provider returned an error."
+            );
+
+        }
+
+
+        /*
+         * The WRC API returns upcoming/current
+         * event information. We preserve the
+         * original provider data while also
+         * creating KLYDE's normalized event format.
+         */
+
+        const sourceEvents = [
+            ...(Array.isArray(data?.upcoming)
+                ? data.upcoming
+                : []),
+
+            ...(Array.isArray(data?.completed)
+                ? data.completed
+                : []),
+
+            ...(Array.isArray(data?.events)
+                ? data.events
+                : []),
+
+            ...(Array.isArray(data?.data)
+                ? data.data
+                : [])
+        ];
+
+
+        const events =
+            sourceEvents.map(
+                normalizeWRCEvent
+            )
+            .filter(Boolean);
+
+
+        /*
+         * Determine whether one of the returned
+         * events is currently active.
+         */
+
+        const now =
+            Date.now();
+
+
+        const liveEvents =
+            events.filter(
+                event => {
+
+                    const start =
+                        event.startTimestamp || 0;
+
+                    const end =
+                        event.endTimestamp || 0;
+
+
+                    return (
+                        start &&
+                        end &&
+                        now >= start &&
+                        now <= end
+                    );
+
+                }
+            );
+
+
+        return {
+
+            provider:
+                "Orange Cat Blacktop WRC",
+
+            providers: [
+                "Orange Cat Blacktop WRC"
+            ],
+
+            events,
+
+            live:
+                liveEvents.length > 0,
+
+            dataAvailable:
+                events.length > 0,
+
+            message:
+                events.length
+                    ? "WRC data successfully received by KLYDE Sports."
+                    : "No WRC events were returned."
+
+        };
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "KLYDE WRC ERROR:",
+            error?.message ||
+            error
+        );
+
+
+        return unavailableResult(
+            "rally",
+            "KLYDE could not reach the WRC data provider."
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   WRC EVENT NORMALIZER
+========================================================= */
+
+function normalizeWRCEvent(
+    event
+) {
+
+    if (!event) {
+        return null;
+    }
+
+
+    const startTimestamp =
+        event.dateStart
+            ? new Date(
+                event.dateStart
+            ).getTime()
+            : 0;
+
+
+    const endTimestamp =
+        event.dateEnd
+            ? new Date(
+                event.dateEnd
+            )
+            .setHours(
+                23,
+                59,
+                59,
+                999
+            )
+            : 0;
+
+
+    const country =
+        event.location?.country || {};
+
+
+    return {
+
+        id:
+            event.id ||
+            null,
+
+        sport:
+            "rally",
+
+        category:
+            "WRC",
+
+        name:
+            event.name ||
+            "WRC Rally",
+
+        round:
+            event.round ??
+            null,
+
+        status:
+            getRallyStatus(
+                startTimestamp,
+                endTimestamp
+            ),
+
+        startDate:
+            event.dateStart ||
+            null,
+
+        endDate:
+            event.dateEnd ||
+            null,
+
+        startTimestamp,
+
+        endTimestamp,
+
+        location: {
+
+            name:
+                event.location?.name ||
+                "",
+
+            country:
+                country.name ||
+                "",
+
+            countryCode:
+                country.threeCode ||
+                country.twoCode ||
+                ""
+
+        },
+
+        liveTiming:
+            false,
+
+        liveTimingAvailable:
+            false,
+
+        provider:
+            "Orange Cat Blacktop WRC",
+
+        providerEventId:
+            event.id ||
+            null,
+
+        source:
+            event
+
+    };
+
+}
+
+
+/* =========================================================
+   WRC EVENT STATUS
+========================================================= */
+
+function getRallyStatus(
+    startTimestamp,
+    endTimestamp
+) {
+
+    const now =
+        Date.now();
+
+
+    if (
+        startTimestamp &&
+        endTimestamp &&
+        now >= startTimestamp &&
+        now <= endTimestamp
+    ) {
+
+        return "LIVE";
+
+    }
+
+
+    if (
+        startTimestamp &&
+        now < startTimestamp
+    ) {
+
+        return "UPCOMING";
+
+    }
+
+
+    if (
+        endTimestamp &&
+        now > endTimestamp
+    ) {
+
+        return "COMPLETED";
+
+    }
+
+
+    return "UNKNOWN";
 
 }
 

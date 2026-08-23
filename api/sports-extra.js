@@ -1,32 +1,41 @@
 /* =========================================================
    KLYDE AI HUB — SPORTS EXTRA ENGINE
+   ========================================================
 
-   PURPOSE:
-   - Handles sports outside the existing football engine.
-   - Keeps Sports Center independent from KLYDE AI/chat.
-   - Provides one normalized response structure.
-   - Designed for real-time provider integrations.
-   - NEVER invents live scores, results, or events.
+   PURPOSE
+   -------
+   Independent sports engine for sports not handled by
+   the main football engine in /api/sports.js.
 
-   SUPPORTED SPORTS:
-   - WWE / Wrestling
-   - Safari Rally / WRC
-   - Formula 1
-   - MotoGP
-   - Tennis
-   - Basketball
-   - Athletics
-   - Rugby
-   - Boxing / MMA
-   - Cricket
-   - Golf
-   - Volleyball
-   - Baseball
-   - Snooker
-   - Swimming
+   IMPORTANT
+   ---------
+   - No fake sports data.
+   - No search-engine dependency.
+   - No KLYDE AI dependency.
+   - API keys remain server-side.
+   - Providers are connected independently.
+   - One provider failure must not break other sports.
+   - Each sport has its own adapter.
+   - The frontend receives normalized KLYDE event data.
 
-   NOTE:
-   Provider/API credentials remain server-side.
+   SPORTS
+   -------
+   WWE / Wrestling
+   Safari Rally / WRC
+   Formula 1
+   MotoGP
+   Tennis
+   Basketball
+   Athletics
+   Rugby
+   Boxing
+   MMA
+   Cricket
+   Golf
+   Volleyball
+   Baseball
+   Snooker
+   Swimming
 ========================================================= */
 
 export default async function handler(req, res) {
@@ -92,37 +101,22 @@ export default async function handler(req, res) {
     try {
 
         /* =================================================
-           VALIDATE SPORT
+           SPORT NORMALIZATION
         ================================================= */
 
-        const supportedSports = [
-            "wwe",
-            "wrestling",
-            "rally",
-            "safari-rally",
-            "wrc",
-            "f1",
-            "formula-1",
-            "motogp",
-            "tennis",
-            "basketball",
-            "athletics",
-            "rugby",
-            "boxing",
-            "mma",
-            "cricket",
-            "golf",
-            "volleyball",
-            "baseball",
-            "snooker",
-            "swimming"
-        ];
+        const normalizedSport =
+            normalizeSportName(
+                sport
+            );
 
+
+        /* =================================================
+           SUPPORTED SPORT CHECK
+        ================================================= */
 
         if (
-            !supportedSports.includes(
-                sport
-            )
+            normalizedSport ===
+            "unknown"
         ) {
 
             return res.status(200).json({
@@ -132,12 +126,13 @@ export default async function handler(req, res) {
                 type,
 
                 sport:
-
                     sport ||
                     "unknown",
 
                 provider:
                     "KLYDE SPORTS",
+
+                providers: [],
 
                 results: 0,
 
@@ -156,24 +151,7 @@ export default async function handler(req, res) {
 
 
         /* =================================================
-           NORMALIZE SPORT NAME
-        ================================================= */
-
-        const normalizedSport =
-            normalizeSportName(
-                sport
-            );
-
-
-        /* =================================================
-           PROVIDER ROUTING
-        =================================================
-
-           Each sport will eventually connect to
-           its verified real-data provider here.
-
-           We deliberately do NOT generate fake
-           sporting information.
+           SPORT ROUTER
         ================================================= */
 
         const result =
@@ -184,12 +162,13 @@ export default async function handler(req, res) {
 
 
         /* =================================================
-           RETURN NORMALIZED RESPONSE
+           NORMALIZED RESPONSE
         ================================================= */
 
         return res.status(200).json({
 
-            success: true,
+            success:
+                result.success !== false,
 
             type,
 
@@ -205,12 +184,16 @@ export default async function handler(req, res) {
                 [],
 
             results:
-                Array.isArray(result.events)
+                Array.isArray(
+                    result.events
+                )
                     ? result.events.length
                     : 0,
 
             events:
-                Array.isArray(result.events)
+                Array.isArray(
+                    result.events
+                )
                     ? result.events
                     : [],
 
@@ -224,9 +207,13 @@ export default async function handler(req, res) {
                     result.dataAvailable
                 ),
 
+            providerStatus:
+                result.providerStatus ??
+                null,
+
             message:
                 result.message ||
-                "KLYDE Sports data response."
+                "KLYDE Sports response."
 
         });
 
@@ -241,6 +228,7 @@ export default async function handler(req, res) {
 
         console.error(
             "KLYDE SPORTS EXTRA ERROR:",
+            error?.message ||
             error
         );
 
@@ -269,7 +257,7 @@ export default async function handler(req, res) {
 
             dataAvailable: false,
 
-            error:
+            message:
                 error?.message ||
                 "KLYDE Sports extra engine error."
 
@@ -290,64 +278,99 @@ function normalizeSportName(
 
     const aliases = {
 
-        "wwe":
+        /* WWE */
+
+        wwe:
             "wwe",
 
-        "wrestling":
+        wrestling:
             "wwe",
 
-        "rally":
+
+        /* RALLY */
+
+        rally:
             "rally",
 
         "safari-rally":
             "rally",
 
-        "wrc":
+        safari:
             "rally",
 
-        "f1":
+        wrc:
+            "rally",
+
+
+        /* MOTORSPORT */
+
+        f1:
             "f1",
 
         "formula-1":
             "f1",
 
-        "motogp":
+        formula1:
+            "f1",
+
+        motogp:
             "motogp",
 
-        "tennis":
+
+        /* COURT SPORTS */
+
+        tennis:
             "tennis",
 
-        "basketball":
+        basketball:
             "basketball",
 
-        "athletics":
-            "athletics",
-
-        "rugby":
-            "rugby",
-
-        "boxing":
-            "boxing",
-
-        "mma":
-            "mma",
-
-        "cricket":
-            "cricket",
-
-        "golf":
-            "golf",
-
-        "volleyball":
+        volleyball:
             "volleyball",
 
-        "baseball":
+
+        /* FIELD SPORTS */
+
+        rugby:
+            "rugby",
+
+        cricket:
+            "cricket",
+
+        baseball:
             "baseball",
 
-        "snooker":
+
+        /* ATHLETICS */
+
+        athletics:
+            "athletics",
+
+        track:
+            "athletics",
+
+        field:
+            "athletics",
+
+
+        /* COMBAT */
+
+        boxing:
+            "boxing",
+
+        mma:
+            "mma",
+
+
+        /* INDIVIDUAL SPORTS */
+
+        golf:
+            "golf",
+
+        snooker:
             "snooker",
 
-        "swimming":
+        swimming:
             "swimming"
 
     };
@@ -355,7 +378,6 @@ function normalizeSportName(
 
     return (
         aliases[sport] ||
-        sport ||
         "unknown"
     );
 
@@ -371,63 +393,71 @@ async function getSportData(
     type
 ) {
 
-    /*
-     * These functions are deliberately separated.
-     *
-     * We will connect each one to a verified
-     * provider instead of putting all sports
-     * into one giant function.
-     */
-
     switch (sport) {
 
         case "wwe":
             return getWWEData(type);
 
+
         case "rally":
             return getRallyData(type);
+
 
         case "f1":
             return getF1Data(type);
 
+
         case "motogp":
             return getMotoGPData(type);
+
 
         case "tennis":
             return getTennisData(type);
 
+
         case "basketball":
             return getBasketballData(type);
+
 
         case "athletics":
             return getAthleticsData(type);
 
+
         case "rugby":
             return getRugbyData(type);
+
 
         case "boxing":
             return getBoxingData(type);
 
+
         case "mma":
             return getMMAData(type);
+
 
         case "cricket":
             return getCricketData(type);
 
+
         case "golf":
             return getGolfData(type);
+
 
         case "volleyball":
             return getVolleyballData(type);
 
+
         case "baseball":
             return getBaseballData(type);
+
 
         case "snooker":
             return getSnookerData(type);
 
+
         case "swimming":
             return getSwimmingData(type);
+
 
         default:
 
@@ -448,9 +478,24 @@ async function getWWEData(
     type
 ) {
 
+    /*
+     * Provider will be connected later.
+     *
+     * Possible data:
+     * - Raw
+     * - SmackDown
+     * - NXT
+     * - Premium Live Events
+     * - Match cards
+     * - Results
+     * - Superstars
+     * - Championships
+     * - Event schedules
+     */
+
     return unavailableResult(
         "wwe",
-        "WWE live-data provider is not connected yet."
+        "WWE provider is not configured yet."
     );
 
 }
@@ -460,350 +505,31 @@ async function getWWEData(
    SAFARI RALLY / WRC
 ========================================================= */
 
-/* =========================================================
-   SAFARI RALLY / WRC
-========================================================= */
-
 async function getRallyData(
     type
 ) {
 
-    const apiKey =
-        process.env.BLACKTOP_API_KEY;
-
-
-    if (!apiKey) {
-
-        return unavailableResult(
-            "rally",
-            "WRC API is not configured."
-        );
-
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-                "https://api.ocblacktop.com/v1/wrc/events",
-                {
-                    method: "GET",
-
-                    headers: {
-
-                        "Accept":
-                            "application/json",
-
-                        "Content-Type":
-                            "application/json",
-
-                        "x-api-key":
-                            apiKey
-
-                    }
-                }
-            );
-
-
-        const data =
-            await safeJSON(response);
-
-
-        console.log(
-            "KLYDE WRC STATUS:",
-            response.status
-        );
-
-
-        if (!response.ok) {
-
-            console.error(
-                "KLYDE WRC ERROR:",
-                data?.message ||
-                data?.error ||
-                `HTTP ${response.status}`
-            );
-
-
-            return unavailableResult(
-                "rally",
-                "WRC data provider returned an error."
-            );
-
-        }
-
-
-        /*
-         * The WRC API returns upcoming/current
-         * event information. We preserve the
-         * original provider data while also
-         * creating KLYDE's normalized event format.
-         */
-
-        const sourceEvents = [
-            ...(Array.isArray(data?.upcoming)
-                ? data.upcoming
-                : []),
-
-            ...(Array.isArray(data?.completed)
-                ? data.completed
-                : []),
-
-            ...(Array.isArray(data?.events)
-                ? data.events
-                : []),
-
-            ...(Array.isArray(data?.data)
-                ? data.data
-                : [])
-        ];
-
-
-        const events =
-            sourceEvents.map(
-                normalizeWRCEvent
-            )
-            .filter(Boolean);
-
-
-        /*
-         * Determine whether one of the returned
-         * events is currently active.
-         */
-
-        const now =
-            Date.now();
-
-
-        const liveEvents =
-            events.filter(
-                event => {
-
-                    const start =
-                        event.startTimestamp || 0;
-
-                    const end =
-                        event.endTimestamp || 0;
-
-
-                    return (
-                        start &&
-                        end &&
-                        now >= start &&
-                        now <= end
-                    );
-
-                }
-            );
-
-
-        return {
-
-            provider:
-                "Orange Cat Blacktop WRC",
-
-            providers: [
-                "Orange Cat Blacktop WRC"
-            ],
-
-            events,
-
-            live:
-                liveEvents.length > 0,
-
-            dataAvailable:
-                events.length > 0,
-
-            message:
-                events.length
-                    ? "WRC data successfully received by KLYDE Sports."
-                    : "No WRC events were returned."
-
-        };
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "KLYDE WRC ERROR:",
-            error?.message ||
-            error
-        );
-
-
-        return unavailableResult(
-            "rally",
-            "KLYDE could not reach the WRC data provider."
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   WRC EVENT NORMALIZER
-========================================================= */
-
-function normalizeWRCEvent(
-    event
-) {
-
-    if (!event) {
-        return null;
-    }
-
-
-    const startTimestamp =
-        event.dateStart
-            ? new Date(
-                event.dateStart
-            ).getTime()
-            : 0;
-
-
-    const endTimestamp =
-        event.dateEnd
-            ? new Date(
-                event.dateEnd
-            )
-            .setHours(
-                23,
-                59,
-                59,
-                999
-            )
-            : 0;
-
-
-    const country =
-        event.location?.country || {};
-
-
-    return {
-
-        id:
-            event.id ||
-            null,
-
-        sport:
-            "rally",
-
-        category:
-            "WRC",
-
-        name:
-            event.name ||
-            "WRC Rally",
-
-        round:
-            event.round ??
-            null,
-
-        status:
-            getRallyStatus(
-                startTimestamp,
-                endTimestamp
-            ),
-
-        startDate:
-            event.dateStart ||
-            null,
-
-        endDate:
-            event.dateEnd ||
-            null,
-
-        startTimestamp,
-
-        endTimestamp,
-
-        location: {
-
-            name:
-                event.location?.name ||
-                "",
-
-            country:
-                country.name ||
-                "",
-
-            countryCode:
-                country.threeCode ||
-                country.twoCode ||
-                ""
-
-        },
-
-        liveTiming:
-            false,
-
-        liveTimingAvailable:
-            false,
-
-        provider:
-            "Orange Cat Blacktop WRC",
-
-        providerEventId:
-            event.id ||
-            null,
-
-        source:
-            event
-
-    };
-
-}
-
-
-/* =========================================================
-   WRC EVENT STATUS
-========================================================= */
-
-function getRallyStatus(
-    startTimestamp,
-    endTimestamp
-) {
-
-    const now =
-        Date.now();
-
-
-    if (
-        startTimestamp &&
-        endTimestamp &&
-        now >= startTimestamp &&
-        now <= endTimestamp
-    ) {
-
-        return "LIVE";
-
-    }
-
-
-    if (
-        startTimestamp &&
-        now < startTimestamp
-    ) {
-
-        return "UPCOMING";
-
-    }
-
-
-    if (
-        endTimestamp &&
-        now > endTimestamp
-    ) {
-
-        return "COMPLETED";
-
-    }
-
-
-    return "UNKNOWN";
+    /*
+     * Provider will be connected here.
+     *
+     * Target data:
+     * - Safari Rally Kenya
+     * - WRC
+     * - Rally schedule
+     * - Stages
+     * - Stage times
+     * - Overall classification
+     * - Driver standings
+     * - Manufacturer standings
+     * - Retirements
+     * - Time gaps
+     * - Rally status
+     */
+
+    return unavailableResult(
+        "rally",
+        "WRC/Safari Rally provider is not configured yet."
+    );
 
 }
 
@@ -816,9 +542,22 @@ async function getF1Data(
     type
 ) {
 
+    /*
+     * Target data:
+     * - Grand Prix
+     * - Practice
+     * - Qualifying
+     * - Sprint
+     * - Race
+     * - Driver standings
+     * - Constructor standings
+     * - Lap information
+     * - Results
+     */
+
     return unavailableResult(
         "f1",
-        "Formula 1 live-data provider is not connected yet."
+        "Formula 1 provider is not configured yet."
     );
 
 }
@@ -832,9 +571,21 @@ async function getMotoGPData(
     type
 ) {
 
+    /*
+     * Target data:
+     * - MotoGP
+     * - Moto2
+     * - Moto3
+     * - Practice
+     * - Qualifying
+     * - Sprint
+     * - Race
+     * - Rider standings
+     */
+
     return unavailableResult(
         "motogp",
-        "MotoGP live-data provider is not connected yet."
+        "MotoGP provider is not configured yet."
     );
 
 }
@@ -848,9 +599,22 @@ async function getTennisData(
     type
 ) {
 
+    /*
+     * Target data:
+     * - ATP
+     * - WTA
+     * - Grand Slams
+     * - Live matches
+     * - Sets
+     * - Games
+     * - Results
+     * - Tournament draws
+     * - Rankings
+     */
+
     return unavailableResult(
         "tennis",
-        "Tennis live-data provider is not connected yet."
+        "Tennis provider is not configured yet."
     );
 
 }
@@ -864,9 +628,20 @@ async function getBasketballData(
     type
 ) {
 
+    /*
+     * Target data:
+     * - NBA
+     * - Major leagues
+     * - Live scores
+     * - Quarters
+     * - Team statistics
+     * - Standings
+     * - Results
+     */
+
     return unavailableResult(
         "basketball",
-        "Basketball live-data provider is not connected yet."
+        "Basketball provider is not configured yet."
     );
 
 }
@@ -880,9 +655,20 @@ async function getAthleticsData(
     type
 ) {
 
+    /*
+     * Target data:
+     * - Diamond League
+     * - World Athletics events
+     * - Olympic events
+     * - Kenyan athletes
+     * - Track results
+     * - Field results
+     * - Rankings
+     */
+
     return unavailableResult(
         "athletics",
-        "Athletics live-data provider is not connected yet."
+        "Athletics provider is not configured yet."
     );
 
 }
@@ -896,9 +682,21 @@ async function getRugbyData(
     type
 ) {
 
+    /*
+     * Target data:
+     * - Rugby Union
+     * - Rugby Sevens
+     * - International competitions
+     * - Kenya Rugby
+     * - Live scores
+     * - Fixtures
+     * - Results
+     * - Standings
+     */
+
     return unavailableResult(
         "rugby",
-        "Rugby live-data provider is not connected yet."
+        "Rugby provider is not configured yet."
     );
 
 }
@@ -912,9 +710,19 @@ async function getBoxingData(
     type
 ) {
 
+    /*
+     * Target data:
+     * - Fight schedules
+     * - Live fights
+     * - Results
+     * - Weight classes
+     * - Records
+     * - Championships
+     */
+
     return unavailableResult(
         "boxing",
-        "Boxing live-data provider is not connected yet."
+        "Boxing provider is not configured yet."
     );
 
 }
@@ -928,9 +736,20 @@ async function getMMAData(
     type
 ) {
 
+    /*
+     * Target data:
+     * - UFC
+     * - PFL
+     * - ONE
+     * - Fight cards
+     * - Results
+     * - Rankings
+     * - Championships
+     */
+
     return unavailableResult(
         "mma",
-        "MMA live-data provider is not connected yet."
+        "MMA provider is not configured yet."
     );
 
 }
@@ -944,9 +763,21 @@ async function getCricketData(
     type
 ) {
 
+    /*
+     * Target data:
+     * - Test
+     * - ODI
+     * - T20
+     * - IPL
+     * - International cricket
+     * - Live scores
+     * - Results
+     * - Standings
+     */
+
     return unavailableResult(
         "cricket",
-        "Cricket live-data provider is not connected yet."
+        "Cricket provider is not configured yet."
     );
 
 }
@@ -960,9 +791,19 @@ async function getGolfData(
     type
 ) {
 
+    /*
+     * Target data:
+     * - PGA Tour
+     * - DP World Tour
+     * - Major championships
+     * - Live leaderboard
+     * - Player scores
+     * - Results
+     */
+
     return unavailableResult(
         "golf",
-        "Golf live-data provider is not connected yet."
+        "Golf provider is not configured yet."
     );
 
 }
@@ -976,9 +817,19 @@ async function getVolleyballData(
     type
 ) {
 
+    /*
+     * Target data:
+     * - International volleyball
+     * - Club competitions
+     * - Live scores
+     * - Sets
+     * - Results
+     * - Standings
+     */
+
     return unavailableResult(
         "volleyball",
-        "Volleyball live-data provider is not connected yet."
+        "Volleyball provider is not configured yet."
     );
 
 }
@@ -992,9 +843,19 @@ async function getBaseballData(
     type
 ) {
 
+    /*
+     * Target data:
+     * - MLB
+     * - International baseball
+     * - Live games
+     * - Innings
+     * - Results
+     * - Standings
+     */
+
     return unavailableResult(
         "baseball",
-        "Baseball live-data provider is not connected yet."
+        "Baseball provider is not configured yet."
     );
 
 }
@@ -1008,9 +869,19 @@ async function getSnookerData(
     type
 ) {
 
+    /*
+     * Target data:
+     * - World Snooker Tour
+     * - Tournaments
+     * - Live frames
+     * - Match results
+     * - Draws
+     * - Rankings
+     */
+
     return unavailableResult(
         "snooker",
-        "Snooker live-data provider is not connected yet."
+        "Snooker provider is not configured yet."
     );
 
 }
@@ -1024,16 +895,27 @@ async function getSwimmingData(
     type
 ) {
 
+    /*
+     * Target data:
+     * - World Aquatics
+     * - Championships
+     * - Olympic events
+     * - Heats
+     * - Finals
+     * - Results
+     * - Records
+     */
+
     return unavailableResult(
         "swimming",
-        "Swimming live-data provider is not connected yet."
+        "Swimming provider is not configured yet."
     );
 
 }
 
 
 /* =========================================================
-   UNAVAILABLE RESPONSE
+   NORMALIZED UNAVAILABLE RESPONSE
 ========================================================= */
 
 function unavailableResult(
@@ -1042,6 +924,8 @@ function unavailableResult(
 ) {
 
     return {
+
+        success: true,
 
         provider:
             "KLYDE SPORTS",
@@ -1054,9 +938,12 @@ function unavailableResult(
 
         dataAvailable: false,
 
+        providerStatus:
+            "NOT_CONFIGURED",
+
         message:
             message ||
-            `${sport} data is currently unavailable.`
+            `${sport} provider is not configured yet.`
 
     };
 

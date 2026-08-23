@@ -3306,14 +3306,23 @@ function renderChatLibrary() {
         return;
     }
 
-    const chats = getSavedChats();
+
+    const chats =
+        getSavedChats();
+
+
+    /* =================================================
+       NO SAVED CHATS
+    ================================================= */
 
     if (!chats.length) {
 
         chatLibraryList.innerHTML = `
 
             <p class="chat-library-empty">
+
                 No saved conversations yet.
+
             </p>
 
         `;
@@ -3321,6 +3330,10 @@ function renderChatLibrary() {
         return;
     }
 
+
+    /* =================================================
+       BUILD CHAT LIST
+    ================================================= */
 
     chatLibraryList.innerHTML =
 
@@ -3334,9 +3347,14 @@ function renderChatLibrary() {
                             display:flex;
                             align-items:center;
                             gap:8px;
+                            width:100%;
                             margin-bottom:8px;
                         "
                     >
+
+                        <!-- =========================
+                             OPEN CHAT BUTTON
+                        ========================== -->
 
                         <button
                             type="button"
@@ -3346,6 +3364,7 @@ function renderChatLibrary() {
                             )}"
                             style="
                                 flex:1;
+                                min-width:0;
                                 display:block;
                                 width:100%;
                                 text-align:left;
@@ -3358,10 +3377,14 @@ function renderChatLibrary() {
                         >
 
                             <strong>
+
                                 ${escapeHTML(
-                                    chat.title
+                                    chat.title ||
+                                    "KLYDE Conversation"
                                 )}
+
                             </strong>
+
 
                             <small
                                 style="
@@ -3370,15 +3393,19 @@ function renderChatLibrary() {
                                     opacity:.6;
                                 "
                             >
+
                                 ${formatTime(
                                     chat.date
                                 )}
+
                             </small>
 
                         </button>
 
 
-                        <!-- DELETE CHAT -->
+                        <!-- =========================
+                             DELETE CHAT BUTTON
+                        ========================== -->
 
                         <button
                             type="button"
@@ -3386,25 +3413,27 @@ function renderChatLibrary() {
                             data-chat-id="${escapeHTML(
                                 chat.id
                             )}"
-                            aria-label="Delete chat"
-                            title="Delete chat"
+                            aria-label="Delete conversation"
+                            title="Delete conversation"
                             style="
+                                flex:0 0 38px;
                                 width:38px;
                                 height:38px;
-                                flex:0 0 38px;
+                                padding:0;
                                 border:0;
                                 border-radius:50%;
                                 background:#dc3545;
-                                color:white;
-                                font-size:20px;
-                                font-weight:bold;
+                                color:#fff;
                                 cursor:pointer;
-                                display:flex;
-                                align-items:center;
-                                justify-content:center;
+                                font-size:22px;
+                                line-height:38px;
+                                font-weight:bold;
+                                text-align:center;
                             "
                         >
+
                             ×
+
                         </button>
 
                     </div>
@@ -3427,25 +3456,47 @@ function renderChatLibrary() {
 
                 button.addEventListener(
                     "click",
-                    () => {
+                    event => {
 
-                        const chats =
+                        event.preventDefault();
+
+
+                        const chatId =
+                            button.dataset.chatId;
+
+
+                        if (!chatId) {
+                            return;
+                        }
+
+
+                        const savedChats =
                             getSavedChats();
 
+
                         const selected =
-                            chats.find(
+                            savedChats.find(
                                 chat =>
-                                    chat.id ===
-                                    button.dataset.chatId
+                                    String(
+                                        chat.id
+                                    ) ===
+                                    String(
+                                        chatId
+                                    )
                             );
+
 
                         if (!selected) {
                             return;
                         }
 
+
                         conversation =
-                            selected.messages
-                                .map(
+                            Array.isArray(
+                                selected.messages
+                            )
+
+                                ? selected.messages.map(
                                     item => ({
 
                                         role:
@@ -3455,7 +3506,10 @@ function renderChatLibrary() {
                                             item.message
 
                                     })
-                                );
+                                )
+
+                                : [];
+
 
                         displayRestoredConversation();
 
@@ -3491,13 +3545,8 @@ function renderChatLibrary() {
                     "click",
                     event => {
 
-                        /*
-                         * IMPORTANT:
-                         * Stop the delete button from
-                         * opening/restoring the chat.
-                         */
-
                         event.preventDefault();
+
                         event.stopPropagation();
 
 
@@ -3510,31 +3559,39 @@ function renderChatLibrary() {
                         }
 
 
-                        const confirmed =
-                            window.confirm(
-                                "Delete this conversation?"
-                            );
+                        /*
+                         * Read the SAME storage
+                         * used by getSavedChats()
+                         */
 
-
-                        if (!confirmed) {
-                            return;
-                        }
-
-
-                        const chats =
+                        const savedChats =
                             getSavedChats();
 
 
+                        /*
+                         * Remove only the
+                         * selected conversation.
+                         */
+
                         const remainingChats =
-                            chats.filter(
+                            savedChats.filter(
                                 chat =>
-                                    chat.id !==
-                                    chatId
+                                    String(
+                                        chat.id
+                                    ) !==
+                                    String(
+                                        chatId
+                                    )
                             );
 
 
+                        /*
+                         * Save using the SAME
+                         * KLYDE storage key.
+                         */
+
                         localStorage.setItem(
-                            "klydeChats",
+                            KLYDE_CHAT_STORAGE,
                             JSON.stringify(
                                 remainingChats
                             )
